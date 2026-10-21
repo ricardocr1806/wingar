@@ -103,6 +103,8 @@ svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-widt
 .av.c1{--c:var(--av1)} .av.c2{--c:var(--av2)} .av.c3{--c:var(--av3)} .av.c4{--c:var(--av4)}
 .person{display:flex;align-items:center;gap:10px;min-width:0}
 .person>span:last-child{min-width:0}
+.person .cl b{display:block;font-weight:550}
+.person .cl span{display:block;font-size:12.5px;color:var(--muted)}
 
 /* área principal */
 .main{padding-block:0 110px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));min-width:0;display:flex;flex-direction:column;gap:22px}
@@ -220,6 +222,12 @@ input.num{text-align:right}
 .legend2{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
 .legend2 i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .lg-fat{background:var(--acc)} .lg-per{background:var(--bad)} .lg-proj{border:1.5px dashed var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
+.todo{display:flex;flex-direction:column;gap:8px}
+.todo-i{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr) auto;gap:14px;align-items:center;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s}
+.todo-i:hover{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 4%,var(--surface))}
+.todo-t{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;min-width:0}
+.todo-go{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:600;font-size:13px;white-space:nowrap}
+@media (max-width:700px){ .todo-i{grid-template-columns:minmax(0,1fr)} }
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -480,7 +488,7 @@ const TECNICOS = ['William Santos','Diego Martins'];
 const CANAIS = ['WhatsApp','Telefone','E-mail','Instagram','Presencial','Indicação'];
 const ETAPAS = ['1º Contato','Tratativa','Potencial de compra','Sem veículo','Follow-up','Fechamento','Pós-venda'];
 const FORMAS = ['PIX','Cartão de crédito','Cartão de débito','Boleto','Dinheiro','Transferência'];
-const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplicacao','Aplicação'],['corte','Corte'],['finalizacao','Finalização'],['pronto','Pronto p/ entrega'],['entregue','Entregue']];
+const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplicacao','Aplicação'],['corte','Corte / Desmontagem'],['finalizacao','Finalização'],['pronto','Pronto p/ entrega'],['entregue','Entregue']];
 const patioNome = k => (PATIO.find(p=>p[0]===k)||['',k])[1];
 const ITENS_IN = ['Painel sem luzes de alerta','Faróis e lanternas funcionando','Vidros elétricos funcionando','Multimídia e som','Rodas e pneus sem avarias','Estepe, macaco e triângulo','Chave reserva entregue','Pertences pessoais retirados','Tapetes no veículo'];
 const ITENS_OUT = ['Luzes do painel e eletrônicos conferidos','PPF sem bolhas, bordas e cantos selados','Películas sem bolhas, riscos ou poeira','Acabamento e limpeza final','Veículo lavado e seco','Cliente acompanhou a vistoria de saída'];
@@ -634,8 +642,8 @@ const PAGAR = [
 ];
 
 /* ---------- estado da tela ---------- */
-const S = {dept:'comercial', view:'painel', sel:null, tab:'resumo', ptab:'geral',
-  f:{periodo:'mes', cons:'todos', cq:'', st:'todos', etapa:'todas', q:'', rec:'aberto', pag:'aberto', ord:'ativas'}};
+const S = {dept:'comercial', view:'painel', sel:null, tab:'resumo', ptab:'geral', atab:'resumo',
+  f:{periodo:'mes', cons:'todos', cq:'', fq:'', fst:'todos', st:'todos', etapa:'todas', q:'', rec:'aberto', pag:'aberto', ord:'ativas'}};
 const cur = () => DB.find(r=>r.id===S.sel);
 const $ = s => document.querySelector(s);
 const main = $('#main');
@@ -1104,22 +1112,51 @@ VIEWS.acompanhamento = () => {
   const L = ordens();
   const tot = L.reduce((s,r)=>s+total(r),0), rec = L.reduce((s,r)=>s+recebido(r),0), pend = L.reduce((s,r)=>s+aReceber(r),0);
   const aguard = L.filter(r=>!r.fin.liberado).length;
-  const formaTxt = r => r.pag.quando==='retirada' ? `${r.pag.formaSaldo} na retirada` : `${r.pag.parcelas}x ${r.pag.formaSaldo}`;
+  const atencao = L.filter(r=>!r.fin.liberado).map(r=>{
+    const ent = r.fin.titulos.find(t=>t.desc==='Entrada'&&!t.recebido), venc = r.fin.titulos.filter(t=>!t.recebido && t.venc<HOJE);
+    if (ent) return {r, k:'bad', t:'Entrada não confirmada', d:`${fmt(ent.valor)} via ${ent.forma} · combinada para ${fd(ent.venc)}`};
+    if (r.op.etapa==='pronto') return {r, k:'warn', t:'Pronto para entrega', d: aReceber(r)>0 && r.pag.quando==='retirada' ? `Receber ${fmt(aReceber(r))} na retirada e liberar` : 'Conferir e liberar a entrega'};
+    if (venc.length) return {r, k:'bad', t:'Parcela vencida', d:`${fmt(venc.reduce((s,t)=>s+t.valor,0))} em atraso`};
+    if (!r.fin.conf.valores || !r.fin.conf.forma) return {r, k:'info', t:'Conferência pendente', d:'Conferir valores e forma de pagamento com o cliente'};
+    return null; }).filter(Boolean);
   return head('Acompanhamento pátio', 'Todas as OS com o que o Comercial combinou e o que já entrou no caixa. Abra uma OS para conferir e liberar a entrega.') + `
-  <div class="kpis">
+  <div class="tabbar"><div class="tabs" role="tablist">${[['resumo','Resumo','chart'],['clientes','Clientes','users']].map(([k,nm,ic])=>
+    `<button role="tab" data-a="atab" data-t="${k}" aria-selected="${S.atab===k}" style="display:inline-flex;gap:8px;align-items:center">${ico(ic)}${nm} <span class="tag">${k==='clientes'?L.length:atencao.length}</span></button>`).join('')}</div></div>
+  ${S.atab==='clientes' ? abaClientesFin(L) : `<div class="kpis">
     <div class="kpi"><span class="k"><i class="ki">${ico('clipboard')}</i>Valor em serviços</span><span class="v">${fmt(tot)}</span><span class="d">${L.length} OS no mês</span></div>
     <div class="kpi"><span class="k"><i class="ki">${ico('check')}</i>Recebido</span><span class="v">${fmt(rec)}</span><span class="d">entradas e saldos confirmados</span></div>
     <div class="kpi hl"><span class="k"><i class="ki">${ico('coins')}</i>Saldo a receber</span><span class="v">${fmt(pend)}</span><span class="d">na retirada ou parcelado</span></div>
     <div class="kpi"><span class="k"><i class="ki">${ico('clock')}</i>Aguardando liberação</span><span class="v">${aguard}</span><span class="d">OS sem liberação de entrega</span></div>
   </div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>OS</th><th>Entrada</th><th>Cliente</th><th>Status</th><th>Responsável</th><th>Veículo</th><th>Prev. entrega</th><th class="num">Valor serviços</th><th class="num">Entrada</th><th class="num">Saldo a pagar</th><th>Forma de pagamento</th><th>Financeiro</th></tr></thead><tbody>
-  ${L.map(r=>`<tr class="click" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}">
-    <td class="mono"><b>${r.os}</b></td><td class="mono">${fd(r.ag.entrada)}</td><td>${person(r.cliente.nome)}</td>
-    <td>${chip(r.op.etapa==='entregue'?'ok':r.op.etapa==='pronto'?'warn':'neu', patioNome(r.op.etapa))}</td><td>${esc(r.consultor.split(' ')[0])}</td>
-    <td>${esc(r.veiculo.modelo)}</td><td class="mono">${fd(r.ag.saida)}</td><td class="num">${fmt(total(r))}</td><td class="num">${fmt(r.pag.entrada)}</td>
-    <td class="num"><b>${fmt(aReceber(r))}</b></td><td>${formaTxt(r)}</td><td>${finChip(r)}</td></tr>`).join('')}
-  </tbody></table></div>`;
+  <section class="card"><div class="card-h"><div><h3>Precisa de atenção</h3><span class="faint" style="font-size:12.5px">O que o Financeiro precisa resolver agora</span></div>
+    <button class="btn sm ghost" data-a="atab" data-t="clientes">Ver todos os clientes ${ico('arrow')}</button></div>
+    ${atencao.length ? `<div class="todo">${atencao.map(x=>`<button class="todo-i" data-a="open" data-d="financeiro" data-v="conf" data-id="${x.r.id}">
+      ${person(x.r.cliente.nome, `OS ${x.r.os} · ${x.r.veiculo.modelo}`)}
+      <span class="todo-t">${chip(x.k, x.t)}<span class="faint">${esc(x.d)}</span></span>
+      <span class="todo-go">Conferir ${ico('arrow')}</span></button>`).join('')}</div>`
+      : '<div class="empty">Nada pendente. Todas as OS estão conferidas.</div>'}
+  </section>`}`;
 };
+function abaClientesFin(L){
+  const f = S.f, q = (f.fq||'').trim().toLowerCase();
+  const F = L.filter(r=>(f.fst==='todos' || (f.fst==='pendente' ? !r.fin.liberado : r.fin.liberado))
+    && (!q || (r.cliente.nome+' '+r.veiculo.modelo+' '+r.os).toLowerCase().includes(q)));
+  return `<section class="card">
+    <div class="card-h"><div class="seg">${[['todos','Todos'],['pendente','Aguardando liberação'],['liberado','Liberados']].map(([v,n])=>`<button data-a="fset" data-k="fst" data-val="${v}" aria-pressed="${f.fst===v}">${n}</button>`).join('')}</div>
+      <input id="f-fq" data-f="fq" placeholder="Buscar cliente, veículo ou OS" value="${esc(f.fq||'')}" style="max-width:300px"></div>
+    <div class="tbl-wrap" id="tbl-fin" style="box-shadow:none">${tblFin(F)}</div></section>`;
+}
+function tblFin(L){
+  if (!L.length) return `<div class="empty" style="margin:12px">Nenhuma OS encontrada.</div>`;
+  const formaTxt = r => r.pag.quando==='retirada' ? `${r.pag.formaSaldo} na retirada` : `${r.pag.parcelas}x ${r.pag.formaSaldo}`;
+  return `<table class="tbl nowrap"><thead><tr><th>OS</th><th>Cliente</th><th>Veículo</th><th>Status</th><th>Responsável</th><th>Entrada</th><th>Prev. entrega</th><th class="num">Valor serviços</th><th class="num">Entrada</th><th class="num">Saldo a pagar</th><th>Forma de pagamento</th><th>Financeiro</th></tr></thead><tbody>
+  ${L.map(r=>`<tr class="click" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}">
+    <td class="mono"><b>${r.os}</b></td><td>${person(r.cliente.nome, r.cliente.tel)}</td><td>${esc(r.veiculo.modelo)}</td>
+    <td>${chip(r.op.etapa==='entregue'?'ok':r.op.etapa==='pronto'?'warn':'neu', patioNome(r.op.etapa))}</td><td>${esc(r.consultor.split(' ')[0])}</td>
+    <td class="mono">${fd(r.ag.entrada)}</td><td class="mono">${fd(r.ag.saida)}</td><td class="num">${fmt(total(r))}</td><td class="num">${fmt(r.pag.entrada)}</td>
+    <td class="num"><b>${fmt(aReceber(r))}</b></td><td>${formaTxt(r)}</td><td>${finChip(r)}</td></tr>`).join('')}
+  </tbody></table>`;
+}
 function reqs(r){
   const t = r.fin.titulos, ent = t.find(x=>x.desc==='Entrada'), sal = t.filter(x=>x.desc!=='Entrada'), L = [];
   L.push(['Entrada confirmada no caixa', !ent || ent.recebido]);
@@ -1344,6 +1381,7 @@ const ACT = {
   setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
   tab: a => { S.tab = a.dataset.t; render(); },
   verPerdidos: () => { S.f.st = 'Perdido'; S.f.etapa = 'todas'; S.f.q = ''; go('comercial','atendimentos'); },
+  atab: a => { S.atab = a.dataset.t; render(); },
   ptab: a => { S.ptab = a.dataset.t; render(); },
   zona: a => { const r = cur(), c = S.tab==='out' ? r.op.chkOut : r.op.chkIn, z = a.dataset.z;
     c.avarias[z] = AVARIAS[(AVARIAS.indexOf(c.avarias[z]||'')+1) % AVARIAS.length]; render(); },
@@ -1392,7 +1430,10 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') $('#modal').hi
 function onField(e){
   const el = e.target;
   if (el.dataset.f){ S.f[el.dataset.f] = el.value;
-    if (el.dataset.f==='cq'){ const L = DB.filter(r=>noPeriodo(r.data,S.f.periodo) && (S.f.cons==='todos'||r.consultor===S.f.cons)), q = el.value.trim().toLowerCase();
+    if (e.type==='change' && ['fq','cq','q'].includes(el.dataset.f)) return;
+    if (el.dataset.f==='fq'){ S.f.fq = el.value; const q = el.value.trim().toLowerCase(), f = S.f;
+      $('#tbl-fin').innerHTML = tblFin(ordens().filter(r=>(f.fst==='todos' || (f.fst==='pendente' ? !r.fin.liberado : r.fin.liberado)) && (!q || (r.cliente.nome+' '+r.veiculo.modelo+' '+r.os).toLowerCase().includes(q)))); }
+    else if (el.dataset.f==='cq'){ const L = DB.filter(r=>noPeriodo(r.data,S.f.periodo) && (S.f.cons==='todos'||r.consultor===S.f.cons)), q = el.value.trim().toLowerCase();
       $('#tbl-cli').innerHTML = tblClientes(clientes(L).filter(c=>!q || (c.u.cliente.nome+' '+c.u.cliente.tel+' '+c.u.veiculo.modelo).toLowerCase().includes(q))); }
     else if (S.view==='atendimentos' && !el.dataset.rr){ $('#tbl').innerHTML = tblAtend(listaAtend()); } else if (e.type==='change') render();
     return; }

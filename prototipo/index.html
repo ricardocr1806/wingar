@@ -266,6 +266,8 @@ table{border-collapse:collapse;width:100%;font-size:inherit}
 .ocard .car{font:650 16px/1.2 var(--f-display);letter-spacing:-.015em;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--fg)}
 .ocard .car:hover{color:var(--acc)}
 .btn.back{padding:5px 9px}
+.btn.open-os{width:100%;justify-content:center;color:var(--acc);border-color:color-mix(in srgb,var(--acc) 40%,var(--line-2));background:color-mix(in srgb,var(--acc) 8%,var(--surface))}
+.btn.open-os:hover{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 14%,var(--surface))}
 .ocard .meta{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
 .ocard .prog{height:5px;border-radius:999px;background:var(--surface-3);overflow:hidden}
 .ocard .prog i{display:block;height:100%;border-radius:999px;background:var(--acc)}
@@ -971,6 +973,7 @@ function ocard(r){
       ${(()=>{ const ex=[...new Set(Object.values(r.op.exec).filter(Boolean))]; return ex.length?`<span class="person" style="gap:6px;margin-top:4px">${ex.slice(0,3).map(n=>avatar(n,true)).join('')}<span>${ex.map(n=>esc(n.split(' ')[0])).join(', ')}</span></span>`:''; })()}</div>
     <div class="prog" title="Etapa ${i+1} de ${PATIO.length}"><i style="width:${(i+1)/PATIO.length*100}%"></i></div>
     <div>${finChip(r)}</div>
+    <button class="btn sm open-os" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">${ico('clipboard')}Abrir OS ${r.os}</button>
     <div class="acts"><span style="display:flex;gap:4px">${i>0?`<button class="btn sm back" data-a="voltar" data-id="${r.id}" title="Voltar para ${PATIO[i-1][1]}" aria-label="Voltar para ${PATIO[i-1][1]}">${ico('back')}</button>`:''}<button class="btn sm ghost" data-a="imprimir" data-id="${r.id}" data-t="os" title="Imprimir OS ${r.os}" aria-label="Imprimir OS ${r.os}">${ico('print')}</button></span>
       ${i<PATIO.length-1?`<button class="btn sm" data-a="avancar" data-id="${r.id}" title="Mover para ${PATIO[i+1][1]}">${PATIO[i+1][1]} ${ico('arrow')}</button>`:''}</div>
   </article>`;

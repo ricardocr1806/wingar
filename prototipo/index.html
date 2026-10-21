@@ -203,6 +203,23 @@ input.num{text-align:right}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .filters select,.filters input{width:auto;min-width:170px}
 .filters .grow{flex:1 1 240px}
+.kpi .meter{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.kpi .meter i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.kpi.lost .ki{color:var(--bad);background:color-mix(in srgb,var(--bad) 11%,transparent)}
+.kpi.lost .v{color:var(--bad)}
+.bar-fill.lost{background:linear-gradient(90deg,color-mix(in srgb,var(--bad) 55%,var(--surface)),var(--bad))}
+.chart{width:100%;min-width:460px;height:auto;display:block}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ax{fill:var(--faint);font:500 11px var(--f-body)}
+.chart .ax.mo{fill:var(--muted);font-size:12px}
+.chart .vl{fill:var(--muted);font:600 11px var(--f-body)}
+.chart .vl-proj{fill:var(--acc);font:700 11px var(--f-body)}
+.chart .b-fat{fill:var(--acc)}
+.chart .b-per{fill:var(--bad);opacity:.8}
+.chart .b-proj{fill:color-mix(in srgb,var(--acc) 14%,transparent);stroke:var(--acc);stroke-width:1.5;stroke-dasharray:4 3}
+.legend2{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend2 i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.lg-fat{background:var(--acc)} .lg-per{background:var(--bad)} .lg-proj{border:1.5px dashed var(--acc);background:color-mix(in srgb,var(--acc) 14%,transparent)}
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -489,7 +506,7 @@ function base(){
   return {id:'', data:HOJE, cliente:{nome:'',tel:'',email:'',cpf:'',nasc:'',end:''}, veiculo:{modelo:'',placa:'',ano:'',cor:'',chassi:''},
     canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'1º Contato', status:'Andamento', servicos:[], desconto:0,
     pag:{entrada:0, formaEntrada:'PIX', dataEntrada:HOJE, entradaPaga:false, parcelas:1, formaSaldo:'PIX', quando:'retirada'},
-    ag:{entrada:'', saida:''}, resumo:'', obs:'', anexos:[], os:null, op:null, fin:null};
+    ag:{entrada:'', saida:''}, motivo:'', resumo:'', obs:'', anexos:[], os:null, op:null, fin:null};
 }
 function mk(o){
   const b = base();
@@ -528,7 +545,7 @@ function gerarOS(r, num){
   r.fin = {titulos:gerarTitulos(r), conf:{valores:false, forma:false}, liberado:false, nota:''};
 }
 
-let nextOS = 433, nextId = 12;
+let nextOS = 433, nextId = 14;
 const DB = [
   mk({id:'A01', data:'2026-10-07', cliente:{nome:'Emerson Fugi', tel:'(11) 97100-5577', email:'emerson.fugi@email.com', cpf:'312.456.789-10', nasc:'1984-03-22'},
       veiculo:{modelo:'BMW M3', placa:'RKT-3B47', ano:'2025', cor:'Azul Portimão', chassi:'WBS83AY0XRFR45120'},
@@ -572,7 +589,7 @@ const DB = [
       servicos:[sv('111')], resumo:'Enviada proposta PPF Full Gloss. Retornar na sexta.'}),
   mk({id:'A08', data:'2026-10-05', cliente:{nome:'Paulo Henrique Dias', tel:'(11) 97788-2201'},
       veiculo:{modelo:'Honda Civic Touring', ano:'2022'}, canal:'Telefone', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
-      servicos:[sv('222'),sv('333')], obs:'Achou o valor alto e fechou com concorrente.'}),
+      servicos:[sv('222'),sv('333')], motivo:'Preço', obs:'Achou o valor alto e fechou com concorrente.'}),
   mk({id:'A09', data:'2026-10-21', cliente:{nome:'Bruno Tanaka', tel:'(11) 96612-4470'},
       veiculo:{modelo:'Mercedes-Benz C300'}, canal:'Telefone', consultor:CONSULTORES[0], etapa:'1º Contato', resumo:'Ligou perguntando sobre PPF fosco.'}),
   mk({id:'A10', data:'2026-10-14', cliente:{nome:'Aline Prado', tel:'(11) 99330-6612', email:'aline.prado@email.com'},
@@ -580,7 +597,13 @@ const DB = [
       servicos:[sv('444')], obs:'Carro novo chega da concessionária em novembro.'}),
   mk({id:'A11', data:'2026-09-24', cliente:{nome:'Thiago Moreira', tel:'(11) 98002-1188'},
       veiculo:{modelo:'Chevrolet Camaro SS', ano:'2021'}, canal:'Presencial', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
-      servicos:[sv('111')], obs:'Desistiu do serviço, vai vender o carro.'}),
+      servicos:[sv('111')], motivo:'Desistiu do serviço', obs:'Desistiu do serviço, vai vender o carro.'}),
+  mk({id:'A12', data:'2026-10-08', cliente:{nome:'Renata Siqueira', tel:'(11) 99412-7730', email:'renata.siqueira@email.com'},
+      veiculo:{modelo:'Tesla Model Y', ano:'2025', cor:'Branco Pérola'}, canal:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up', status:'Perdido',
+      servicos:[sv('111')], motivo:'Fechou com concorrente', obs:'Fechou com outra loja que entregava em 3 dias.'}),
+  mk({id:'A13', data:'2026-10-16', cliente:{nome:'Eduardo Lima', tel:'(11) 98733-1904'},
+      veiculo:{modelo:'Volkswagen Nivus', ano:'2024'}, canal:'WhatsApp', consultor:CONSULTORES[1], etapa:'Follow-up', status:'Perdido',
+      servicos:[sv('222'),sv('333')], motivo:'Sem retorno do cliente', obs:'Três tentativas de contato sem resposta.'}),
 ];
 /* gera OS e estado de pátio / financeiro dos exemplos */
 (function seed(){
@@ -670,39 +693,84 @@ function render(){
 const noPeriodo = (d,p) => p==='tudo' || (p==='mes' ? d.startsWith('2026-10') : d>='2026-10-15');
 const VIEWS = {};
 
+const PROB = {'1º Contato':.1,'Tratativa':.25,'Potencial de compra':.5,'Sem veículo':.3,'Follow-up':.4,'Fechamento':.8,'Pós-venda':1};
+const MOTIVOS = ['Preço','Fechou com concorrente','Desistiu do serviço','Sem retorno do cliente','Prazo de entrega'];
+const HIST = [{m:'Jul',fat:61200,per:21000},{m:'Ago',fat:68900,per:18500},{m:'Set',fat:58400,per:24300}];
+const fk = v => v>=1000 ? 'R$ '+(v/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+' mil' : fmt(v);
+const pct = v => Math.round(v*100)+'%';
+function numeros(L){
+  const gan = L.filter(r=>r.status==='Ganho'), and = L.filter(r=>r.status==='Andamento'), per = L.filter(r=>r.status==='Perdido');
+  const fat = gan.reduce((s,r)=>s+total(r),0), bruto = and.reduce((s,r)=>s+total(r),0);
+  const prev = and.reduce((s,r)=>s+total(r)*(PROB[r.etapa]??0),0), perV = per.reduce((s,r)=>s+total(r),0);
+  return {gan, and, per, fat, bruto, prev, proj:fat+prev, perV, taxa: gan.length+per.length ? per.length/(gan.length+per.length) : 0};
+}
+function tilesFat(n, ticket=false){
+  return `<div class="kpis">
+    <div class="kpi hl"><span class="k"><i class="ki">${ico('trend')}</i>Faturado</span><span class="v">${fmt(n.fat)}</span><span class="d">${n.gan.length} venda${n.gan.length===1?'':'s'} fechada${n.gan.length===1?'':'s'}</span>${spark(n.gan)}</div>
+    <div class="kpi"><span class="k"><i class="ki">${ico('target')}</i>Projeção do mês</span><span class="v">${fmt(n.proj)}</span>
+      <span class="d">faturado + ${fmt(n.prev)} previstos de ${n.and.length} proposta${n.and.length===1?'':'s'} em andamento</span>
+      <div class="meter" title="Faturado ${pct(n.proj?n.fat/n.proj:0)} da projeção"><i style="width:${n.proj?n.fat/n.proj*100:0}%"></i></div></div>
+    <div class="kpi lost"><span class="k"><i class="ki">${ico('alert')}</i>Orçamentos perdidos</span><span class="v">${fmt(n.perV)}</span>
+      <span class="d">${n.per.length} orçamento${n.per.length===1?'':'s'} não fechado${n.per.length===1?'':'s'} · taxa de perda ${pct(n.taxa)}</span></div>
+    ${ticket?`<div class="kpi"><span class="k"><i class="ki">${ico('receipt')}</i>Ticket médio</span><span class="v">${fmt(n.gan.length?n.fat/n.gan.length:0)}</span><span class="d">em negociação: ${fmt(n.bruto)}</span></div>`:''}
+  </div>`;
+}
+function chartMeses(){
+  const out = numeros(DB.filter(r=>r.data.startsWith('2026-10')));
+  const M = [...HIST.map(h=>({...h})), {m:'Out', fat:out.fat, per:out.perV, proj:out.proj}];
+  const W = 640, H = 250, pl = 56, pr = 12, pt = 16, pb = 30, top = Math.ceil(Math.max(...M.map(x=>Math.max(x.fat,x.per,x.proj||0)))/25000)*25000 || 25000;
+  const y = v => pt + (H-pt-pb)*(1 - v/top), gw = (W-pl-pr)/M.length, bw = Math.min(34, gw/3.2);
+  const ticks = []; for (let t=0; t<=top; t+=25000) ticks.push(t);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Faturado, projeção e perdido por mês">
+    ${ticks.map(t=>`<line x1="${pl}" x2="${W-pr}" y1="${y(t)}" y2="${y(t)}" class="gl"/><text x="${pl-8}" y="${y(t)+4}" class="ax" text-anchor="end">${t?Math.round(t/1000)+' mil':'0'}</text>`).join('')}
+    ${M.map((d,i)=>{ const cx = pl + gw*i + gw/2, x1 = cx - bw - 3, x2 = cx + 3;
+      return `${d.proj?`<rect x="${x1}" y="${y(d.proj)}" width="${bw}" height="${y(d.fat)-y(d.proj)}" rx="5" class="b-proj"><title>Projeção ${fmt(d.proj)}</title></rect>
+        <text x="${x1+bw/2}" y="${y(d.proj)-6}" class="vl-proj" text-anchor="middle">${Math.round(d.proj/1000)}k</text>`:''}
+        <rect x="${x1}" y="${y(d.fat)}" width="${bw}" height="${y(0)-y(d.fat)}" rx="5" class="b-fat"><title>Faturado ${fmt(d.fat)}</title></rect>
+        <rect x="${x2}" y="${y(d.per)}" width="${bw}" height="${y(0)-y(d.per)}" rx="5" class="b-per"><title>Perdido ${fmt(d.per)}</title></rect>
+        ${d.proj?'':`<text x="${x1+bw/2}" y="${y(d.fat)-6}" class="vl" text-anchor="middle">${Math.round(d.fat/1000)}k</text>`}
+        <text x="${x2+bw/2}" y="${y(d.per)-6}" class="vl" text-anchor="middle">${Math.round(d.per/1000)}k</text>
+        <text x="${cx}" y="${H-8}" class="ax mo" text-anchor="middle">${d.m}${d.proj?' (atual)':''}</text>`; }).join('')}
+  </svg>`;
+}
 VIEWS.painel = () => {
   const f = S.f, L = DB.filter(r=>noPeriodo(r.data,f.periodo) && (f.cons==='todos'||r.consultor===f.cons));
-  const gan = L.filter(r=>r.status==='Ganho'), and = L.filter(r=>r.status==='Andamento'), per = L.filter(r=>r.status==='Perdido');
-  const vend = gan.reduce((s,r)=>s+total(r),0), pipe = and.reduce((s,r)=>s+total(r),0);
-  const conv = gan.length+per.length ? Math.round(gan.length/(gan.length+per.length)*100) : 0;
-  const porCons = CONSULTORES.map(c=>{ const g=gan.filter(r=>r.consultor===c); return {c, v:g.reduce((s,r)=>s+total(r),0), n:g.length}; }).sort((a,b)=>b.v-a.v);
+  const n = numeros(L);
+  const porCons = CONSULTORES.filter(c=>f.cons==='todos'||c===f.cons).map(c=>{ const g=n.gan.filter(r=>r.consultor===c), p=n.per.filter(r=>r.consultor===c);
+    return {c, v:g.reduce((s,r)=>s+total(r),0), k:g.length, pv:p.reduce((s,r)=>s+total(r),0)}; }).sort((a,b)=>b.v-a.v);
   const max = Math.max(1,...porCons.map(x=>x.v));
-  const funil = ETAPAS.map(e=>({e, n:and.filter(r=>r.etapa===e).length}));
-  const maxF = Math.max(1,...funil.map(x=>x.n));
+  const mot = [...MOTIVOS, ''].map(m=>{ const p = n.per.filter(r=>(r.motivo||'')===m); return {m:m||'Motivo não informado', k:p.length, v:p.reduce((s,r)=>s+total(r),0)}; }).filter(x=>x.k).sort((a,b)=>b.v-a.v);
+  const maxM = Math.max(1,...mot.map(x=>x.v));
+  const etp = ETAPAS.map(e=>{ const a = n.and.filter(r=>r.etapa===e), v = a.reduce((s,r)=>s+total(r),0); return {e, k:a.length, v, p:PROB[e], prev:v*PROB[e]}; }).filter(x=>x.k);
   const sel = (k, opts) => `<select id="f-${k}" data-f="${k}" data-rr="1">${opts.map(([v,n])=>`<option value="${v}" ${f[k]===v?'selected':''}>${n}</option>`).join('')}</select>`;
-  return head('Painel comercial', 'Vendas fechadas, negócios em andamento e desempenho de cada consultor no período escolhido.',
+  return head('Painel comercial', 'Quanto a empresa já faturou, quanto deve faturar até o fim do mês e quanto ficou para trás em orçamentos que não fecharam.',
       `<button class="btn pri" data-a="nav" data-v="novo">${ico('plus')}Novo atendimento</button>`) + `
     <div class="tabbar">
-      <div class="tabs" role="tablist">${[['geral','Visão geral','chart'],['clientes','Clientes','users']].map(([k,n,ic])=>
-        `<button role="tab" data-a="ptab" data-t="${k}" aria-selected="${S.ptab===k}" style="display:inline-flex;gap:8px;align-items:center">${ico(ic)}${n}${k==='clientes'?` <span class="tag">${clientes(L).length}</span>`:''}</button>`).join('')}</div>
+      <div class="tabs" role="tablist">${[['geral','Visão geral','chart'],['clientes','Clientes','users']].map(([k,nm,ic])=>
+        `<button role="tab" data-a="ptab" data-t="${k}" aria-selected="${S.ptab===k}" style="display:inline-flex;gap:8px;align-items:center">${ico(ic)}${nm}${k==='clientes'?` <span class="tag">${clientes(L).length}</span>`:''}</button>`).join('')}</div>
       <div class="filters">${sel('periodo',[['mes','Outubro de 2026'],['7d','Últimos 7 dias'],['tudo','Todo o período']])}
       ${sel('cons',[['todos','Todos os consultores'],...CONSULTORES.map(c=>[c,c])])}</div>
     </div>
-    ${S.ptab==='clientes' ? abaClientes(L) : `<div class="kpis">
-      <div class="kpi hl"><span class="k"><i class="ki">${ico('trend')}</i>Vendas fechadas</span><span class="v">${fmt(vend)}</span><span class="d">${gan.length} negócio${gan.length===1?'':'s'} ganho${gan.length===1?'':'s'}</span>${spark(gan)}</div>
-      <div class="kpi"><span class="k"><i class="ki">${ico('receipt')}</i>Ticket médio</span><span class="v">${fmt(gan.length?vend/gan.length:0)}</span><span class="d">por venda fechada</span></div>
-      <div class="kpi"><span class="k"><i class="ki">${ico('clock')}</i>Em andamento</span><span class="v">${and.length}</span><span class="d">${fmt(pipe)} em propostas</span></div>
-      <div class="kpi"><span class="k"><i class="ki">${ico('target')}</i>Conversão</span><span class="v">${conv}%</span><span class="d">${gan.length} ganhos · ${per.length} perdidos</span></div>
+    ${S.ptab==='clientes' ? abaClientes(L) : `${tilesFat(n, true)}
+    <div class="grid g-side">
+      <section class="card"><div class="card-h"><div><h3>Faturado × perdido por mês</h3><span class="faint" style="font-size:12.5px">Todos os consultores · julho a outubro de 2026</span></div>
+        <div class="legend2"><span><i class="lg-fat"></i>Faturado</span><span><i class="lg-proj"></i>Projeção</span><span><i class="lg-per"></i>Perdido</span></div></div>
+        <div style="overflow-x:auto">${chartMeses()}</div></section>
+      <section class="card"><div class="card-h"><div><h3>De onde vem a projeção</h3><span class="faint" style="font-size:12.5px">Propostas em andamento × chance de fechar</span></div></div>
+        ${etp.length?`<div>${etp.map(x=>`<div class="sumline"><span>${x.e} <span class="faint">· ${x.k} · ${pct(x.p)}</span></span><span><span class="faint">${fk(x.v)} →</span> <b>${fmt(x.prev)}</b></span></div>`).join('')}
+          <div class="sumline big"><span>Previsto</span><span>${fmt(n.prev)}</span></div></div>`:'<div class="empty">Nenhuma proposta em andamento no período.</div>'}
+        <p class="faint" style="font-size:12px;margin:0">A chance de cada tarefa é um exemplo. No sistema final ela é calculada pelo histórico de vendas da Wingard.</p></section>
     </div>
     <div class="grid g2">
-      <section class="card"><div class="card-h"><h3>Vendas por consultor</h3></div>
+      <section class="card"><div class="card-h"><h3>Faturado por consultor</h3></div>
         <div class="bars">${porCons.map(x=>`<div class="bar-row"><span class="person nm">${avatar(x.c,true)}<span class="nm">${esc(x.c)}</span></span>
           <div class="bar-track"><div class="bar-fill" style="width:${x.v/max*100}%"></div></div>
-          <span class="vl">${fmt(x.v)} <span class="faint">· ${x.n}</span></span></div>`).join('')}</div></section>
-      <section class="card"><div class="card-h"><h3>Atendimentos em andamento por tarefa</h3></div>
-        <div class="bars">${funil.map(x=>`<div class="bar-row"><span class="nm">${x.e}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${x.n/maxF*100}%;opacity:${x.n?1:0}"></div></div>
-          <span class="vl">${x.n}</span></div>`).join('')}</div></section>
+          <span class="vl">${fmt(x.v)} <span class="faint">· ${x.k}</span></span></div>`).join('')}</div></section>
+      <section class="card"><div class="card-h"><h3>Por que perdemos</h3><span class="tag">${n.per.length} orçamento${n.per.length===1?'':'s'} · ${fmt(n.perV)}</span></div>
+        ${mot.length?`<div class="bars">${mot.map(x=>`<div class="bar-row"><span class="nm">${x.m}</span>
+          <div class="bar-track"><div class="bar-fill lost" style="width:${x.v/maxM*100}%"></div></div>
+          <span class="vl">${fmt(x.v)} <span class="faint">· ${x.k}</span></span></div>`).join('')}</div>`:'<div class="empty">Nenhum orçamento perdido no período.</div>'}
+        ${n.per.length?`<button class="btn sm ghost" style="align-self:flex-start" data-a="verPerdidos">Ver orçamentos perdidos ${ico('arrow')}</button>`:''}</section>
     </div>`}`;
 };
 function clientes(L){
@@ -759,6 +827,7 @@ VIEWS.atendimentos = () => {
   const cnt = s => DB.filter(r=>s==='todos'||r.status===s).length;
   return head('Atendimentos', 'Cada cliente em tratativa, com a tarefa atual e o status do negócio.',
       `<button class="btn pri" data-a="nav" data-v="novo">${ico('plus')}Novo atendimento</button>`) + `
+    ${tilesFat(numeros(DB.filter(r=>r.data.startsWith('2026-10') && (f.cons==='todos'||r.consultor===f.cons))))}
     <div class="filters">
       <div class="seg status">${[['todos','Todos'],['Andamento','Em andamento'],['Ganho','Ganho'],['Perdido','Perdido']].map(([v,n])=>
         `<button data-a="fset" data-k="st" data-val="${v}" aria-pressed="${f.st===v}" class="${v==='Andamento'?'s-and':v==='Ganho'?'s-gan':v==='Perdido'?'s-per':''}">${n} <span class="faint">${cnt(v)}</span></button>`).join('')}</div>
@@ -837,6 +906,8 @@ VIEWS.ficha = () => {
           `<button class="${c}" data-a="status" data-s="${s}" aria-pressed="${r.status===s}" ${lock&&s!=='Ganho'?'disabled':''}>${s}</button>`).join('')}</div></div>
         <div class="field"><label for="i-et">Tarefa atual</label><select id="i-et" data-b="etapa">${ETAPAS.map((e,i)=>`<option value="${e}" ${r.etapa===e?'selected':''}>${i+1}. ${e}</option>`).join('')}</select></div>
         <div class="field"><span class="flabel">Canal do atendimento</span><div class="seg">${CANAIS.map(c=>`<button data-a="canal" data-c="${c}" aria-pressed="${r.canal===c}">${c}</button>`).join('')}</div></div>
+        ${r.status==='Perdido'?`<div class="field"><label for="i-mot">Motivo da perda</label><select id="i-mot" data-b="motivo"><option value="">Escolha o motivo</option>${MOTIVOS.map(m=>`<option ${r.motivo===m?'selected':''}>${m}</option>`).join('')}</select>
+          <span class="faint" style="font-size:12px">Orçamento de ${fmt(total(r))} entra em “Orçamentos perdidos” no painel.</span></div>`:''}
         <div class="field"><label for="i-co">Consultor responsável</label><select id="i-co" data-b="consultor">${opt(CONSULTORES,r.consultor)}</select></div>
       </section>
       <section class="card"><h3>Agendamento</h3>
@@ -1272,6 +1343,7 @@ const ACT = {
   avancar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); moverEtapa(r, PATIO[i+1][0]); },
   setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
   tab: a => { S.tab = a.dataset.t; render(); },
+  verPerdidos: () => { S.f.st = 'Perdido'; S.f.etapa = 'todas'; S.f.q = ''; go('comercial','atendimentos'); },
   ptab: a => { S.ptab = a.dataset.t; render(); },
   zona: a => { const r = cur(), c = S.tab==='out' ? r.op.chkOut : r.op.chkIn, z = a.dataset.z;
     c.avarias[z] = AVARIAS[(AVARIAS.indexOf(c.avarias[z]||'')+1) % AVARIAS.length]; render(); },

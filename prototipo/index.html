@@ -203,6 +203,11 @@ input.num{text-align:right}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .filters select,.filters input{width:auto;min-width:170px}
 .filters .grow{flex:1 1 240px}
+.tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
+.tabbar .filters select{min-width:0}
+.kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1240px){ .kpis:has(> :nth-child(4)){grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:520px){ .kpis:has(> :nth-child(4)){grid-template-columns:minmax(0,1fr)} }
 .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:18px;background:var(--surface);box-shadow:var(--shadow)}
 table{border-collapse:collapse;width:100%;font-size:inherit}
 .tbl th{font:500 12px/1.2 var(--f-body);color:var(--faint);text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -212,6 +217,7 @@ table{border-collapse:collapse;width:100%;font-size:inherit}
 .tbl tbody tr.click:hover td{background:var(--surface-2)}
 .tbl .cl b{display:block;font-weight:550}
 .tbl .cl span{font-size:12.5px;color:var(--muted)}
+.tbl.nowrap td,.tbl.nowrap th{white-space:nowrap}
 .tbl tfoot td{font-weight:650;border-top:1px solid var(--line-2);border-bottom:0}
 .inner-tbl th{padding:8px 6px}
 .inner-tbl td{padding:8px 6px}
@@ -605,8 +611,8 @@ const PAGAR = [
 ];
 
 /* ---------- estado da tela ---------- */
-const S = {dept:'comercial', view:'painel', sel:null, tab:'resumo',
-  f:{periodo:'mes', cons:'todos', st:'todos', etapa:'todas', q:'', rec:'aberto', pag:'aberto', ord:'ativas'}};
+const S = {dept:'comercial', view:'painel', sel:null, tab:'resumo', ptab:'geral',
+  f:{periodo:'mes', cons:'todos', cq:'', st:'todos', etapa:'todas', q:'', rec:'aberto', pag:'aberto', ord:'ativas'}};
 const cur = () => DB.find(r=>r.id===S.sel);
 const $ = s => document.querySelector(s);
 const main = $('#main');
@@ -676,11 +682,13 @@ VIEWS.painel = () => {
   const sel = (k, opts) => `<select id="f-${k}" data-f="${k}" data-rr="1">${opts.map(([v,n])=>`<option value="${v}" ${f[k]===v?'selected':''}>${n}</option>`).join('')}</select>`;
   return head('Painel comercial', 'Vendas fechadas, negócios em andamento e desempenho de cada consultor no período escolhido.',
       `<button class="btn pri" data-a="nav" data-v="novo">${ico('plus')}Novo atendimento</button>`) + `
-    <div class="filters">
-      ${sel('periodo',[['mes','Outubro de 2026'],['7d','Últimos 7 dias'],['tudo','Todo o período']])}
-      ${sel('cons',[['todos','Todos os consultores'],...CONSULTORES.map(c=>[c,c])])}
+    <div class="tabbar">
+      <div class="tabs" role="tablist">${[['geral','Visão geral','chart'],['clientes','Clientes','users']].map(([k,n,ic])=>
+        `<button role="tab" data-a="ptab" data-t="${k}" aria-selected="${S.ptab===k}" style="display:inline-flex;gap:8px;align-items:center">${ico(ic)}${n}${k==='clientes'?` <span class="tag">${clientes(L).length}</span>`:''}</button>`).join('')}</div>
+      <div class="filters">${sel('periodo',[['mes','Outubro de 2026'],['7d','Últimos 7 dias'],['tudo','Todo o período']])}
+      ${sel('cons',[['todos','Todos os consultores'],...CONSULTORES.map(c=>[c,c])])}</div>
     </div>
-    <div class="kpis">
+    ${S.ptab==='clientes' ? abaClientes(L) : `<div class="kpis">
       <div class="kpi hl"><span class="k"><i class="ki">${ico('trend')}</i>Vendas fechadas</span><span class="v">${fmt(vend)}</span><span class="d">${gan.length} negócio${gan.length===1?'':'s'} ganho${gan.length===1?'':'s'}</span>${spark(gan)}</div>
       <div class="kpi"><span class="k"><i class="ki">${ico('receipt')}</i>Ticket médio</span><span class="v">${fmt(gan.length?vend/gan.length:0)}</span><span class="d">por venda fechada</span></div>
       <div class="kpi"><span class="k"><i class="ki">${ico('clock')}</i>Em andamento</span><span class="v">${and.length}</span><span class="d">${fmt(pipe)} em propostas</span></div>
@@ -695,10 +703,32 @@ VIEWS.painel = () => {
         <div class="bars">${funil.map(x=>`<div class="bar-row"><span class="nm">${x.e}</span>
           <div class="bar-track"><div class="bar-fill" style="width:${x.n/maxF*100}%;opacity:${x.n?1:0}"></div></div>
           <span class="vl">${x.n}</span></div>`).join('')}</div></section>
-    </div>
-    <section class="card"><div class="card-h"><h3>Últimos atendimentos</h3><button class="btn sm ghost" data-a="nav" data-v="atendimentos">Ver todos ${ico('arrow')}</button></div>
-      <div class="tbl-wrap">${tblAtend(L.slice().sort((a,b)=>b.data.localeCompare(a.data)).slice(0,6))}</div></section>`;
+    </div>`}`;
 };
+function clientes(L){
+  const m = new Map();
+  L.forEach(r=>{ const k = r.cliente.nome.trim().toLowerCase() || r.id; if (!m.has(k)) m.set(k, []); m.get(k).push(r); });
+  return [...m.values()].map(rs=>{ rs.sort((a,b)=>b.data.localeCompare(a.data)); return {u:rs[0], rs, fechado:rs.filter(r=>r.status==='Ganho').reduce((s,r)=>s+total(r),0)}; })
+    .sort((a,b)=>b.u.data.localeCompare(a.u.data));
+}
+function abaClientes(L){
+  const q = (S.f.cq||'').trim().toLowerCase();
+  const C = clientes(L).filter(c=>!q || (c.u.cliente.nome+' '+c.u.cliente.tel+' '+c.u.veiculo.modelo).toLowerCase().includes(q));
+  return `<section class="card">
+    <div class="card-h"><div><h3>Clientes</h3><span class="faint" style="font-size:12.5px">Quem foi atendido no período. Toque num cliente para abrir o atendimento mais recente.</span></div>
+      <input id="f-cq" data-f="cq" placeholder="Buscar cliente, telefone ou veículo" value="${esc(S.f.cq||'')}" style="max-width:300px"></div>
+    <div class="tbl-wrap" id="tbl-cli" style="box-shadow:none">${tblClientes(C)}</div>
+  </section>`;
+}
+function tblClientes(C){
+  if (!C.length) return `<div class="empty" style="margin:12px">Nenhum cliente encontrado.</div>`;
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Consultor</th><th>Último status</th><th class="num">Atendimentos</th><th class="num">Total fechado</th><th>Último contato</th></tr></thead><tbody>
+  ${C.map(c=>`<tr class="click" data-a="open" data-d="comercial" data-v="ficha" data-id="${c.u.id}">
+    <td>${person(c.u.cliente.nome, c.u.cliente.tel)}</td>
+    <td class="cl"><b>${esc(c.u.veiculo.modelo||'—')}</b><span>${esc([c.u.veiculo.ano,c.u.veiculo.cor].filter(Boolean).join(' · ')||c.u.canal)}</span></td>
+    <td><span class="person">${avatar(c.u.consultor,true)}${esc(c.u.consultor.split(' ')[0])}</span></td>
+    <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td></tr>`).join('')}</tbody></table>`;
+}
 
 function spark(gan){
   const dias = 21, acc = []; let s = 0;
@@ -711,7 +741,7 @@ function spark(gan){
 }
 function tblAtend(L){
   if (!L.length) return `<div class="empty" style="margin:12px">Nenhum atendimento com esses filtros.</div>`;
-  return `<table class="tbl"><thead><tr><th>Cliente</th><th>Veículo</th><th>Canal</th><th>Consultor</th><th>Tarefa</th><th>Status</th><th class="num">Valor</th><th>Data</th></tr></thead><tbody>
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Canal</th><th>Consultor</th><th>Tarefa</th><th>Status</th><th class="num">Valor</th><th>Data</th></tr></thead><tbody>
   ${L.map(r=>`<tr class="click" data-a="open" data-d="comercial" data-v="ficha" data-id="${r.id}">
     <td>${person(r.cliente.nome, r.cliente.tel)}</td>
     <td>${esc(r.veiculo.modelo||'—')}</td><td><span class="tag">${r.canal}</span></td>
@@ -1242,6 +1272,7 @@ const ACT = {
   avancar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); moverEtapa(r, PATIO[i+1][0]); },
   setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
   tab: a => { S.tab = a.dataset.t; render(); },
+  ptab: a => { S.ptab = a.dataset.t; render(); },
   zona: a => { const r = cur(), c = S.tab==='out' ? r.op.chkOut : r.op.chkIn, z = a.dataset.z;
     c.avarias[z] = AVARIAS[(AVARIAS.indexOf(c.avarias[z]||'')+1) % AVARIAS.length]; render(); },
   comb: a => { cur().op[a.dataset.k].comb = a.dataset.c; render(); },
@@ -1289,7 +1320,9 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') $('#modal').hi
 function onField(e){
   const el = e.target;
   if (el.dataset.f){ S.f[el.dataset.f] = el.value;
-    if (S.view==='atendimentos' && !el.dataset.rr){ $('#tbl').innerHTML = tblAtend(listaAtend()); } else if (e.type==='change') render();
+    if (el.dataset.f==='cq'){ const L = DB.filter(r=>noPeriodo(r.data,S.f.periodo) && (S.f.cons==='todos'||r.consultor===S.f.cons)), q = el.value.trim().toLowerCase();
+      $('#tbl-cli').innerHTML = tblClientes(clientes(L).filter(c=>!q || (c.u.cliente.nome+' '+c.u.cliente.tel+' '+c.u.veiculo.modelo).toLowerCase().includes(q))); }
+    else if (S.view==='atendimentos' && !el.dataset.rr){ $('#tbl').innerHTML = tblAtend(listaAtend()); } else if (e.type==='change') render();
     return; }
   if (el.dataset.up && e.type==='change'){
     const r = cur(), files = [...el.files], path = el.dataset.up.split('.');

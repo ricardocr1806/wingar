@@ -232,7 +232,9 @@ table{border-collapse:collapse;width:100%;font-size:inherit}
 .ocard:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
 .ocard .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
 .ocard .os{font:600 12px/1 var(--f-mono);color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);padding:5px 8px;border-radius:7px}
-.ocard .car{font:650 16px/1.2 var(--f-display);letter-spacing:-.015em}
+.ocard .car{font:650 16px/1.2 var(--f-display);letter-spacing:-.015em;border:0;background:none;padding:0;text-align:left;cursor:pointer;color:var(--fg)}
+.ocard .car:hover{color:var(--acc)}
+.btn.back{padding:5px 9px}
 .ocard .meta{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
 .ocard .prog{height:5px;border-radius:999px;background:var(--surface-3);overflow:hidden}
 .ocard .prog i{display:block;height:100%;border-radius:999px;background:var(--acc)}
@@ -853,21 +855,21 @@ function ocard(r){
   const i = PATIO.findIndex(p=>p[0]===r.op.etapa), late = r.ag.saida && r.ag.saida<HOJE && r.op.etapa!=='entregue';
   return `<article class="ocard">
     <div class="top"><span class="os">OS ${r.os}</span>${r.veiculo.placa?`<span class="plate">${esc(r.veiculo.placa)}</span>`:''}</div>
-    <div class="car">${esc(r.veiculo.modelo)}</div>
+    <button class="car" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}" title="Abrir OS ${r.os}">${esc(r.veiculo.modelo)}</button>
     <div class="meta"><span>${esc(r.cliente.nome)}</span>
       <span>Entrada ${fd(r.ag.entrada)} · Entrega <span class="${late?'late':''}">${fd(r.ag.saida)}${late?' (atrasada)':''}</span></span>
       <span>${r.servicos.map(s=>esc(s.desc.split(' (')[0])).join(' · ')}</span>
       ${(()=>{ const ex=[...new Set(Object.values(r.op.exec).filter(Boolean))]; return ex.length?`<span class="person" style="gap:6px;margin-top:4px">${ex.slice(0,3).map(n=>avatar(n,true)).join('')}<span>${ex.map(n=>esc(n.split(' ')[0])).join(', ')}</span></span>`:''; })()}</div>
     <div class="prog" title="Etapa ${i+1} de ${PATIO.length}"><i style="width:${(i+1)/PATIO.length*100}%"></i></div>
     <div>${finChip(r)}</div>
-    <div class="acts"><span style="display:flex;gap:2px"><button class="btn sm ghost" data-a="imprimir" data-id="${r.id}" data-t="os" title="Imprimir OS ${r.os}" aria-label="Imprimir OS ${r.os}">${ico('print')}</button><button class="btn sm ghost" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">Abrir</button></span>
+    <div class="acts"><span style="display:flex;gap:4px">${i>0?`<button class="btn sm back" data-a="voltar" data-id="${r.id}" title="Voltar para ${PATIO[i-1][1]}" aria-label="Voltar para ${PATIO[i-1][1]}">${ico('back')}</button>`:''}<button class="btn sm ghost" data-a="imprimir" data-id="${r.id}" data-t="os" title="Imprimir OS ${r.os}" aria-label="Imprimir OS ${r.os}">${ico('print')}</button></span>
       ${i<PATIO.length-1?`<button class="btn sm" data-a="avancar" data-id="${r.id}" title="Mover para ${PATIO[i+1][1]}">${PATIO[i+1][1]} ${ico('arrow')}</button>`:''}</div>
   </article>`;
 }
 const STAGE_C = {aguardando:'var(--faint)', lavagem:'var(--av0)', aplicacao:'var(--av3)', corte:'var(--av4)', finalizacao:'var(--warn)', pronto:'var(--ok)'};
 VIEWS.patio = () => {
   const L = ordens(), ent = L.filter(r=>r.op.etapa==='entregue').length;
-  return head('Gestão de pátio', 'Onde cada carro está agora. Avance o card quando a etapa terminar. A entrega só é liberada depois do checklist de saída e da liberação do Financeiro.',
+  return head('Gestão de pátio', 'Onde cada carro está agora. Use a seta para avançar o card quando a etapa terminar, ou para voltar uma etapa se alguém moveu errado. A entrega só é liberada depois do checklist de saída e da liberação do Financeiro.',
     `<span class="tag">${ent} entregue${ent===1?'':'s'} no mês</span>`) + `
   <div class="kanban-wrap"><div class="kanban">
     ${PATIO.slice(0,6).map(([k,n])=>{ const c = L.filter(r=>r.op.etapa===k);
@@ -978,6 +980,9 @@ VIEWS.os = () => {
     <div class="grid" style="align-content:start">
       ${r.resumo?`<section class="note"><b>Agendamento</b>${esc(r.resumo).replace(/\n/g,'<br>')}</section>`:''}
       ${r.obs?`<section class="note warn"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      <section class="card"><div class="card-h"><h3>Histórico do pátio</h3><span class="faint" style="font-size:12px">quem moveu e quando</span></div>
+        ${(r.op.hist||[]).length ? `<div>${r.op.hist.map(h=>`<div class="sumline"><span>${h.volta?chip('warn','Voltou'):chip('info','Avançou')} ${esc(h.de)} → <b>${esc(h.para)}</b></span><span class="faint" style="white-space:nowrap">${esc(h.quem.split(' ')[0])} · hoje ${h.hora}</span></div>`).join('')}</div>`
+          : '<div class="empty">Nenhuma movimentação registrada nesta sessão.</div>'}</section>
       <section class="note ${r.fin.liberado?'ok':'bad'}"><b>Situação financeira</b>${r.fin.liberado?'Financeiro liberou a entrega do veículo.':`Entrega bloqueada até o Financeiro liberar. ${aReceber(r)>0?'A receber: '+fmt(aReceber(r))+'.':''}`}</section>
     </div></div>`;
   else if (S.tab==='in' || S.tab==='out') body = vistoria(r, S.tab);
@@ -1233,6 +1238,7 @@ const ACT = {
   },
   sino: () => { const p = ordens().filter(r=>!r.fin.liberado && (r.op.etapa==='pronto' || r.fin.titulos.some(t=>t.desc==='Entrada'&&!t.recebido)));
     toast(p.length ? 'Avisos: '+p.map(r=>`OS ${r.os} ${r.op.etapa==='pronto'?'pronta, aguardando o Financeiro':'com entrada não confirmada'}`).join(' · ') : 'Nenhum aviso agora.', p.length?'warn':''); },
+  voltar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); if (i>0) moverEtapa(r, PATIO[i-1][0]); },
   avancar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); moverEtapa(r, PATIO[i+1][0]); },
   setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
   tab: a => { S.tab = a.dataset.t; render(); },
@@ -1265,7 +1271,11 @@ function moverEtapa(r, etapa){
   if (etapa!=='aguardando' && !r.op.chkIn.concluido) return toast(`Faça o checklist de entrada da OS ${r.os} antes de mover o veículo.`,'bad');
   if (etapa==='entregue' && !r.op.chkOut.concluido) return toast(`Entrega bloqueada: falta o checklist de saída da OS ${r.os}.`,'bad');
   if (etapa==='entregue' && !r.fin.liberado) return toast(`Entrega bloqueada: o Financeiro ainda não liberou a OS ${r.os}. A receber: ${fmt(aReceber(r))}.`,'bad');
-  r.op.etapa = etapa; render(); toast(`OS ${r.os} agora está em ${PATIO[i][1]}.`);
+  const de = PATIO.findIndex(p=>p[0]===r.op.etapa);
+  if (de===i) return;
+  (r.op.hist = r.op.hist || []).unshift({de:PATIO[de][1], para:PATIO[i][1], volta:i<de, quem:DEPTS[S.dept].user, hora:new Date().toTimeString().slice(0,5)});
+  r.op.etapa = etapa; render();
+  toast(i<de ? `OS ${r.os} voltou para ${PATIO[i][1]}.` : `OS ${r.os} agora está em ${PATIO[i][1]}.`, i<de?'warn':'');
 }
 
 document.addEventListener('click', e => {

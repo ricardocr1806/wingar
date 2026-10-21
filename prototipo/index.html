@@ -1,0 +1,1146 @@
+<title>Sistema Wingard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra lateral fixa com os 3 departamentos (etapas 1→2→3) + área de trabalho; no celular a barra vira faixa no topo. */
+:root{
+  --bg:#EEF1F5; --surface:#FFFFFF; --surface-2:#F6F8FB; --line:#DCE1E9; --line-2:#C8D0DB;
+  --fg:#141A24; --muted:#5A6476; --faint:#8A93A3;
+  --side:#121A27; --side-2:#1B2535; --side-fg:#E7ECF3; --side-muted:#8C98AB;
+  --com:#2C58CF; --ops:#B8620E; --fin:#17845A;
+  --ok:#17845A; --warn:#B36B00; --bad:#C2372F; --info:#2C58CF;
+  --z-risco:#E0A21B; --z-amassado:#D2453C; --z-trinca:#7B4FD0; --z-base:#E4E9F0; --z-stroke:#9AA5B5;
+  --paper:#FFFFFF; --ink:#1A1A1A; --ink-line:#BDBDBD;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --r:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0C1118; --surface:#141B25; --surface-2:#19212D; --line:#263142; --line-2:#334055;
+  --fg:#E5EAF1; --muted:#98A3B5; --faint:#6C778A;
+  --side:#090D13; --side-2:#141B25; --side-fg:#E5EAF1; --side-muted:#808CA0;
+  --com:#7095FF; --ops:#EE9C46; --fin:#45C08A;
+  --ok:#45C08A; --warn:#E9A93A; --bad:#F06B62; --info:#7095FF;
+  --z-risco:#E9B235; --z-amassado:#EE6A60; --z-trinca:#9D7AF0; --z-base:#253041; --z-stroke:#5D6A80;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0C1118; --surface:#141B25; --surface-2:#19212D; --line:#263142; --line-2:#334055;
+  --fg:#E5EAF1; --muted:#98A3B5; --faint:#6C778A;
+  --side:#090D13; --side-2:#141B25; --side-fg:#E5EAF1; --side-muted:#808CA0;
+  --com:#7095FF; --ops:#EE9C46; --fin:#45C08A;
+  --ok:#45C08A; --warn:#E9A93A; --bad:#F06B62; --info:#7095FF;
+  --z-risco:#E9B235; --z-amassado:#EE6A60; --z-trinca:#9D7AF0; --z-base:#253041; --z-stroke:#5D6A80;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 var(--f-body)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.app{--acc:var(--com);display:grid;grid-template-columns:256px minmax(0,1fr);min-height:100vh}
+.app[data-dept="operacional"]{--acc:var(--ops)}
+.app[data-dept="financeiro"]{--acc:var(--fin)}
+
+/* barra lateral */
+.side{background:var(--side);color:var(--side-fg);position:sticky;top:env(safe-area-inset-top,0px);height:100vh;display:flex;flex-direction:column;gap:20px;padding-block:22px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;overflow-y:auto}
+.brand{display:flex;align-items:baseline;gap:10px;padding:0 6px}
+.brand b{font:700 24px/1 var(--f-display);letter-spacing:.14em}
+.brand span{font:500 11px/1 var(--f-mono);color:var(--side-muted);text-transform:uppercase;letter-spacing:.08em}
+.depts{display:flex;flex-direction:column;gap:6px}
+.dept{display:grid;grid-template-columns:30px 1fr;align-items:center;gap:10px;padding:10px;border-radius:var(--r);border:1px solid transparent;background:transparent;cursor:pointer;text-align:left;color:var(--side-fg)}
+.dept:hover{background:var(--side-2)}
+.dept .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 13px/1 var(--f-mono);border:1.5px solid var(--dc);color:var(--dc)}
+.dept small{display:block;font:500 10.5px/1.2 var(--f-mono);color:var(--side-muted);text-transform:uppercase;letter-spacing:.08em}
+.dept strong{font:600 17px/1.2 var(--f-display);letter-spacing:.02em}
+.dept[aria-current="true"]{background:var(--side-2);border-color:var(--dc)}
+.dept[aria-current="true"] .n{background:var(--dc);color:var(--side)}
+.dept.d1{--dc:var(--com)} .dept.d2{--dc:var(--ops)} .dept.d3{--dc:var(--fin)}
+.flowline{margin:-2px 0 0 25px;height:10px;border-left:1.5px dashed var(--side-muted);opacity:.5}
+.menu{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--side-2);padding-top:16px}
+.menu .lbl{font:500 10.5px/1 var(--f-mono);color:var(--side-muted);text-transform:uppercase;letter-spacing:.1em;padding:0 10px 8px}
+.menu button{background:none;border:0;text-align:left;padding:9px 10px;border-radius:6px;color:var(--side-muted);cursor:pointer;font-weight:500;white-space:nowrap}
+.menu button:hover{color:var(--side-fg);background:var(--side-2)}
+.menu button[aria-current="true"]{color:var(--side-fg);background:var(--side-2);box-shadow:inset 3px 0 0 var(--acc)}
+.side-foot{margin-top:auto;font-size:12px;color:var(--side-muted);padding:0 6px;display:flex;flex-direction:column;gap:6px}
+.who{display:flex;align-items:center;gap:10px;padding:10px 6px;border-top:1px solid var(--side-2)}
+.av{width:32px;height:32px;border-radius:50%;background:var(--acc);color:var(--side);display:grid;place-items:center;font:600 12px/1 var(--f-mono);flex:none}
+.who div{display:flex;flex-direction:column;line-height:1.25}
+.who b{color:var(--side-fg);font-weight:500;font-size:13px}
+
+/* área principal */
+.main{padding-block:28px 96px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px));min-width:0;display:flex;flex-direction:column;gap:20px}
+.phead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.phead>div{min-width:0}
+.eyebrow{font:500 11px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.1em;color:var(--acc);display:flex;gap:8px;align-items:center}
+.eyebrow .ex{color:var(--faint);border:1px solid var(--line-2);padding:2px 6px;border-radius:4px;letter-spacing:.06em}
+h1{font:600 30px/1.1 var(--f-display);margin:8px 0 0;letter-spacing:.01em;text-wrap:balance}
+h2{font:600 19px/1.2 var(--f-display);margin:0;letter-spacing:.02em}
+h3{font:600 12px/1 var(--f-mono);margin:0;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.sub{margin:6px 0 0;color:var(--muted);max-width:68ch}
+.phead-r{display:flex;gap:8px;flex-wrap:wrap}
+.crumb{background:none;border:0;padding:0;color:var(--muted);cursor:pointer;font-size:13px}
+.crumb:hover{color:var(--fg)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.faint{color:var(--faint)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g-side{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+.span2{grid-column:1/-1}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label,.flabel{font-size:12px;color:var(--muted);font-weight:500}
+input[type=text],input[type=date],input[type=email],input[type=tel],input:not([type]),select,textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-height:38px}
+input:disabled,select:disabled{opacity:.65;cursor:not-allowed}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent)}
+input.num{text-align:right}
+.read{padding:8px 0;border-bottom:1px dashed var(--line);min-height:38px;overflow-wrap:anywhere}
+
+.btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;padding:9px 14px;border-radius:7px;border:1px solid var(--line-2);background:var(--surface);cursor:pointer;font-weight:500;white-space:nowrap;min-height:38px}
+.btn:hover{border-color:var(--fg)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--surface)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:5px 10px;min-height:30px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);background:var(--surface-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+.icon-btn{border:0;background:none;color:var(--faint);cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;border-radius:5px}
+.icon-btn:hover{color:var(--bad);background:var(--surface-2)}
+
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line-2);background:var(--surface);padding:6px 12px;border-radius:999px;cursor:pointer;font-size:13px;min-height:32px}
+.seg button[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--surface)}
+.seg.status button[aria-pressed="true"].s-and{background:var(--info);border-color:var(--info)}
+.seg.status button[aria-pressed="true"].s-gan{background:var(--ok);border-color:var(--ok)}
+.seg.status button[aria-pressed="true"].s-per{background:var(--bad);border-color:var(--bad)}
+
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.chip.ok{--c:var(--ok)} .chip.warn{--c:var(--warn)} .chip.bad{--c:var(--bad)} .chip.info{--c:var(--info)} .chip.neu{--c:var(--muted)}
+.tag{font:500 11.5px/1 var(--f-mono);padding:4px 7px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.plate{font:600 12px/1 var(--f-mono);letter-spacing:.08em;padding:4px 7px;border:1.5px solid var(--fg);border-radius:4px;white-space:nowrap}
+
+/* indicadores */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.kpi .k{font-size:12px;color:var(--muted);font-weight:500}
+.kpi .v{font:600 26px/1.05 var(--f-display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.kpi .d{font-size:12px;color:var(--faint)}
+.kpi.hl{border-color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
+
+.bars{display:flex;flex-direction:column;gap:12px}
+.bar-row{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px}
+.bar-row .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{height:10px;border-radius:5px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.bar-fill{height:100%;background:var(--acc);border-radius:5px}
+.bar-row .vl{font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
+
+/* filtros e tabelas */
+.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.filters select,.filters input{width:auto;min-width:160px}
+.filters .grow{flex:1 1 220px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:inherit}
+.tbl th{font:500 11px/1.2 var(--f-mono);text-transform:uppercase;letter-spacing:.07em;color:var(--muted);text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--surface-2)}
+.tbl .cl b{display:block;font-weight:500}
+.tbl .cl span{font-size:12px;color:var(--muted)}
+.tbl tfoot td{font-weight:600;border-top:1px solid var(--line-2);border-bottom:0}
+.inner-tbl td,.inner-tbl th{padding:8px 6px}
+.inner-tbl input,.inner-tbl select{min-height:34px;padding:6px 8px}
+.totals{display:grid;grid-template-columns:1fr auto;gap:6px 18px;justify-content:end;margin-left:auto;min-width:260px;font-variant-numeric:tabular-nums}
+.totals .t-big{font:600 22px/1.1 var(--f-display)}
+.totals input{width:130px;text-align:right}
+
+/* pátio */
+.kanban-wrap{overflow-x:auto;padding-bottom:6px}
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(236px,1fr));gap:12px;min-width:min-content}
+.col{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:10px;min-height:220px}
+.col-h{display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+.col-h b{font:600 15px/1 var(--f-display);letter-spacing:.03em}
+.col-h span{font:500 12px/1 var(--f-mono);color:var(--muted)}
+.ocard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.ocard .top{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ocard .os{font:600 13px/1 var(--f-mono);color:var(--acc)}
+.ocard .car{font:600 16px/1.15 var(--f-display)}
+.ocard .meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.ocard .acts{display:flex;gap:6px;justify-content:space-between;border-top:1px solid var(--line);padding-top:8px}
+.late{color:var(--bad);font-weight:500}
+.empty{font-size:12.5px;color:var(--faint);text-align:center;padding:16px 4px;border:1px dashed var(--line-2);border-radius:8px}
+
+.stepper{display:flex;gap:0;overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.stepper button{flex:1 0 auto;border:0;background:none;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:3px;align-items:flex-start;border-right:1px solid var(--line);min-width:120px;text-align:left}
+.stepper button:last-child{border-right:0}
+.stepper small{font:500 10.5px/1 var(--f-mono);color:var(--faint);letter-spacing:.06em}
+.stepper b{font:600 14.5px/1.1 var(--f-display);color:var(--muted);letter-spacing:.02em}
+.stepper .done b{color:var(--fg)}
+.stepper .done small{color:var(--acc)}
+.stepper .now{background:color-mix(in srgb,var(--acc) 12%,transparent);box-shadow:inset 0 -3px 0 var(--acc)}
+.stepper .now b{color:var(--fg)}
+.stepper .now small{color:var(--acc)}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--acc)}
+
+/* vistoria */
+.vist{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:20px;align-items:start}
+.carbox{display:flex;flex-direction:column;gap:10px;align-items:center}
+.carbox svg{width:100%;max-width:240px;height:auto}
+.zone{fill:var(--z-base);stroke:var(--z-stroke);stroke-width:1.2;cursor:pointer;transition:fill .15s}
+.zone:hover{stroke:var(--fg);stroke-width:2}
+.zone.risco{fill:var(--z-risco)} .zone.amassado{fill:var(--z-amassado)} .zone.trinca{fill:var(--z-trinca)}
+.glass{fill:var(--surface-2)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--muted);justify-content:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;border:1px solid var(--z-stroke)}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}
+.ck{display:flex;gap:10px;align-items:center;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:var(--surface-2);cursor:pointer;font-size:13.5px}
+.ck input{width:17px;height:17px;accent-color:var(--acc);flex:none}
+.ck:has(input:checked){border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.foto{aspect-ratio:4/3;border-radius:6px;border:1px solid var(--line);background:var(--surface-2) center/cover no-repeat;display:flex;align-items:flex-end;font:500 10.5px/1.2 var(--f-mono);color:var(--muted);padding:5px;overflow:hidden;max-width:100%}
+.foto.ph{background-image:repeating-linear-gradient(135deg,var(--surface-2) 0 8px,var(--line) 8px 9px)}
+.up{display:flex;align-items:center;justify-content:center;aspect-ratio:4/3;border:1.5px dashed var(--line-2);border-radius:6px;cursor:pointer;color:var(--muted);font-size:12.5px;text-align:center;padding:6px;max-width:100%}
+.up:hover{border-color:var(--acc);color:var(--fg)}
+.up input{display:none}
+.avlist{display:flex;flex-direction:column;gap:4px;font-size:13px;width:100%}
+.avlist div{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:4px 0}
+
+.note{border:1px solid var(--line);border-left:3px solid var(--c,var(--acc));background:var(--surface-2);border-radius:6px;padding:10px 12px;font-size:13.5px}
+.note.warn{--c:var(--warn)} .note.ok{--c:var(--ok)} .note.bad{--c:var(--bad)}
+.note b{display:block;font:600 11px/1 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;color:var(--c,var(--acc))}
+.reqs{display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.reqs div{display:flex;gap:8px;align-items:center}
+.reqs .y{color:var(--ok)} .reqs .n{color:var(--faint)}
+.sumline{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.sumline:last-child{border-bottom:0}
+.sumline.big{font:600 18px/1.2 var(--f-display);border-bottom:0;padding-top:10px}
+.actionbar{position:sticky;bottom:0;margin-top:4px;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;padding:12px;padding-bottom:max(12px,env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(6px);border-top:1px solid var(--line);z-index:5}
+.actionbar .info{margin-right:auto;align-self:center;font-size:13px;color:var(--muted)}
+.anexos{display:flex;flex-wrap:wrap;gap:8px}
+.anexo{width:108px;display:flex;flex-direction:column;gap:4px;font-size:11.5px;color:var(--muted)}
+.anexo .foto{width:108px}
+
+/* DRE */
+.dre td{padding:9px 12px}
+.dre .grp td{font-weight:600;background:var(--surface-2)}
+.dre .res td{font:600 17px/1.2 var(--f-display);border-top:2px solid var(--fg)}
+.dre .ind td:first-child{padding-left:28px;color:var(--muted)}
+.dre .neg{color:var(--bad)}
+.minibar{height:6px;border-radius:3px;background:var(--acc);opacity:.7}
+
+/* documento impresso */
+.modal{position:fixed;inset:0;background:color-mix(in srgb,var(--side) 72%,transparent);z-index:50;overflow-y:auto;padding-block:max(24px,env(safe-area-inset-top,0px)) 24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal-in{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.modal-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--side-fg);flex-wrap:wrap}
+.modal-bar .btn{background:var(--surface);color:var(--fg)}
+.doc{background:var(--paper);color:var(--ink);font:12px/1.45 var(--f-body);padding:36px 40px;border-radius:4px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow-x:auto}
+.doc h4{font:600 13px/1 var(--f-body);margin:18px 0 6px;padding-bottom:4px;border-bottom:1.5px solid var(--ink)}
+.doc .dt{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.doc .dt .ttl{font:400 26px/1 var(--f-body)}
+.doc .dt .logo{font:700 18px/1 var(--f-display);letter-spacing:.2em}
+.doc .row{display:flex;flex-wrap:wrap;gap:4px 22px;margin:2px 0}
+.doc .row span b{font-weight:600}
+.doc .big{font:700 15px/1.3 var(--f-body)}
+.doc table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:520px}
+.doc th{text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid var(--ink)}
+.doc td{padding:4px 6px;border-bottom:1px solid var(--ink-line)}
+.doc .r{text-align:right}
+.doc .sig{display:flex;gap:40px;margin-top:34px}
+.doc .sig div{flex:1;border-top:1px solid var(--ink);padding-top:4px;text-align:center;font-size:11px}
+.doc .lines div{border-bottom:1px solid var(--ink-line);height:22px}
+.doc .cap{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#555;margin-top:10px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(20px,calc(env(safe-area-inset-bottom,0px) + 12px));background:var(--fg);color:var(--bg);padding:11px 16px;border-radius:8px;z-index:60;max-width:min(560px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:13.5px;border-left:4px solid var(--tc,var(--ok))}
+.toast.bad{--tc:var(--bad)} .toast.warn{--tc:var(--warn)}
+
+@media (max-width:1100px){ .g-side{grid-template-columns:minmax(0,1fr)} }
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;gap:12px;padding-block:14px;padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .depts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .flowline{display:none}
+  .dept{grid-template-columns:1fr;justify-items:start;gap:6px;padding:8px}
+  .dept .n{width:24px;height:24px;font-size:11px}
+  .dept strong{font-size:15px}
+  .menu{flex-direction:row;overflow-x:auto;padding-top:10px}
+  .menu .lbl{display:none}
+  .menu button[aria-current="true"]{box-shadow:inset 0 -2px 0 var(--acc)}
+  .side-foot{display:none}
+  .main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-top:20px}
+  .g2,.g3{grid-template-columns:minmax(0,1fr)}
+  .vist{grid-template-columns:minmax(0,1fr)}
+  .doc{padding:22px 18px}
+  h1{font-size:26px}
+}
+@media (max-width:520px){
+  .dept small{display:none}
+  .filters select,.filters input{min-width:0;flex:1 1 140px}
+  .totals{min-width:0;width:100%}
+  .bar-row{grid-template-columns:minmax(0,1fr) auto}
+  .bar-row .bar-track{grid-column:1/-1;grid-row:2}
+}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
+</style>
+
+<div class="app" id="app" data-dept="comercial">
+  <aside class="side">
+    <div class="brand"><b>WINGARD</b><span>Protótipo</span></div>
+    <nav class="depts" id="depts" aria-label="Departamentos"></nav>
+    <nav class="menu" id="menu" aria-label="Menu do departamento"></nav>
+    <div class="side-foot">
+      <div class="who" id="who"></div>
+      <div>Dados de exemplo para visualizar o fluxo. Nada é salvo.</div>
+    </div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+<div class="modal" id="modal" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+/* ---------- utilidades ---------- */
+const HOJE = '2026-10-21';
+const fmt = v => (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fdate = s => s ? s.slice(8,10)+'/'+s.slice(5,7)+'/'+s.slice(0,4) : '—';
+const fd = s => s ? s.slice(8,10)+'/'+s.slice(5,7) : '—';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ini = n => n.split(' ').filter(Boolean).slice(0,2).map(p=>p[0]).join('').toUpperCase();
+const addMes = (d,i) => { const [y,m,dd] = d.split('-').map(Number); return new Date(Date.UTC(y,m-1+i,dd)).toISOString().slice(0,10); };
+const chip = (k,t) => `<span class="chip ${k}">${esc(t)}</span>`;
+
+/* ---------- cadastros ---------- */
+const CATALOGO = [
+  {cod:'111', desc:'PPF Full Gloss', valor:16000},
+  {cod:'222', desc:'Película Grafeno Vidros', valor:1300},
+  {cod:'333', desc:'Antitrinco Para-brisa', valor:1500},
+  {cod:'444', desc:'PPF Full Fosco (Matte)', valor:19000},
+  {cod:'555', desc:'PPF Frontal (capô, para-choque e retrovisores)', valor:6500},
+  {cod:'666', desc:'Vitrificação Cerâmica', valor:3500},
+  {cod:'777', desc:'Película Grafeno Para-brisa G50', valor:900},
+];
+const CONSULTORES = ['Letícia de Rezende Siciliano','Rafael Nunes','Camila Duarte'];
+const APLICADORES = ['Diego Martins','Felipe Souza','Lucas Pereira','Rogério Lima'];
+const TECNICOS = ['William Santos','Diego Martins'];
+const CANAIS = ['WhatsApp','Telefone','E-mail','Instagram','Presencial','Indicação'];
+const ETAPAS = ['1º Contato','Tratativa','Potencial de compra','Sem veículo','Follow-up','Fechamento','Pós-venda'];
+const FORMAS = ['PIX','Cartão de crédito','Cartão de débito','Boleto','Dinheiro','Transferência'];
+const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplicacao','Aplicação'],['corte','Corte'],['finalizacao','Finalização'],['pronto','Pronto p/ entrega'],['entregue','Entregue']];
+const patioNome = k => (PATIO.find(p=>p[0]===k)||['',k])[1];
+const ITENS_IN = ['Painel sem luzes de alerta','Faróis e lanternas funcionando','Vidros elétricos funcionando','Multimídia e som','Rodas e pneus sem avarias','Estepe, macaco e triângulo','Chave reserva entregue','Pertences pessoais retirados','Tapetes no veículo'];
+const ITENS_OUT = ['Luzes do painel e eletrônicos conferidos','PPF sem bolhas, bordas e cantos selados','Películas sem bolhas, riscos ou poeira','Acabamento e limpeza final','Veículo lavado e seco','Cliente acompanhou a vistoria de saída'];
+const ZONAS = {
+  'parachoque-d':'Para-choque dianteiro','capo':'Capô','parabrisa':'Para-brisa','teto':'Teto','vidro-t':'Vidro traseiro','tampa':'Tampa traseira','parachoque-t':'Para-choque traseiro',
+  'paralama-de':'Para-lama diant. esq.','paralama-dd':'Para-lama diant. dir.','porta-de':'Porta diant. esq.','porta-dd':'Porta diant. dir.',
+  'porta-te':'Porta tras. esq.','porta-td':'Porta tras. dir.','lateral-te':'Lateral tras. esq.','lateral-td':'Lateral tras. dir.','retro-e':'Retrovisor esq.','retro-d':'Retrovisor dir.'
+};
+const AVARIAS = ['', 'risco', 'amassado', 'trinca'];
+const AV_NOME = {risco:'Risco', amassado:'Amassado', trinca:'Trinca / quebra'};
+
+const DEPTS = {
+  comercial:  {n:1, nome:'Comercial',   etapa:'Etapa 1 · Venda',     user:'Letícia Siciliano', papel:'Consultora',
+               menu:[['painel','Painel comercial'],['atendimentos','Atendimentos'],['novo','+ Novo atendimento']]},
+  operacional:{n:2, nome:'Operacional', etapa:'Etapa 2 · Pátio e OS', user:'William Santos', papel:'Responsável técnico',
+               menu:[['patio','Gestão de pátio'],['ordens','Ordens de serviço']]},
+  financeiro: {n:3, nome:'Financeiro',  etapa:'Etapa 3 · Conferência', user:'Tatiane Moura', papel:'Financeiro',
+               menu:[['acompanhamento','Acompanhamento pátio'],['receber','Contas a receber'],['pagar','Contas a pagar'],['dre','Relatório e DRE']]},
+};
+
+/* ---------- registros ---------- */
+function base(){
+  return {id:'', data:HOJE, cliente:{nome:'',tel:'',email:'',cpf:'',nasc:'',end:''}, veiculo:{modelo:'',placa:'',ano:'',cor:'',chassi:''},
+    canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'1º Contato', status:'Andamento', servicos:[], desconto:0,
+    pag:{entrada:0, formaEntrada:'PIX', dataEntrada:HOJE, entradaPaga:false, parcelas:1, formaSaldo:'PIX', quando:'retirada'},
+    ag:{entrada:'', saida:''}, resumo:'', obs:'', anexos:[], os:null, op:null, fin:null};
+}
+function mk(o){
+  const b = base();
+  for (const k in o){
+    if (o[k] && typeof o[k]==='object' && !Array.isArray(o[k]) && b[k] && typeof b[k]==='object' && !Array.isArray(b[k])) Object.assign(b[k], o[k]);
+    else b[k] = o[k];
+  }
+  return b;
+}
+const sv = (cod,qtd=1) => { const c = CATALOGO.find(x=>x.cod===cod); return {cod, desc:c.desc, qtd, valor:c.valor}; };
+const subtotal = r => r.servicos.reduce((s,x)=>s+(+x.qtd||0)*(+x.valor||0),0);
+const total = r => Math.max(0, subtotal(r)-(+r.desconto||0));
+const saldo = r => Math.max(0, total(r)-(+r.pag.entrada||0));
+const recebido = r => r.fin ? r.fin.titulos.filter(t=>t.recebido).reduce((s,t)=>s+t.valor,0) : 0;
+const aReceber = r => r.fin ? r.fin.titulos.filter(t=>!t.recebido).reduce((s,t)=>s+t.valor,0) : saldo(r);
+
+function gerarTitulos(r){
+  const t = [], e = +r.pag.entrada||0;
+  if (e>0) t.push({desc:'Entrada', valor:e, forma:r.pag.formaEntrada, venc:r.pag.dataEntrada||r.data, recebido:!!r.pag.entradaPaga, dataRec:r.pag.entradaPaga?(r.pag.dataEntrada||r.data):''});
+  const s = saldo(r), n = r.pag.quando==='retirada' ? 1 : Math.max(1, +r.pag.parcelas||1), baseD = r.ag.saida||HOJE;
+  if (s>0){
+    const p = Math.floor(s/n*100)/100;
+    for (let i=0;i<n;i++){
+      const v = i===n-1 ? Math.round((s-p*(n-1))*100)/100 : p;
+      t.push({desc: n===1 ? (r.pag.quando==='retirada'?'Saldo na retirada':'Saldo') : `Parcela ${i+1}/${n}`, valor:v, forma:r.pag.formaSaldo, venc:addMes(baseD,i), recebido:false, dataRec:''});
+    }
+  }
+  return t;
+}
+function novoChk(){ return {itens:{}, avarias:{}, comb:'1/2', km:'', fotos:[], obs:'', resp:TECNICOS[0], concluido:false}; }
+function gerarOS(r, num){
+  r.os = num ?? nextOS++;
+  r.status = 'Ganho';
+  if (!['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa = 'Fechamento';
+  r.op = {etapa:'aguardando', tecnico:TECNICOS[0], exec:{}, chkIn:novoChk(), chkOut:novoChk()};
+  r.fin = {titulos:gerarTitulos(r), conf:{valores:false, forma:false}, liberado:false, nota:''};
+}
+
+let nextOS = 433, nextId = 12;
+const DB = [
+  mk({id:'A01', data:'2026-10-07', cliente:{nome:'Emerson Fugi', tel:'(11) 97100-5577', email:'emerson.fugi@email.com', cpf:'312.456.789-10', nasc:'1984-03-22'},
+      veiculo:{modelo:'BMW M3', placa:'RKT-3B47', ano:'2025', cor:'Azul Portimão', chassi:'WBS83AY0XRFR45120'},
+      canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'Fechamento',
+      servicos:[sv('111'),sv('222'),sv('333')],
+      pag:{entrada:9400, formaEntrada:'PIX', dataEntrada:'2026-10-07', entradaPaga:true, formaSaldo:'PIX', quando:'retirada'},
+      ag:{entrada:'2026-10-13', saida:'2026-10-19'},
+      resumo:'Agendamento BMW M3 Emerson. Entrada 13/10, saída 19/10. Pagamento do saldo restante na retirada, à vista.\nServiços: PPF Full Gloss com finalização da aplicação, Película Grafeno para-brisa G50, Película Grafeno laterais e traseiro G05, Película Anti-Trinco para-brisa.',
+      obs:'Cliente extremamente exigente com acabamento e detalhes. Alinhar expectativas diretamente com William. Realizar checklist detalhado na entrada. Antes da entrega conferir luzes, painel, eletrônicos, PPF, películas e acabamentos. Cliente prioritário: atenção redobrada em todas as etapas.',
+      anexos:[{nome:'comprovante-pix-entrada.jpg'}]}),
+  mk({id:'A02', data:'2026-10-15', cliente:{nome:'Marina Okada', tel:'(11) 98822-4410', email:'marina.okada@email.com', cpf:'228.901.334-07', nasc:'1990-11-02'},
+      veiculo:{modelo:'Porsche 911 Carrera T', placa:'PRS-9T11', ano:'2026', cor:'Cinza Ártico'},
+      canal:'Instagram', consultor:CONSULTORES[2], etapa:'Fechamento',
+      servicos:[sv('444'),sv('666')],
+      pag:{entrada:11250, formaEntrada:'Cartão de crédito', dataEntrada:'2026-10-15', entradaPaga:true, parcelas:3, formaSaldo:'Cartão de crédito', quando:'parcelado'},
+      ag:{entrada:'2026-10-20', saida:'2026-10-27'}, resumo:'PPF fosco completo + vitrificação nas rodas e plásticos. Saldo em 3x no cartão a partir da retirada.',
+      anexos:[{nome:'proposta-assinada.pdf'}]}),
+  mk({id:'A03', data:'2026-10-09', cliente:{nome:'Carlos Menezes', tel:'(11) 99654-0021', email:'carlos.menezes@email.com', cpf:'401.223.118-55', nasc:'1978-06-14'},
+      veiculo:{modelo:'Toyota Corolla Cross XRX', placa:'GHT-2C19', ano:'2024', cor:'Branco Lunar'},
+      canal:'Telefone', consultor:CONSULTORES[1], etapa:'Fechamento',
+      servicos:[sv('555'),sv('222')],
+      pag:{entrada:2000, formaEntrada:'PIX', dataEntrada:'2026-10-09', entradaPaga:true, parcelas:2, formaSaldo:'Boleto', quando:'parcelado'},
+      ag:{entrada:'2026-10-16', saida:'2026-10-22'}, resumo:'PPF frontal + película grafeno. Saldo em 2 boletos.'}),
+  mk({id:'A04', data:'2026-10-01', cliente:{nome:'Fernanda Lopes', tel:'(11) 97311-8890', email:'fernanda.lopes@email.com', cpf:'355.678.902-41', nasc:'1987-01-30'},
+      veiculo:{modelo:'Volvo XC60 Recharge', placa:'VLV-6X60', ano:'2025', cor:'Preto Ônix'},
+      canal:'Indicação', consultor:CONSULTORES[0], etapa:'Pós-venda', desconto:500,
+      servicos:[sv('111')],
+      pag:{entrada:15500, formaEntrada:'PIX', dataEntrada:'2026-10-01', entradaPaga:true, quando:'retirada'},
+      ag:{entrada:'2026-10-06', saida:'2026-10-11'}, resumo:'Indicação do Emerson. Pagamento integral antecipado com desconto.'}),
+  mk({id:'A05', data:'2026-10-19', cliente:{nome:'Gustavo Reis', tel:'(11) 98140-7765', email:'gustavo.reis@email.com', cpf:'290.114.563-80', nasc:'1993-09-09'},
+      veiculo:{modelo:'Range Rover Evoque', placa:'EVQ-4R22', ano:'2023', cor:'Verde Eiger'},
+      canal:'WhatsApp', consultor:CONSULTORES[1], etapa:'Fechamento',
+      servicos:[sv('555'),sv('777'),sv('333')],
+      pag:{entrada:3000, formaEntrada:'Transferência', dataEntrada:'2026-10-20', entradaPaga:false, formaSaldo:'Cartão de débito', quando:'retirada'},
+      ag:{entrada:'2026-10-24', saida:'2026-10-28'}, resumo:'Cliente vai transferir a entrada até 20/10. Saldo no débito na retirada.'}),
+  mk({id:'A06', data:'2026-10-18', cliente:{nome:'Ricardo Alves', tel:'(11) 99201-3348', email:'ricardo.alves@email.com'},
+      veiculo:{modelo:'Jeep Compass Série S', ano:'2025', cor:'Cinza'}, canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'Potencial de compra',
+      servicos:[sv('555'),sv('222')], resumo:'Pediu proposta com PPF frontal e película. Quer fazer antes da viagem de dezembro.'}),
+  mk({id:'A07', data:'2026-10-12', cliente:{nome:'Juliana Castro', tel:'(11) 98455-1290', email:'juliana.castro@email.com'},
+      veiculo:{modelo:'Audi Q5 Sportback', ano:'2024', cor:'Branco'}, canal:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up',
+      servicos:[sv('111')], resumo:'Enviada proposta PPF Full Gloss. Retornar na sexta.'}),
+  mk({id:'A08', data:'2026-10-05', cliente:{nome:'Paulo Henrique Dias', tel:'(11) 97788-2201'},
+      veiculo:{modelo:'Honda Civic Touring', ano:'2022'}, canal:'Telefone', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
+      servicos:[sv('222'),sv('333')], obs:'Achou o valor alto e fechou com concorrente.'}),
+  mk({id:'A09', data:'2026-10-21', cliente:{nome:'Bruno Tanaka', tel:'(11) 96612-4470'},
+      veiculo:{modelo:'Mercedes-Benz C300'}, canal:'Telefone', consultor:CONSULTORES[0], etapa:'1º Contato', resumo:'Ligou perguntando sobre PPF fosco.'}),
+  mk({id:'A10', data:'2026-10-14', cliente:{nome:'Aline Prado', tel:'(11) 99330-6612', email:'aline.prado@email.com'},
+      veiculo:{modelo:'BYD Seal', ano:'2027'}, canal:'E-mail', consultor:CONSULTORES[2], etapa:'Sem veículo',
+      servicos:[sv('444')], obs:'Carro novo chega da concessionária em novembro.'}),
+  mk({id:'A11', data:'2026-09-24', cliente:{nome:'Thiago Moreira', tel:'(11) 98002-1188'},
+      veiculo:{modelo:'Chevrolet Camaro SS', ano:'2021'}, canal:'Presencial', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
+      servicos:[sv('111')], obs:'Desistiu do serviço, vai vender o carro.'}),
+];
+/* gera OS e estado de pátio / financeiro dos exemplos */
+(function seed(){
+  const g = id => DB.find(r=>r.id===id);
+  const set = (id, os, etapa, fn) => { const r=g(id); gerarOS(r, os); r.op.etapa = etapa; fn && fn(r); };
+  const chkFeito = (c, av={}, km='') => { ITENS_IN.forEach((_,i)=>c.itens[i]=true); c.avarias=av; c.comb='3/4'; c.km=km; c.concluido=true;
+    c.fotos=[{nome:'frente.jpg'},{nome:'traseira.jpg'},{nome:'lateral-esq.jpg'},{nome:'lateral-dir.jpg'},{nome:'painel.jpg'}]; };
+  set('A01', 430, 'pronto', r => { chkFeito(r.op.chkIn, {'parachoque-d':'risco','porta-dd':'risco'}, '1'); r.op.chkIn.obs='Pequeno risco no para-choque dianteiro (lado direito) já existente. Cliente ciente.';
+    r.op.exec = {0:'Diego Martins',1:'Felipe Souza',2:'Felipe Souza'}; ITENS_OUT.slice(0,4).forEach((_,i)=>r.op.chkOut.itens[i]=true); r.fin.conf.valores = true; });
+  set('A02', 431, 'lavagem', r => { chkFeito(r.op.chkIn, {'retro-e':'risco'}, '820'); r.op.exec = {0:'Lucas Pereira',1:'Rogério Lima'}; r.fin.conf.valores = true; });
+  set('A03', 429, 'finalizacao', r => { chkFeito(r.op.chkIn, {'parachoque-t':'amassado'}, '18.400'); r.op.exec={0:'Diego Martins',1:'Felipe Souza'}; r.fin.conf.valores=true; r.fin.conf.forma=true; });
+  set('A04', 428, 'entregue', r => { chkFeito(r.op.chkIn, {}, '5.210'); ITENS_OUT.forEach((_,i)=>r.op.chkOut.itens[i]=true); r.op.chkOut.concluido=true; r.op.exec={0:'Lucas Pereira'};
+    r.fin.conf.valores=true; r.fin.conf.forma=true; r.fin.liberado=true; });
+  set('A05', 432, 'aguardando');
+})();
+
+/* contas a pagar (exemplo) */
+const PAGAR = [
+  {desc:'Rolo PPF Gloss 1,52 × 15 m', forn:'Distribuidora FilmPro', cat:'Materiais', venc:'2026-10-25', valor:8900, pago:false},
+  {desc:'Película grafeno (caixa com 6 rolos)', forn:'Nanotech Films', cat:'Materiais', venc:'2026-10-18', valor:2400, pago:true},
+  {desc:'Produtos de lavagem e descontaminação', forn:'Vonixx', cat:'Materiais', venc:'2026-10-20', valor:780, pago:false},
+  {desc:'Aluguel do galpão', forn:'Imobiliária Vila Nova', cat:'Ocupação', venc:'2026-10-10', valor:7500, pago:true},
+  {desc:'Energia elétrica', forn:'Enel', cat:'Ocupação', venc:'2026-10-28', valor:1180, pago:false},
+  {desc:'Folha de pagamento', forn:'Equipe', cat:'Pessoal', venc:'2026-10-05', valor:21600, pago:true},
+  {desc:'Comissões consultores (setembro)', forn:'Equipe comercial', cat:'Pessoal', venc:'2026-10-05', valor:4350, pago:true},
+  {desc:'Anúncios Instagram', forn:'Meta Ads', cat:'Marketing', venc:'2026-10-30', valor:2000, pago:false},
+  {desc:'Sistema e contabilidade', forn:'Escritório Contábil Paulista', cat:'Administrativo', venc:'2026-10-15', valor:1450, pago:true},
+];
+
+/* ---------- estado da tela ---------- */
+const S = {dept:'comercial', view:'painel', sel:null, tab:'resumo',
+  f:{periodo:'mes', cons:'todos', st:'todos', etapa:'todas', q:'', rec:'aberto', pag:'aberto', ord:'ativas'}};
+const cur = () => DB.find(r=>r.id===S.sel);
+const $ = s => document.querySelector(s);
+const main = $('#main');
+
+function go(dept, view, sel){
+  if (view==='novo'){ const r = mk({id:'A'+String(nextId++).padStart(2,'0'), data:HOJE}); DB.unshift(r); dept='comercial'; view='ficha'; sel=r.id; }
+  if (dept && dept!==S.dept){ S.dept = dept; }
+  if (view) S.view = view;
+  S.sel = sel ?? null;
+  if (view==='os') S.tab = 'resumo';
+  render(); window.scrollTo(0,0);
+}
+function toast(msg, kind=''){
+  const t = $('#toast'); t.className = 'toast '+kind; t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.hidden=true, 3800);
+}
+
+/* ---------- navegação ---------- */
+function renderNav(){
+  $('#app').dataset.dept = S.dept;
+  $('#depts').innerHTML = Object.entries(DEPTS).map(([k,d],i)=>`
+    ${i?'<div class="flowline" aria-hidden="true"></div>':''}
+    <button class="dept d${d.n}" data-a="dept" data-d="${k}" aria-current="${S.dept===k}">
+      <span class="n">${d.n}</span><span><small>${d.etapa}</small><strong>${d.nome}</strong></span>
+    </button>`).join('');
+  const hl = {ficha:'atendimentos', os:'ordens', conf:'acompanhamento'}[S.view] || S.view;
+  const d = DEPTS[S.dept];
+  $('#menu').innerHTML = `<div class="lbl">${d.nome}</div>` + d.menu.map(([v,n])=>`<button data-a="nav" data-v="${v}" aria-current="${hl===v}">${n}</button>`).join('');
+  $('#who').innerHTML = `<span class="av">${ini(d.user)}</span><div><b>${d.user}</b><span>${d.papel}</span></div>`;
+}
+function head(title, sub='', right='', crumb=''){
+  return `<header class="phead"><div>
+    ${crumb}
+    <div class="eyebrow">${DEPTS[S.dept].etapa}<span class="ex">dados de exemplo</span></div>
+    <h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}</div>
+    <div class="phead-r">${right}</div></header>`;
+}
+const statusChip = s => chip(s==='Ganho'?'ok':s==='Perdido'?'bad':'info', s);
+function render(){
+  renderNav();
+  const v = VIEWS[S.view]; main.innerHTML = v ? v() : '';
+}
+
+/* ======================= COMERCIAL ======================= */
+const noPeriodo = (d,p) => p==='tudo' || (p==='mes' ? d.startsWith('2026-10') : d>='2026-10-15');
+const VIEWS = {};
+
+VIEWS.painel = () => {
+  const f = S.f, L = DB.filter(r=>noPeriodo(r.data,f.periodo) && (f.cons==='todos'||r.consultor===f.cons));
+  const gan = L.filter(r=>r.status==='Ganho'), and = L.filter(r=>r.status==='Andamento'), per = L.filter(r=>r.status==='Perdido');
+  const vend = gan.reduce((s,r)=>s+total(r),0), pipe = and.reduce((s,r)=>s+total(r),0);
+  const conv = gan.length+per.length ? Math.round(gan.length/(gan.length+per.length)*100) : 0;
+  const porCons = CONSULTORES.map(c=>{ const g=gan.filter(r=>r.consultor===c); return {c, v:g.reduce((s,r)=>s+total(r),0), n:g.length}; }).sort((a,b)=>b.v-a.v);
+  const max = Math.max(1,...porCons.map(x=>x.v));
+  const funil = ETAPAS.map(e=>({e, n:and.filter(r=>r.etapa===e).length}));
+  const maxF = Math.max(1,...funil.map(x=>x.n));
+  const sel = (k, opts) => `<select id="f-${k}" data-f="${k}" data-rr="1">${opts.map(([v,n])=>`<option value="${v}" ${f[k]===v?'selected':''}>${n}</option>`).join('')}</select>`;
+  return head('Painel comercial', 'Vendas fechadas, negócios em andamento e desempenho de cada consultor no período escolhido.',
+      `<button class="btn pri" data-a="nav" data-v="novo">+ Novo atendimento</button>`) + `
+    <div class="filters">
+      ${sel('periodo',[['mes','Outubro de 2026'],['7d','Últimos 7 dias'],['tudo','Todo o período']])}
+      ${sel('cons',[['todos','Todos os consultores'],...CONSULTORES.map(c=>[c,c])])}
+    </div>
+    <div class="kpis">
+      <div class="kpi hl"><span class="k">Vendas fechadas</span><span class="v">${fmt(vend)}</span><span class="d">${gan.length} negócio${gan.length===1?'':'s'} ganho${gan.length===1?'':'s'}</span></div>
+      <div class="kpi"><span class="k">Ticket médio</span><span class="v">${fmt(gan.length?vend/gan.length:0)}</span><span class="d">por venda fechada</span></div>
+      <div class="kpi"><span class="k">Em andamento</span><span class="v">${and.length}</span><span class="d">${fmt(pipe)} em propostas</span></div>
+      <div class="kpi"><span class="k">Conversão</span><span class="v">${conv}%</span><span class="d">${gan.length} ganhos · ${per.length} perdidos</span></div>
+    </div>
+    <div class="grid g2">
+      <section class="card"><div class="card-h"><h3>Vendas por consultor</h3></div>
+        <div class="bars">${porCons.map(x=>`<div class="bar-row"><span class="nm">${esc(x.c)}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${x.v/max*100}%"></div></div>
+          <span class="vl">${fmt(x.v)} <span class="faint">· ${x.n}</span></span></div>`).join('')}</div></section>
+      <section class="card"><div class="card-h"><h3>Atendimentos em andamento por tarefa</h3></div>
+        <div class="bars">${funil.map(x=>`<div class="bar-row"><span class="nm">${x.e}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${x.n/maxF*100}%;opacity:${x.n?1:0}"></div></div>
+          <span class="vl">${x.n}</span></div>`).join('')}</div></section>
+    </div>
+    <section class="card"><div class="card-h"><h3>Últimos atendimentos</h3><button class="btn sm ghost" data-a="nav" data-v="atendimentos">Ver todos →</button></div>
+      <div class="tbl-wrap">${tblAtend(L.slice().sort((a,b)=>b.data.localeCompare(a.data)).slice(0,6))}</div></section>`;
+};
+
+function tblAtend(L){
+  if (!L.length) return `<div class="empty" style="margin:12px">Nenhum atendimento com esses filtros.</div>`;
+  return `<table class="tbl"><thead><tr><th>Cliente</th><th>Veículo</th><th>Canal</th><th>Consultor</th><th>Tarefa</th><th>Status</th><th class="num">Valor</th><th>Data</th></tr></thead><tbody>
+  ${L.map(r=>`<tr class="click" data-a="open" data-d="comercial" data-v="ficha" data-id="${r.id}">
+    <td class="cl"><b>${esc(r.cliente.nome||'Sem nome')}</b><span>${esc(r.cliente.tel)}</span></td>
+    <td>${esc(r.veiculo.modelo||'—')}</td><td><span class="tag">${r.canal}</span></td>
+    <td>${esc(r.consultor.split(' ')[0])}</td><td>${r.etapa}</td>
+    <td>${statusChip(r.status)}${r.os?` <span class="tag">OS ${r.os}</span>`:''}</td>
+    <td class="num">${fmt(total(r))}</td><td class="mono">${fd(r.data)}</td></tr>`).join('')}</tbody></table>`;
+}
+function listaAtend(){
+  const f = S.f, q = f.q.trim().toLowerCase();
+  return DB.filter(r=>(f.st==='todos'||r.status===f.st) && (f.etapa==='todas'||r.etapa===f.etapa) && (f.cons==='todos'||r.consultor===f.cons)
+    && (!q || (r.cliente.nome+' '+r.veiculo.modelo+' '+r.cliente.tel).toLowerCase().includes(q)));
+}
+VIEWS.atendimentos = () => {
+  const f = S.f;
+  const cnt = s => DB.filter(r=>s==='todos'||r.status===s).length;
+  return head('Atendimentos', 'Cada cliente em tratativa, com a tarefa atual e o status do negócio.',
+      `<button class="btn pri" data-a="nav" data-v="novo">+ Novo atendimento</button>`) + `
+    <div class="filters">
+      <div class="seg status">${[['todos','Todos'],['Andamento','Em andamento'],['Ganho','Ganho'],['Perdido','Perdido']].map(([v,n])=>
+        `<button data-a="fset" data-k="st" data-val="${v}" aria-pressed="${f.st===v}" class="${v==='Andamento'?'s-and':v==='Ganho'?'s-gan':v==='Perdido'?'s-per':''}">${n} <span class="faint">${cnt(v)}</span></button>`).join('')}</div>
+    </div>
+    <div class="filters">
+      <input class="grow" id="f-q" data-f="q" placeholder="Buscar cliente, veículo ou telefone" value="${esc(f.q)}">
+      <select id="f-etapa" data-f="etapa"><option value="todas">Todas as tarefas</option>${ETAPAS.map((e,i)=>`<option value="${e}" ${f.etapa===e?'selected':''}>${i+1}. ${e}</option>`).join('')}</select>
+      <select id="f-cons2" data-f="cons"><option value="todos">Todos os consultores</option>${CONSULTORES.map(c=>`<option ${f.cons===c?'selected':''}>${c}</option>`).join('')}</select>
+    </div>
+    <div class="tbl-wrap" id="tbl">${tblAtend(listaAtend())}</div>`;
+};
+
+VIEWS.ficha = () => {
+  const r = cur(); if (!r) return '';
+  const lock = !!r.os, dis = lock ? 'disabled' : '';
+  const inp = (p, label, v, type='text', extra='') => `<div class="field"><label for="i-${p}">${label}</label><input id="i-${p}" type="${type}" data-b="${p}" value="${esc(v)}" ${extra}></div>`;
+  const opt = (arr, v) => arr.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
+  const rows = r.servicos.map((s,i)=>`<tr>
+      <td style="min-width:220px"><select id="svc${i}" data-svc="${i}" aria-label="Serviço" ${dis}>${CATALOGO.map(c=>`<option value="${c.cod}" ${c.cod===s.cod?'selected':''}>${c.cod} · ${esc(c.desc)}</option>`).join('')}</select></td>
+      <td style="width:70px"><input id="q${i}" class="num" data-b="servicos.${i}.qtd" data-t="n" value="${s.qtd}" inputmode="numeric" aria-label="Quantidade" ${dis}></td>
+      <td style="width:120px"><input id="v${i}" class="num" data-b="servicos.${i}.valor" data-t="n" value="${s.valor}" inputmode="decimal" aria-label="Valor unitário" ${dis}></td>
+      <td class="num" data-rowtot="${i}" style="width:120px">${fmt(s.qtd*s.valor)}</td>
+      <td style="width:36px">${lock?'':`<button class="icon-btn" data-a="rmSvc" data-i="${i}" aria-label="Remover serviço">×</button>`}</td></tr>`).join('');
+  const right = r.os
+    ? `<button class="btn" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">Ver OS ${r.os} no Operacional</button><button class="btn" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}">Ver no Financeiro</button>`
+    : '';
+  return head(`<span id="c-nome">${esc(r.cliente.nome||'Novo atendimento')}</span>`,
+      r.os ? `Venda fechada. OS ${r.os} criada e enviada ao Operacional e ao Financeiro.` : 'Preencha os dados do cliente, monte a proposta e defina como o cliente vai pagar.',
+      right, `<button class="crumb" data-a="nav" data-v="atendimentos">← Atendimentos</button>`) + `
+  <div class="grid g-side">
+    <div class="grid">
+      <section class="card"><div class="card-h"><h3>Cliente</h3><span class="mono faint">${r.id} · aberto em ${fdate(r.data)}</span></div>
+        <div class="fields">
+          ${inp('cliente.nome','Nome completo',r.cliente.nome,'text','data-name="1"')}
+          ${inp('cliente.tel','Telefone / celular',r.cliente.tel,'tel')}
+          ${inp('cliente.email','E-mail',r.cliente.email,'email')}
+          ${inp('cliente.cpf','CPF',r.cliente.cpf)}
+          ${inp('cliente.nasc','Data de nascimento',r.cliente.nasc,'date')}
+        </div></section>
+      <section class="card"><h3>Veículo</h3>
+        <div class="fields">
+          ${inp('veiculo.modelo','Marca e modelo',r.veiculo.modelo)}
+          ${inp('veiculo.placa','Placa',r.veiculo.placa)}
+          ${inp('veiculo.ano','Ano',r.veiculo.ano)}
+          ${inp('veiculo.cor','Cor',r.veiculo.cor)}
+        </div></section>
+      <section class="card"><div class="card-h"><h3>Serviços da proposta</h3>${lock?'':'<button class="btn sm" data-a="addSvc">+ Adicionar serviço</button>'}</div>
+        ${r.servicos.length ? `<div style="overflow-x:auto"><table class="tbl inner-tbl"><thead><tr><th>Código · descrição</th><th class="num">Qtd</th><th class="num">Vlr. unitário</th><th class="num">Vlr. total</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+          : `<div class="empty">Nenhum serviço ainda. Use “Adicionar serviço” para montar a proposta.</div>`}
+        <div class="totals">
+          <span class="muted">Subtotal</span><span class="num" id="c-sub">${fmt(subtotal(r))}</span>
+          <label class="muted" for="i-desc" style="align-self:center">Desconto (R$)</label><input id="i-desc" class="num" data-b="desconto" data-t="n" value="${r.desconto}" ${dis}>
+          <span class="t-big">Total</span><span class="t-big num" id="c-total">${fmt(total(r))}</span>
+        </div></section>
+      <section class="card"><div class="card-h"><h3>Previsão financeira</h3>${lock?chip('ok','Enviada ao Financeiro'):chip('neu','Vai para o Financeiro ao fechar a venda')}</div>
+        <div class="fields">
+          <div class="field"><label for="i-ent">Entrada (R$)</label><input id="i-ent" class="num" data-b="pag.entrada" data-t="n" value="${r.pag.entrada}" ${dis}></div>
+          <div class="field"><label for="i-fe">Forma da entrada</label><select id="i-fe" data-b="pag.formaEntrada" ${dis}>${opt(FORMAS,r.pag.formaEntrada)}</select></div>
+          <div class="field"><label for="i-de">Data da entrada</label><input id="i-de" type="date" data-b="pag.dataEntrada" value="${r.pag.dataEntrada}" ${dis}></div>
+        </div>
+        <label class="ck"><input type="checkbox" id="i-ep" data-b="pag.entradaPaga" ${r.pag.entradaPaga?'checked':''} ${dis}> Cliente já pagou a entrada (anexar comprovante abaixo)</label>
+        <div class="sumline"><span>Saldo restante</span><b class="num" id="c-saldo">${fmt(saldo(r))}</b></div>
+        <div class="fields">
+          <div class="field"><label for="i-qd">Quando o cliente paga o saldo</label><select id="i-qd" data-b="pag.quando" data-rr="1" ${dis}>
+            <option value="retirada" ${r.pag.quando==='retirada'?'selected':''}>À vista, na retirada do veículo</option>
+            <option value="parcelado" ${r.pag.quando==='parcelado'?'selected':''}>Parcelado a partir da retirada</option></select></div>
+          ${r.pag.quando==='parcelado'?`<div class="field"><label for="i-np">Nº de parcelas</label><select id="i-np" data-b="pag.parcelas" data-t="n" ${dis}>${[1,2,3,4,5,6,10,12].map(n=>`<option value="${n}" ${+r.pag.parcelas===n?'selected':''}>${n}x</option>`).join('')}</select></div>`:''}
+          <div class="field"><label for="i-fs">Forma do saldo</label><select id="i-fs" data-b="pag.formaSaldo" ${dis}>${opt(FORMAS,r.pag.formaSaldo)}</select></div>
+        </div>
+        <div id="c-parc">${parcPreview(r)}</div>
+      </section>
+    </div>
+    <div class="grid" style="align-content:start">
+      <section class="card"><h3>Atendimento</h3>
+        <div class="field"><span class="flabel">Status</span><div class="seg status">${[['Andamento','s-and'],['Ganho','s-gan'],['Perdido','s-per']].map(([s,c])=>
+          `<button class="${c}" data-a="status" data-s="${s}" aria-pressed="${r.status===s}" ${lock&&s!=='Ganho'?'disabled':''}>${s}</button>`).join('')}</div></div>
+        <div class="field"><label for="i-et">Tarefa atual</label><select id="i-et" data-b="etapa">${ETAPAS.map((e,i)=>`<option value="${e}" ${r.etapa===e?'selected':''}>${i+1}. ${e}</option>`).join('')}</select></div>
+        <div class="field"><span class="flabel">Canal do atendimento</span><div class="seg">${CANAIS.map(c=>`<button data-a="canal" data-c="${c}" aria-pressed="${r.canal===c}">${c}</button>`).join('')}</div></div>
+        <div class="field"><label for="i-co">Consultor responsável</label><select id="i-co" data-b="consultor">${opt(CONSULTORES,r.consultor)}</select></div>
+      </section>
+      <section class="card"><h3>Agendamento</h3>
+        <div class="fields">
+          ${inp('ag.entrada','Entrada do veículo',r.ag.entrada,'date')}
+          ${inp('ag.saida','Previsão de saída',r.ag.saida,'date')}
+        </div></section>
+      <section class="card"><h3>Proposta e anexos</h3>
+        <div class="field"><label for="i-res">Resumo da proposta</label><textarea id="i-res" data-b="resumo">${esc(r.resumo)}</textarea></div>
+        <div class="field"><label for="i-obs">Observações para o Operacional</label><textarea id="i-obs" data-b="obs">${esc(r.obs)}</textarea></div>
+        <span class="flabel">Comprovantes e fotos</span>
+        <div class="anexos">${r.anexos.map(a=>`<div class="anexo"><div class="foto ${a.src?'':'ph'}" ${a.src?`style="background-image:url('${a.src}')"`:''}></div>${esc(a.nome)}</div>`).join('')}
+          <label class="up" style="width:108px">+ Anexar imagem<input type="file" accept="image/*,application/pdf" multiple data-up="anexos"></label></div>
+      </section>
+    </div>
+  </div>
+  <div class="actionbar">
+    <span class="info">${r.os?`Venda fechada · OS <b class="mono">${r.os}</b>`:'Os dados ficam no atendimento até a venda ser fechada.'}</span>
+    <button class="btn" data-a="salvar">Salvar</button>
+    ${r.os?'':`<button class="btn pri" data-a="fechar">Fechar venda e gerar OS</button>`}
+  </div>`;
+};
+function parcPreview(r){
+  const t = gerarTitulos(r);
+  if (!t.length) return `<div class="empty">Adicione serviços para ver como o pagamento fica dividido.</div>`;
+  return `<div class="note"><b>Como o Financeiro vai receber</b>${t.map(x=>`<div class="sumline"><span>${x.desc} · ${x.forma} · ${fd(x.venc)}</span><span class="num">${fmt(x.valor)}</span></div>`).join('')}</div>`;
+}
+function refreshFicha(){
+  const r = cur(); if (!r || S.view!=='ficha') return;
+  $('#c-sub').textContent = fmt(subtotal(r)); $('#c-total').textContent = fmt(total(r)); $('#c-saldo').textContent = fmt(saldo(r));
+  $('#c-parc').innerHTML = parcPreview(r); $('#c-nome').textContent = r.cliente.nome || 'Novo atendimento';
+  r.servicos.forEach((s,i)=>{ const el = document.querySelector(`[data-rowtot="${i}"]`); if (el) el.textContent = fmt(s.qtd*s.valor); });
+}
+
+/* ======================= OPERACIONAL ======================= */
+const ordens = () => DB.filter(r=>r.os).sort((a,b)=>b.os-a.os);
+function finChip(r){
+  if (r.fin.liberado) return chip('ok','Financeiro liberou');
+  if (r.fin.titulos.some(t=>t.desc==='Entrada'&&!t.recebido)) return chip('bad','Entrada não confirmada');
+  const p = aReceber(r);
+  if (p>0 && r.pag.quando==='retirada') return chip('warn','Saldo na retirada '+fmt(p));
+  if (p>0) return chip('info','Parcelado · '+fmt(p)+' a receber');
+  return chip('info','Pago · aguardando liberação');
+}
+function ocard(r){
+  const i = PATIO.findIndex(p=>p[0]===r.op.etapa), late = r.ag.saida && r.ag.saida<HOJE && r.op.etapa!=='entregue';
+  return `<article class="ocard">
+    <div class="top"><span class="os">OS ${r.os}</span>${r.veiculo.placa?`<span class="plate">${esc(r.veiculo.placa)}</span>`:''}</div>
+    <div class="car">${esc(r.veiculo.modelo)}</div>
+    <div class="meta"><span>${esc(r.cliente.nome)}</span>
+      <span>Entrada ${fd(r.ag.entrada)} · Entrega <span class="${late?'late':''}">${fd(r.ag.saida)}${late?' (atrasada)':''}</span></span>
+      <span>${r.servicos.map(s=>esc(s.desc.split(' (')[0])).join(' · ')}</span></div>
+    <div>${finChip(r)}</div>
+    <div class="acts"><button class="btn sm ghost" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">Abrir OS</button>
+      ${i<PATIO.length-1?`<button class="btn sm" data-a="avancar" data-id="${r.id}">${PATIO[i+1][1]} →</button>`:''}</div>
+  </article>`;
+}
+VIEWS.patio = () => {
+  const L = ordens(), ent = L.filter(r=>r.op.etapa==='entregue').length;
+  return head('Gestão de pátio', 'Onde cada carro está agora. Avance o card quando a etapa terminar. A entrega só é liberada depois do checklist de saída e da liberação do Financeiro.',
+    `<span class="tag">${ent} entregue${ent===1?'':'s'} no mês</span>`) + `
+  <div class="kanban-wrap"><div class="kanban">
+    ${PATIO.slice(0,6).map(([k,n])=>{ const c = L.filter(r=>r.op.etapa===k);
+      return `<section class="col"><div class="col-h"><b>${n}</b><span>${c.length}</span></div>${c.length?c.map(ocard).join(''):'<div class="empty">Nenhum veículo</div>'}</section>`; }).join('')}
+  </div></div>`;
+};
+VIEWS.ordens = () => {
+  const f = S.f, L = ordens().filter(r=>f.ord==='todas' || (f.ord==='ativas' ? r.op.etapa!=='entregue' : r.op.etapa==='entregue'));
+  return head('Ordens de serviço', 'Toda venda fechada no Comercial vira uma OS aqui, já com cliente, veículo, serviços e observações.') + `
+  <div class="filters"><div class="seg">${[['ativas','No pátio'],['entregues','Entregues'],['todas','Todas']].map(([v,n])=>`<button data-a="fset" data-k="ord" data-val="${v}" aria-pressed="${f.ord===v}">${n}</button>`).join('')}</div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>OS</th><th>Veículo</th><th>Cliente</th><th>Etapa no pátio</th><th>Checklist</th><th>Entrada</th><th>Entrega</th><th>Resp. técnico</th></tr></thead><tbody>
+  ${L.map(r=>`<tr class="click" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">
+    <td class="mono"><b>${r.os}</b></td><td class="cl"><b>${esc(r.veiculo.modelo)}</b><span class="mono">${esc(r.veiculo.placa||'sem placa')}</span></td>
+    <td>${esc(r.cliente.nome)}</td><td>${chip(r.op.etapa==='entregue'?'ok':r.op.etapa==='aguardando'?'neu':'info', patioNome(r.op.etapa))}</td>
+    <td>${r.op.chkOut.concluido?chip('ok','Saída feita'):r.op.chkIn.concluido?chip('info','Entrada feita'):chip('warn','Pendente')}</td>
+    <td class="mono">${fd(r.ag.entrada)}</td><td class="mono">${fd(r.ag.saida)}</td><td>${esc(r.op.tecnico)}</td></tr>`).join('') || `<tr><td colspan="8"><div class="empty">Nenhuma OS nesse filtro.</div></td></tr>`}
+  </tbody></table></div>`;
+};
+function carSVG(av){
+  const z = (id, el) => el.replace('<R', `<rect data-a="zona" data-z="${id}" class="zone ${av[id]||''}"`).replace('<P', `<path data-a="zona" data-z="${id}" class="zone ${av[id]||''}"`)
+    .replace('/>', `><title>${ZONAS[id]}${av[id]?' · '+AV_NOME[av[id]]:''}</title></${el.startsWith('<R')?'rect':'path'}>`);
+  return `<svg viewBox="0 0 220 450" role="img" aria-label="Vista superior do veículo para marcar avarias">
+    ${z('parachoque-d','<R x="42" y="8" width="136" height="30" rx="15"/>')}
+    ${z('capo','<P d="M50 44 H170 Q176 44 176 52 V128 H44 V52 Q44 44 50 44 Z"/>')}
+    ${z('parabrisa','<P d="M48 134 H172 L160 176 H60 Z"/>')}
+    ${z('teto','<R x="60" y="182" width="100" height="112" rx="6"/>')}
+    ${z('vidro-t','<P d="M60 300 H160 L170 334 H50 Z"/>')}
+    ${z('tampa','<P d="M44 340 H176 V392 Q176 400 168 400 H52 Q44 400 44 392 Z"/>')}
+    ${z('parachoque-t','<R x="42" y="408" width="136" height="30" rx="15"/>')}
+    ${z('paralama-de','<P d="M12 50 Q12 44 20 44 H38 V128 H12 Z"/>')}
+    ${z('paralama-dd','<P d="M182 44 H200 Q208 44 208 50 V128 H182 Z"/>')}
+    ${z('porta-de','<R x="12" y="134" width="26" height="80" rx="3"/>')}
+    ${z('porta-dd','<R x="182" y="134" width="26" height="80" rx="3"/>')}
+    ${z('porta-te','<R x="12" y="220" width="26" height="80" rx="3"/>')}
+    ${z('porta-td','<R x="182" y="220" width="26" height="80" rx="3"/>')}
+    ${z('lateral-te','<P d="M12 306 H38 V400 H20 Q12 400 12 392 Z"/>')}
+    ${z('lateral-td','<P d="M182 306 H208 V392 Q208 400 200 400 H182 Z"/>')}
+    ${z('retro-e','<R x="0" y="140" width="10" height="22" rx="3"/>')}
+    ${z('retro-d','<R x="210" y="140" width="10" height="22" rx="3"/>')}
+  </svg>`;
+}
+function vistoria(r, tipo){
+  const c = tipo==='in' ? r.op.chkIn : r.op.chkOut, key = tipo==='in' ? 'chkIn' : 'chkOut', itens = tipo==='in' ? ITENS_IN : ITENS_OUT;
+  const av = Object.entries(c.avarias).filter(([,v])=>v);
+  const entradaAv = Object.entries(r.op.chkIn.avarias).filter(([,v])=>v);
+  return `<div class="grid g-side">
+    <section class="card"><div class="card-h"><h3>${tipo==='in'?'Vistoria de entrada':'Vistoria de saída'}</h3>${c.concluido?chip('ok','Concluída'):chip('warn','Em aberto')}</div>
+      <div class="vist">
+        <div class="carbox">
+          ${carSVG(c.avarias)}
+          <div class="legend"><span><i style="background:var(--z-risco)"></i>Risco</span><span><i style="background:var(--z-amassado)"></i>Amassado</span><span><i style="background:var(--z-trinca)"></i>Trinca</span></div>
+          <span class="faint" style="font-size:12px;text-align:center">Toque numa peça para marcar. Cada toque troca o tipo de avaria.</span>
+          <div class="avlist">${av.length?av.map(([k,v])=>`<div><span>${ZONAS[k]}</span><b>${AV_NOME[v]}</b></div>`).join(''):'<div><span class="faint">Nenhuma avaria marcada</span></div>'}</div>
+        </div>
+        <div class="grid" style="align-content:start">
+          <div class="fields">
+            <div class="field"><label for="k-km">Km</label><input id="k-km" data-b="op.${key}.km" value="${esc(c.km)}" inputmode="numeric"></div>
+            <div class="field"><label for="k-resp">Vistoria feita por</label><select id="k-resp" data-b="op.${key}.resp">${[...TECNICOS,...APLICADORES.slice(1)].map(x=>`<option ${x===c.resp?'selected':''}>${x}</option>`).join('')}</select></div>
+          </div>
+          <div class="field"><span class="flabel">Combustível</span><div class="seg">${['Reserva','1/4','1/2','3/4','Cheio'].map(x=>`<button data-a="comb" data-k="${key}" data-c="${x}" aria-pressed="${c.comb===x}">${x}</button>`).join('')}</div></div>
+          <div class="checks">${itens.map((it,i)=>`<label class="ck"><input type="checkbox" id="k-${key}-${i}" data-b="op.${key}.itens.${i}" ${c.itens[i]?'checked':''}> ${it}</label>`).join('')}</div>
+          <div class="field"><label for="k-obs">Observações da vistoria</label><textarea id="k-obs" data-b="op.${key}.obs">${esc(c.obs)}</textarea></div>
+        </div>
+      </div></section>
+    <div class="grid" style="align-content:start">
+      ${tipo==='out' ? `<section class="note ${entradaAv.length?'warn':''}"><b>Avarias registradas na entrada</b>${entradaAv.length?entradaAv.map(([k,v])=>`<div class="sumline"><span>${ZONAS[k]}</span><span>${AV_NOME[v]}</span></div>`).join(''):'Nenhuma avaria na entrada.'}</section>`:''}
+      ${r.obs ? `<section class="note"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      <section class="card"><div class="card-h"><h3>Fotos</h3><span class="faint mono">${c.fotos.length}</span></div>
+        <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('')}
+          <label class="up">+ Adicionar fotos<input type="file" accept="image/*" multiple data-up="op.${key}.fotos"></label></div></section>
+      <button class="btn pri" data-a="concluirChk" data-k="${key}" ${c.concluido?'disabled':''}>${c.concluido?'Checklist concluído':tipo==='in'?'Concluir checklist de entrada':'Concluir checklist de saída'}</button>
+    </div>
+  </div>`;
+}
+VIEWS.os = () => {
+  const r = cur(); if (!r || !r.os) return '';
+  const idx = PATIO.findIndex(p=>p[0]===r.op.etapa);
+  const tabs = [['resumo','Resumo da OS'],['in','Checklist de entrada'],['out','Checklist de saída'],['docs','Imprimir OS e Prisma']];
+  const kv = (k,v) => `<div class="field"><span class="flabel">${k}</span><div class="read">${v||'—'}</div></div>`;
+  let body = '';
+  if (S.tab==='resumo') body = `<div class="grid g-side">
+    <div class="grid" style="align-content:start">
+      <section class="card"><h3>Cliente e veículo</h3><div class="fields">
+        ${kv('Cliente',esc(r.cliente.nome))}${kv('CPF',esc(r.cliente.cpf))}${kv('Celular',esc(r.cliente.tel))}
+        ${kv('Veículo',esc(r.veiculo.modelo))}${kv('Placa',r.veiculo.placa?`<span class="plate">${esc(r.veiculo.placa)}</span>`:'')}${kv('Cor / ano',esc([r.veiculo.cor,r.veiculo.ano].filter(Boolean).join(' · ')))}
+        ${kv('Entrada',fdate(r.ag.entrada))}${kv('Previsão de saída',fdate(r.ag.saida))}${kv('Consultor',esc(r.consultor))}
+      </div></section>
+      <section class="card"><div class="card-h"><h3>Serviços e aplicadores</h3></div>
+        <div style="overflow-x:auto"><table class="tbl inner-tbl"><thead><tr><th>Código</th><th>Descrição</th><th class="num">Qtd</th><th>Aplicador</th></tr></thead><tbody>
+        ${r.servicos.map((s,i)=>`<tr><td class="mono">${s.cod}</td><td>${esc(s.desc)}</td><td class="num">${s.qtd}</td>
+          <td style="min-width:170px"><select id="ex${i}" data-b="op.exec.${i}" aria-label="Aplicador"><option value="">Definir aplicador</option>${APLICADORES.map(a=>`<option ${r.op.exec[i]===a?'selected':''}>${a}</option>`).join('')}</select></td></tr>`).join('')}
+        </tbody></table></div>
+        <div class="fields"><div class="field"><label for="o-tec">Responsável técnico</label><select id="o-tec" data-b="op.tecnico">${TECNICOS.map(t=>`<option ${r.op.tecnico===t?'selected':''}>${t}</option>`).join('')}</select></div></div>
+      </section>
+    </div>
+    <div class="grid" style="align-content:start">
+      ${r.resumo?`<section class="note"><b>Agendamento</b>${esc(r.resumo).replace(/\n/g,'<br>')}</section>`:''}
+      ${r.obs?`<section class="note warn"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      <section class="note ${r.fin.liberado?'ok':'bad'}"><b>Situação financeira</b>${r.fin.liberado?'Financeiro liberou a entrega do veículo.':`Entrega bloqueada até o Financeiro liberar. ${aReceber(r)>0?'A receber: '+fmt(aReceber(r))+'.':''}`}</section>
+    </div></div>`;
+  else if (S.tab==='in' || S.tab==='out') body = vistoria(r, S.tab);
+  else body = `<div class="grid g2">
+    <section class="card"><h2>Ordem de Serviço</h2><p class="muted" style="margin:0">Documento com dados do cliente, veículo, serviços, valores, pagamentos e assinatura. Vai junto com o veículo e fica com o cliente.</p>
+      <div><button class="btn pri" data-a="doc" data-t="os">Ver OS ${r.os}</button></div></section>
+    <section class="card"><h2>Prisma</h2><p class="muted" style="margin:0">Ficha de produção para o pátio: serviços, aplicador de cada um e autorização do cliente. Sem valores.</p>
+      <div><button class="btn" data-a="doc" data-t="prisma">Ver Prisma ${r.os}</button></div></section></div>`;
+  return head(`OS <span class="mono">${r.os}</span> · ${esc(r.veiculo.modelo)}`, `${esc(r.cliente.nome)} · aberta em ${fdate(r.data)} pelo Comercial`,
+      `<button class="btn" data-a="doc" data-t="os">Ver OS para impressão</button>`, `<button class="crumb" data-a="nav" data-v="patio">← Gestão de pátio</button>`) + `
+    <div class="stepper">${PATIO.map(([k,n],i)=>`<button data-a="setEtapa" data-id="${r.id}" data-e="${k}" class="${i<idx?'done':i===idx?'now':''}"><small>${i<idx?'FEITO':i===idx?'AGORA':'ETAPA '+(i+1)}</small><b>${n}</b></button>`).join('')}</div>
+    <div class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" data-a="tab" data-t="${k}" aria-selected="${S.tab===k}">${n}${k==='in'&&r.op.chkIn.concluido||k==='out'&&r.op.chkOut.concluido?' ✓':''}</button>`).join('')}</div>
+    ${body}`;
+};
+
+/* ======================= FINANCEIRO ======================= */
+VIEWS.acompanhamento = () => {
+  const L = ordens();
+  const tot = L.reduce((s,r)=>s+total(r),0), rec = L.reduce((s,r)=>s+recebido(r),0), pend = L.reduce((s,r)=>s+aReceber(r),0);
+  const aguard = L.filter(r=>!r.fin.liberado).length;
+  const formaTxt = r => r.pag.quando==='retirada' ? `${r.pag.formaSaldo} na retirada` : `${r.pag.parcelas}x ${r.pag.formaSaldo}`;
+  return head('Acompanhamento pátio', 'Todas as OS com o que o Comercial combinou e o que já entrou no caixa. Abra uma OS para conferir e liberar a entrega.') + `
+  <div class="kpis">
+    <div class="kpi"><span class="k">Valor em serviços</span><span class="v">${fmt(tot)}</span><span class="d">${L.length} OS no mês</span></div>
+    <div class="kpi"><span class="k">Recebido</span><span class="v">${fmt(rec)}</span><span class="d">entradas e saldos confirmados</span></div>
+    <div class="kpi hl"><span class="k">Saldo a receber</span><span class="v">${fmt(pend)}</span><span class="d">na retirada ou parcelado</span></div>
+    <div class="kpi"><span class="k">Aguardando liberação</span><span class="v">${aguard}</span><span class="d">OS sem liberação de entrega</span></div>
+  </div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>OS</th><th>Entrada</th><th>Cliente</th><th>Status</th><th>Responsável</th><th>Veículo</th><th>Prev. entrega</th><th class="num">Valor serviços</th><th class="num">Entrada</th><th class="num">Saldo a pagar</th><th>Forma de pagamento</th><th>Financeiro</th></tr></thead><tbody>
+  ${L.map(r=>`<tr class="click" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}">
+    <td class="mono"><b>${r.os}</b></td><td class="mono">${fd(r.ag.entrada)}</td><td>${esc(r.cliente.nome)}</td>
+    <td>${chip(r.op.etapa==='entregue'?'ok':r.op.etapa==='pronto'?'warn':'neu', patioNome(r.op.etapa))}</td><td>${esc(r.consultor.split(' ')[0])}</td>
+    <td>${esc(r.veiculo.modelo)}</td><td class="mono">${fd(r.ag.saida)}</td><td class="num">${fmt(total(r))}</td><td class="num">${fmt(r.pag.entrada)}</td>
+    <td class="num"><b>${fmt(aReceber(r))}</b></td><td>${formaTxt(r)}</td><td>${finChip(r)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+};
+function reqs(r){
+  const t = r.fin.titulos, ent = t.find(x=>x.desc==='Entrada'), sal = t.filter(x=>x.desc!=='Entrada'), L = [];
+  L.push(['Entrada confirmada no caixa', !ent || ent.recebido]);
+  if (r.pag.quando==='retirada') L.push(['Saldo recebido na retirada', sal.every(x=>x.recebido)]);
+  else L.push([`${sal.length} parcela${sal.length===1?'':'s'} lançada${sal.length===1?'':'s'} em Contas a receber`, true]);
+  L.push(['Valores conferidos com os comprovantes', r.fin.conf.valores]);
+  L.push(['Forma de pagamento confirmada com o cliente', r.fin.conf.forma]);
+  return L;
+}
+VIEWS.conf = () => {
+  const r = cur(); if (!r || !r.os) return '';
+  const R = reqs(r), ok = R.every(x=>x[1]);
+  return head(`Conferência · OS <span class="mono">${r.os}</span>`, `${esc(r.cliente.nome)} · ${esc(r.veiculo.modelo)} · ${patioNome(r.op.etapa)}`,
+      `<button class="btn" data-a="doc" data-t="os">Ver OS</button>`, `<button class="crumb" data-a="nav" data-v="acompanhamento">← Acompanhamento pátio</button>`) + `
+  <div class="grid g-side">
+    <div class="grid" style="align-content:start">
+      <section class="card"><div class="card-h"><h3>Recebimentos</h3><span class="muted">Recebido <b class="num">${fmt(recebido(r))}</b> · a receber <b class="num">${fmt(aReceber(r))}</b></span></div>
+        <div style="overflow-x:auto"><table class="tbl inner-tbl"><thead><tr><th>Descrição</th><th>Vencimento</th><th>Forma</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead><tbody>
+        ${r.fin.titulos.map((t,i)=>`<tr><td><b>${t.desc}</b></td><td class="mono">${fdate(t.venc)}</td>
+          <td style="min-width:150px">${t.recebido?esc(t.forma):`<select id="tf${i}" data-b="fin.titulos.${i}.forma" aria-label="Forma de pagamento">${FORMAS.map(f=>`<option ${f===t.forma?'selected':''}>${f}</option>`).join('')}</select>`}</td>
+          <td class="num">${fmt(t.valor)}</td>
+          <td>${t.recebido?chip('ok','Recebido '+fd(t.dataRec)):t.venc<HOJE?chip('bad','Vencido'):chip('warn','Pendente')}</td>
+          <td>${t.recebido?`<button class="btn sm ghost" data-a="receber" data-i="${i}">Desfazer</button>`:`<button class="btn sm pri" data-a="receber" data-i="${i}">Confirmar recebimento</button>`}</td></tr>`).join('')}
+        </tbody><tfoot><tr><td colspan="3">Total da venda</td><td class="num">${fmt(total(r))}</td><td colspan="2"></td></tr></tfoot></table></div>
+      </section>
+      <section class="card"><h3>Conferência</h3>
+        <label class="ck"><input type="checkbox" id="cf-v" data-b="fin.conf.valores" data-rr="1" ${r.fin.conf.valores?'checked':''}> Conferi os valores com os comprovantes anexados pelo Comercial</label>
+        <label class="ck"><input type="checkbox" id="cf-f" data-b="fin.conf.forma" data-rr="1" ${r.fin.conf.forma?'checked':''}> Confirmei com o cliente a forma de pagamento do saldo</label>
+        <div class="field"><label for="cf-n">Observação do Financeiro</label><textarea id="cf-n" data-b="fin.nota" placeholder="Ex.: cliente pediu nota fiscal no CNPJ">${esc(r.fin.nota)}</textarea></div>
+      </section>
+    </div>
+    <div class="grid" style="align-content:start">
+      <section class="card"><div class="card-h"><h3>Combinado pelo Comercial</h3>${chip('neu',r.consultor.split(' ')[0])}</div>
+        <div>${r.servicos.map(s=>`<div class="sumline"><span>${s.qtd}× ${esc(s.desc)}</span><span>${fmt(s.qtd*s.valor)}</span></div>`).join('')}
+          ${+r.desconto?`<div class="sumline"><span>Desconto</span><span class="neg">− ${fmt(r.desconto)}</span></div>`:''}
+          <div class="sumline big"><span>Total</span><span>${fmt(total(r))}</span></div></div>
+        <div class="sumline"><span>Entrada · ${r.pag.formaEntrada} · ${fd(r.pag.dataEntrada)}</span><span>${fmt(r.pag.entrada)}</span></div>
+        <div class="sumline"><span>Saldo · ${r.pag.quando==='retirada'?`${r.pag.formaSaldo} na retirada`:`${r.pag.parcelas}x ${r.pag.formaSaldo}`}</span><span>${fmt(saldo(r))}</span></div>
+        ${r.pag.entradaPaga?`<div class="note ok"><b>Comercial informou</b>Cliente já pagou a entrada.</div>`:`<div class="note bad"><b>Comercial informou</b>Entrada ainda não paga. Confirmar quando cair na conta.</div>`}
+        ${r.anexos.length?`<div><span class="flabel">Anexos do Comercial</span><div class="anexos" style="margin-top:6px">${r.anexos.map(a=>`<div class="anexo"><div class="foto ${a.src?'':'ph'}" ${a.src?`style="background-image:url('${a.src}')"`:''}></div>${esc(a.nome)}</div>`).join('')}</div></div>`:''}
+      </section>
+      <section class="card"><h3>Liberação da entrega</h3>
+        <div class="reqs">${R.map(([t,v])=>`<div><span class="${v?'y':'n'}">${v?'✓':'○'}</span><span class="${v?'':'muted'}">${t}</span></div>`).join('')}</div>
+        ${r.fin.liberado?`<div class="note ok"><b>Liberado</b>O Operacional já pode entregar o veículo.</div><button class="btn ghost" data-a="liberar">Cancelar liberação</button>`
+          :`<button class="btn pri" data-a="liberar" ${ok?'':'disabled'}>Liberar veículo para entrega</button>${ok?'':'<span class="faint" style="font-size:12.5px">Complete os itens acima para liberar.</span>'}`}
+      </section>
+    </div>
+  </div>`;
+};
+function titulosTodos(){
+  return ordens().flatMap(r=>r.fin.titulos.map((t,i)=>({r,t,i}))).sort((a,b)=>a.t.venc.localeCompare(b.t.venc));
+}
+VIEWS.receber = () => {
+  const f = S.f, all = titulosTodos();
+  const L = all.filter(x=>f.rec==='todos' || (f.rec==='aberto' ? !x.t.recebido : x.t.recebido));
+  const venc = all.filter(x=>!x.t.recebido && x.t.venc<HOJE).reduce((s,x)=>s+x.t.valor,0);
+  const sem = all.filter(x=>!x.t.recebido && x.t.venc>=HOJE && x.t.venc<='2026-10-31').reduce((s,x)=>s+x.t.valor,0);
+  const rec = all.filter(x=>x.t.recebido).reduce((s,x)=>s+x.t.valor,0);
+  return head('Contas a receber', 'Entradas, saldos e parcelas gerados automaticamente a partir das vendas do Comercial.') + `
+  <div class="kpis">
+    <div class="kpi"><span class="k">Vencido</span><span class="v" style="color:var(--bad)">${fmt(venc)}</span><span class="d">cobrar o cliente</span></div>
+    <div class="kpi hl"><span class="k">A receber em outubro</span><span class="v">${fmt(sem)}</span><span class="d">de hoje até 31/10</span></div>
+    <div class="kpi"><span class="k">Recebido</span><span class="v">${fmt(rec)}</span><span class="d">confirmado pelo Financeiro</span></div>
+  </div>
+  <div class="filters"><div class="seg">${[['aberto','Em aberto'],['recebido','Recebidos'],['todos','Todos']].map(([v,n])=>`<button data-a="fset" data-k="rec" data-val="${v}" aria-pressed="${f.rec===v}">${n}</button>`).join('')}</div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vencimento</th><th>Cliente</th><th>OS</th><th>Descrição</th><th>Forma</th><th class="num">Valor</th><th>Situação</th></tr></thead><tbody>
+  ${L.map(({r,t})=>`<tr class="click" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}"><td class="mono">${fdate(t.venc)}</td><td>${esc(r.cliente.nome)}</td><td class="mono">${r.os}</td><td>${t.desc}</td><td>${esc(t.forma)}</td>
+    <td class="num">${fmt(t.valor)}</td><td>${t.recebido?chip('ok','Recebido'):t.venc<HOJE?chip('bad','Vencido'):chip('warn','A vencer')}</td></tr>`).join('') || `<tr><td colspan="7"><div class="empty">Nada por aqui.</div></td></tr>`}
+  </tbody></table></div>`;
+};
+VIEWS.pagar = () => {
+  const f = S.f;
+  const st = p => p.pago ? 'pago' : p.venc<HOJE ? 'vencido' : 'aberto';
+  const L = PAGAR.map((p,i)=>({p,i})).filter(({p})=>f.pag==='todos' || (f.pag==='aberto' ? !p.pago : p.pago)).sort((a,b)=>a.p.venc.localeCompare(b.p.venc));
+  const ab = PAGAR.filter(p=>!p.pago).reduce((s,p)=>s+p.valor,0), vc = PAGAR.filter(p=>st(p)==='vencido').reduce((s,p)=>s+p.valor,0), pg = PAGAR.filter(p=>p.pago).reduce((s,p)=>s+p.valor,0);
+  return head('Contas a pagar', 'Fornecedores, despesas fixas e equipe. Tudo entra na DRE por categoria.') + `
+  <div class="kpis">
+    <div class="kpi hl"><span class="k">Em aberto</span><span class="v">${fmt(ab)}</span><span class="d">${PAGAR.filter(p=>!p.pago).length} contas</span></div>
+    <div class="kpi"><span class="k">Vencido</span><span class="v" style="color:${vc?'var(--bad)':'inherit'}">${fmt(vc)}</span><span class="d">pagar hoje</span></div>
+    <div class="kpi"><span class="k">Pago em outubro</span><span class="v">${fmt(pg)}</span><span class="d">${PAGAR.filter(p=>p.pago).length} contas</span></div>
+  </div>
+  <section class="card"><h3>Nova conta</h3>
+    <div class="fields">
+      <div class="field"><label for="np-d">Descrição</label><input id="np-d" placeholder="Ex.: Rolo PPF fosco"></div>
+      <div class="field"><label for="np-f">Fornecedor</label><input id="np-f"></div>
+      <div class="field"><label for="np-c">Categoria</label><select id="np-c">${['Materiais','Ocupação','Pessoal','Marketing','Administrativo'].map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div class="field"><label for="np-v">Vencimento</label><input id="np-v" type="date" value="2026-10-31"></div>
+      <div class="field"><label for="np-x">Valor (R$)</label><input id="np-x" class="num" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+    <div><button class="btn pri" data-a="addPagar">Lançar conta</button></div></section>
+  <div class="filters"><div class="seg">${[['aberto','Em aberto'],['pago','Pagas'],['todos','Todas']].map(([v,n])=>`<button data-a="fset" data-k="pag" data-val="${v}" aria-pressed="${f.pag===v}">${n}</button>`).join('')}</div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Vencimento</th><th>Descrição</th><th>Fornecedor</th><th>Categoria</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead><tbody>
+  ${L.map(({p,i})=>`<tr><td class="mono">${fdate(p.venc)}</td><td>${esc(p.desc)}</td><td class="muted">${esc(p.forn)}</td><td><span class="tag">${p.cat}</span></td><td class="num">${fmt(p.valor)}</td>
+    <td>${st(p)==='pago'?chip('ok','Pago'):st(p)==='vencido'?chip('bad','Vencido'):chip('warn','Em aberto')}</td>
+    <td>${p.pago?`<button class="btn sm ghost" data-a="pagar" data-i="${i}">Desfazer</button>`:`<button class="btn sm" data-a="pagar" data-i="${i}">Marcar como paga</button>`}</td></tr>`).join('') || `<tr><td colspan="7"><div class="empty">Nada por aqui.</div></td></tr>`}
+  </tbody></table></div>`;
+};
+VIEWS.dre = () => {
+  const vendas = DB.filter(r=>r.os && r.data.startsWith('2026-10'));
+  const bruta = vendas.reduce((s,r)=>s+subtotal(r),0), desc = vendas.reduce((s,r)=>s+(+r.desconto||0),0);
+  const impostos = Math.round((bruta-desc)*0.06*100)/100;
+  const cartao = vendas.flatMap(r=>r.fin.titulos).filter(t=>t.forma.startsWith('Cartão')).reduce((s,t)=>s+t.valor,0);
+  const taxa = Math.round(cartao*0.029*100)/100;
+  const liq = bruta-desc-impostos-taxa;
+  const cat = c => PAGAR.filter(p=>p.cat===c && p.venc.startsWith('2026-10')).reduce((s,p)=>s+p.valor,0);
+  const mat = cat('Materiais'), lucroB = liq-mat;
+  const desp = [['Pessoal',cat('Pessoal')],['Ocupação',cat('Ocupação')],['Marketing',cat('Marketing')],['Administrativo',cat('Administrativo')]];
+  const totDesp = desp.reduce((s,d)=>s+d[1],0), res = lucroB-totDesp;
+  const pc = v => bruta ? (v/bruta*100).toFixed(1).replace('.',',')+'%' : '—';
+  const line = (n,v,cls='',neg=false) => `<tr class="${cls}"><td>${n}</td><td class="num ${neg&&v?'neg':''}">${neg&&v?'− ':''}${fmt(Math.abs(v))}</td><td class="num faint">${pc(Math.abs(v))}</td>
+    <td style="width:22%"><div class="minibar" style="width:${bruta?Math.min(100,Math.abs(v)/bruta*100):0}%;${neg?'background:var(--bad)':''}"></div></td></tr>`;
+  return head('Relatório e DRE', 'Demonstração do resultado de outubro de 2026 por competência. As receitas vêm das vendas fechadas e as despesas das contas a pagar.',
+      `<select id="dre-m" aria-label="Mês"><option>Outubro de 2026</option><option disabled>Setembro de 2026</option></select>`) + `
+  <div class="kpis">
+    <div class="kpi"><span class="k">Receita líquida</span><span class="v">${fmt(liq)}</span><span class="d">${vendas.length} vendas</span></div>
+    <div class="kpi"><span class="k">Lucro bruto</span><span class="v">${fmt(lucroB)}</span><span class="d">margem ${pc(lucroB)}</span></div>
+    <div class="kpi hl"><span class="k">Resultado do mês</span><span class="v" style="color:${res<0?'var(--bad)':'var(--ok)'}">${fmt(res)}</span><span class="d">margem ${pc(res)}</span></div>
+  </div>
+  <div class="tbl-wrap"><table class="tbl dre"><thead><tr><th>Conta</th><th class="num">Valor</th><th class="num">% receita</th><th></th></tr></thead><tbody>
+    ${line('Receita bruta de serviços', bruta, 'grp')}
+    ${line('Descontos concedidos', desc, 'ind', true)}
+    ${line('Impostos sobre vendas (Simples Nacional 6%)', impostos, 'ind', true)}
+    ${line('Taxas de cartão (2,9%)', taxa, 'ind', true)}
+    ${line('Receita líquida', liq, 'grp')}
+    ${line('Materiais aplicados (PPF, películas, produtos)', mat, 'ind', true)}
+    ${line('Lucro bruto', lucroB, 'grp')}
+    ${desp.map(([n,v])=>line(n, v, 'ind', true)).join('')}
+    ${line('Despesas operacionais', totDesp, 'grp', true)}
+    ${line('Resultado do período', res, 'res', res<0)}
+  </tbody></table></div>`;
+};
+
+/* ======================= DOCUMENTOS ======================= */
+function docOS(r){
+  const t = r.fin.titulos, n = t.length;
+  const av = Object.entries(r.op.chkIn.avarias).filter(([,v])=>v);
+  return `<div class="doc">
+    <div class="dt"><span class="ttl">Ordem de Serviço</span><span class="logo">WINGARD</span></div>
+    <div class="dt" style="margin-top:14px"><span class="big">Nº ${r.os}</span><span class="big">Data ${fdate(r.data)}</span></div>
+    <div class="row"><span><b>Cliente:</b> ${esc(r.cliente.nome.toUpperCase())}</span><span><b>CPF/CNPJ:</b> ${esc(r.cliente.cpf)}</span><span><b>Celular:</b> ${esc(r.cliente.tel)}</span></div>
+    <div class="row"><span><b>Endereço:</b> ${esc(r.cliente.end)}</span></div>
+    <div class="row"><span><b>Veículo:</b> ${esc(r.veiculo.modelo)}</span><span><b>Placa:</b> ${esc(r.veiculo.placa)}</span><span><b>Km:</b> ${esc(r.op.chkIn.km)}</span><span><b>Ano:</b> ${esc(r.veiculo.ano)}</span><span><b>Chassi:</b> ${esc(r.veiculo.chassi)}</span></div>
+    ${r.resumo?`<div class="cap">Agendamento</div><div>${esc(r.resumo).replace(/\n/g,'<br>')}</div>`:''}
+    ${r.obs?`<div class="cap">Observações</div><div>${esc(r.obs)}</div>`:''}
+    <h4>Serviços</h4>
+    <table><thead><tr><th>Código</th><th>Descrição</th><th class="r">Qtd</th><th class="r">Vlr. Unitário</th><th class="r">Vlr. Total</th></tr></thead><tbody>
+      ${r.servicos.map(s=>`<tr><td>${s.cod}</td><td>${esc(s.desc.toUpperCase())}</td><td class="r">${s.qtd}</td><td class="r">${fmt(s.valor)}</td><td class="r">${fmt(s.qtd*s.valor)}</td></tr>`).join('')}
+      <tr><td colspan="4" class="r"><b>Serviços:</b></td><td class="r">${fmt(subtotal(r))}</td></tr>
+      ${+r.desconto?`<tr><td colspan="4" class="r"><b>Desconto:</b></td><td class="r">− ${fmt(r.desconto)}</td></tr>`:''}
+      <tr><td colspan="4" class="r"><b>Total Venda:</b></td><td class="r"><b>${fmt(total(r))}</b></td></tr></tbody></table>
+    <h4>Pagamentos</h4>
+    <table><thead><tr><th>Data</th><th>Documento</th><th class="r">$ Parcela</th><th>Parcela(s)</th><th>Situação</th></tr></thead><tbody>
+      ${t.map((x,i)=>`<tr><td>${fdate(x.venc)}</td><td>${esc(x.forma)} · ${x.desc}</td><td class="r">${fmt(x.valor)}</td><td>${i+1}/${n}</td><td>${x.recebido?'Pago':'Em aberto'}</td></tr>`).join('')}
+      <tr><td colspan="2" class="r"><b>$ Total das Parcelas</b></td><td class="r"><b>${fmt(t.reduce((s,x)=>s+x.valor,0))}</b></td><td colspan="2"></td></tr></tbody></table>
+    <h4>Consultores</h4>
+    <div class="row"><span><b>Responsável:</b> ${esc(r.consultor.toUpperCase())}</span><span><b>Responsável técnico:</b> ${esc(r.op.tecnico.toUpperCase())}</span></div>
+    <h4>Vistoria de entrada</h4>
+    <div>${av.length?av.map(([k,v])=>`${ZONAS[k]}: ${AV_NOME[v]}`).join(' · '):'Sem avarias registradas.'} ${r.op.chkIn.comb?`· Combustível ${r.op.chkIn.comb}`:''}</div>
+    <h4>Garantia</h4>
+    <div>Garantia conforme o fabricante de cada produto aplicado, mediante apresentação desta OS.</div>
+    <h4>Observações</h4>
+    <div class="lines"><div></div><div></div></div>
+    <div class="sig"><div>${esc(r.consultor)}<br>Wingard</div><div>${esc(r.cliente.nome)}<br>Cliente</div></div>
+  </div>`;
+}
+function docPrisma(r){
+  return `<div class="doc">
+    <div class="dt"><span class="big">Nº ${r.os}</span><span class="big">Data ${fdate(r.data)}</span></div>
+    <div class="row" style="margin-top:8px"><span><b>Cliente:</b> ${esc(r.cliente.nome.toUpperCase())}</span><span><b>Tel:</b> ${esc(r.cliente.tel)}</span></div>
+    <div class="row"><span><b>Veículo:</b> ${esc(r.veiculo.modelo)}</span><span><b>Placa:</b> ${esc(r.veiculo.placa)}</span><span><b>Km:</b> ${esc(r.op.chkIn.km)}</span><span><b>Ano:</b> ${esc(r.veiculo.ano)}</span><span><b>Chassi:</b> ${esc(r.veiculo.chassi)}</span></div>
+    ${r.resumo?`<div class="cap">Agendamento</div><div>${esc(r.resumo).replace(/\n/g,'<br>')}</div>`:''}
+    ${r.obs?`<div class="cap">Observações</div><div>${esc(r.obs)}</div>`:''}
+    <h4>Produtos e Serviços</h4>
+    <table><thead><tr><th>Código</th><th>Referência</th><th>Descrição</th><th>End.</th><th class="r">Qtd</th><th>Executor</th></tr></thead><tbody>
+      ${r.servicos.map((s,i)=>`<tr><td>${s.cod}</td><td></td><td>${esc(s.desc.toUpperCase())}</td><td></td><td class="r">${s.qtd}</td><td>${esc(r.op.exec[i]||'')}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="sig"><div>${esc(r.consultor.toUpperCase())}<br>Responsável</div><div>${esc(r.cliente.nome.toUpperCase())}<br>Autorização do cliente</div></div>
+    <h4>Observações</h4>
+    <div class="lines"><div></div><div></div><div></div><div></div><div></div></div>
+  </div>`;
+}
+function abrirDoc(tipo){
+  const r = cur(), m = $('#modal');
+  m.innerHTML = `<div class="modal-in"><div class="modal-bar"><span><b>${tipo==='os'?'Ordem de Serviço':'Prisma'} ${r.os}</b> · pré-visualização da impressão em A4</span>
+    <span style="display:flex;gap:8px"><button class="btn sm" data-a="doc" data-t="${tipo==='os'?'prisma':'os'}">Ver ${tipo==='os'?'Prisma':'OS'}</button><button class="btn sm" data-a="fecharModal">Fechar</button></span></div>
+    ${tipo==='os'?docOS(r):docPrisma(r)}</div>`;
+  m.hidden = false;
+}
+
+/* ======================= AÇÕES ======================= */
+function setPath(obj, path, val){
+  const ks = path.split('.'); let o = obj;
+  for (let i=0;i<ks.length-1;i++){ if (o[ks[i]]==null) o[ks[i]] = {}; o = o[ks[i]]; }
+  o[ks[ks.length-1]] = val;
+}
+const ACT = {
+  dept: a => { const d = a.dataset.d; go(d, DEPTS[d].menu[0][0]); },
+  nav: a => go(S.dept, a.dataset.v),
+  open: a => go(a.dataset.d, a.dataset.v, a.dataset.id),
+  fset: a => { S.f[a.dataset.k] = a.dataset.val; render(); },
+  status: a => { const r = cur(); r.status = a.dataset.s; if (r.status==='Ganho' && !['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa='Fechamento'; render();
+    if (r.status==='Ganho' && !r.os) toast('Status ganho. Use “Fechar venda e gerar OS” para enviar ao Operacional e ao Financeiro.','warn'); },
+  canal: a => { cur().canal = a.dataset.c; render(); },
+  addSvc: () => { cur().servicos.push(sv('111')); render(); },
+  rmSvc: a => { cur().servicos.splice(+a.dataset.i,1); render(); },
+  salvar: () => toast('Atendimento salvo.'),
+  fechar: () => {
+    const r = cur(), falta = [];
+    if (!r.cliente.nome) falta.push('nome do cliente');
+    if (!r.cliente.tel) falta.push('telefone');
+    if (!r.veiculo.modelo) falta.push('veículo');
+    if (!r.servicos.length) falta.push('pelo menos um serviço');
+    if (!r.ag.entrada || !r.ag.saida) falta.push('datas de entrada e saída');
+    if (falta.length) return toast('Para fechar a venda, preencha: '+falta.join(', ')+'.','bad');
+    gerarOS(r); render(); window.scrollTo(0,0);
+    toast(`Venda fechada. OS ${r.os} criada no Operacional e recebimentos lançados no Financeiro.`);
+  },
+  avancar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); moverEtapa(r, PATIO[i+1][0]); },
+  setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
+  tab: a => { S.tab = a.dataset.t; render(); },
+  zona: a => { const r = cur(), c = S.tab==='out' ? r.op.chkOut : r.op.chkIn, z = a.dataset.z;
+    c.avarias[z] = AVARIAS[(AVARIAS.indexOf(c.avarias[z]||'')+1) % AVARIAS.length]; render(); },
+  comb: a => { cur().op[a.dataset.k].comb = a.dataset.c; render(); },
+  concluirChk: a => { const r = cur(), c = r.op[a.dataset.k]; c.concluido = true;
+    if (a.dataset.k==='chkIn' && r.op.etapa==='aguardando') r.op.etapa = 'lavagem';
+    render(); toast(a.dataset.k==='chkIn' ? `Checklist de entrada concluído. OS ${r.os} foi para Lavagem.` : `Checklist de saída concluído.${r.fin.liberado?' Veículo pode ser entregue.':' Falta a liberação do Financeiro.'}`, r.fin.liberado||a.dataset.k==='chkIn'?'':'warn'); },
+  doc: a => abrirDoc(a.dataset.t),
+  fecharModal: () => { $('#modal').hidden = true; },
+  receber: a => { const r = cur(), t = r.fin.titulos[+a.dataset.i]; t.recebido = !t.recebido; t.dataRec = t.recebido ? HOJE : '';
+    if (!t.recebido) r.fin.liberado = false; render(); if (t.recebido) toast(`${t.desc} de ${fmt(t.valor)} confirmada no caixa.`); },
+  liberar: () => { const r = cur(); r.fin.liberado = !r.fin.liberado; render();
+    toast(r.fin.liberado ? `OS ${r.os} liberada. O Operacional já vê a liberação no pátio.` : 'Liberação cancelada.', r.fin.liberado?'':'warn'); },
+  pagar: a => { const p = PAGAR[+a.dataset.i]; p.pago = !p.pago; render(); },
+  addPagar: () => {
+    const d = $('#np-d').value.trim(), v = parseFloat($('#np-x').value.replace(/\./g,'').replace(',','.'));
+    if (!d || !(v>0)) return toast('Informe a descrição e o valor da conta.','bad');
+    PAGAR.push({desc:d, forn:$('#np-f').value.trim()||'—', cat:$('#np-c').value, venc:$('#np-v').value||HOJE, valor:v, pago:false});
+    S.f.pag = 'aberto'; render(); toast('Conta lançada.');
+  },
+};
+function moverEtapa(r, etapa){
+  const i = PATIO.findIndex(p=>p[0]===etapa);
+  if (etapa!=='aguardando' && !r.op.chkIn.concluido) return toast(`Faça o checklist de entrada da OS ${r.os} antes de mover o veículo.`,'bad');
+  if (etapa==='entregue' && !r.op.chkOut.concluido) return toast(`Entrega bloqueada: falta o checklist de saída da OS ${r.os}.`,'bad');
+  if (etapa==='entregue' && !r.fin.liberado) return toast(`Entrega bloqueada: o Financeiro ainda não liberou a OS ${r.os}. A receber: ${fmt(aReceber(r))}.`,'bad');
+  r.op.etapa = etapa; render(); toast(`OS ${r.os} agora está em ${PATIO[i][1]}.`);
+}
+
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-a]'); if (!a || a.disabled) return;
+  if (a.tagName==='TR' && e.target.closest('button,select,input,a')) return;
+  const f = ACT[a.dataset.a]; if (f){ e.preventDefault(); f(a, e); }
+});
+$('#modal').addEventListener('click', e => { if (e.target.id==='modal') $('#modal').hidden = true; });
+document.addEventListener('keydown', e => { if (e.key==='Escape') $('#modal').hidden = true; });
+
+function onField(e){
+  const el = e.target;
+  if (el.dataset.f){ S.f[el.dataset.f] = el.value;
+    if (S.view==='atendimentos' && !el.dataset.rr){ $('#tbl').innerHTML = tblAtend(listaAtend()); } else if (e.type==='change') render();
+    return; }
+  if (el.dataset.up && e.type==='change'){
+    const r = cur(), files = [...el.files], path = el.dataset.up.split('.');
+    let arr = r; path.forEach(p=>arr = arr[p]);
+    let n = files.length; if (!n) return;
+    files.forEach(f => { const rd = new FileReader(); rd.onload = () => { arr.push({nome:f.name, src: f.type.startsWith('image/') ? rd.result : ''}); if (--n===0) render(); }; rd.readAsDataURL(f); });
+    return; }
+  if (el.dataset.svc!=null && e.type==='change'){
+    const s = cur().servicos[+el.dataset.svc], c = CATALOGO.find(x=>x.cod===el.value); Object.assign(s, {cod:c.cod, desc:c.desc, valor:c.valor}); render(); return; }
+  const p = el.dataset.b; if (!p) return;
+  if (el.type==='checkbox' && e.type!=='change') return;
+  let v = el.type==='checkbox' ? el.checked : el.value;
+  if (el.dataset.t==='n') v = parseFloat(String(v).replace(',','.')) || 0;
+  setPath(cur(), p, v);
+  if (el.dataset.rr && e.type==='change') render(); else refreshFicha();
+}
+main.addEventListener('input', onField);
+main.addEventListener('change', onField);
+
+render();
+</script>

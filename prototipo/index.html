@@ -205,8 +205,8 @@ input.num{text-align:right}
 .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .filters select,.filters input{width:auto;min-width:170px}
 .filters .grow{flex:1 1 240px}
-.kpi .meter{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;margin-top:6px}
-.kpi .meter i{display:block;height:100%;border-radius:999px;background:var(--acc)}
+.meter{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;border-radius:999px;background:var(--acc)}
 .kpi.lost .ki{color:var(--bad);background:color-mix(in srgb,var(--bad) 11%,transparent)}
 .kpi.lost .v{color:var(--bad)}
 .bar-fill.lost{background:linear-gradient(90deg,color-mix(in srgb,var(--bad) 55%,var(--surface)),var(--bad))}
@@ -228,6 +228,35 @@ input.num{text-align:right}
 .todo-t{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:13px;min-width:0}
 .todo-go{display:inline-flex;align-items:center;gap:6px;color:var(--acc);font-weight:600;font-size:13px;white-space:nowrap}
 @media (max-width:700px){ .todo-i{grid-template-columns:minmax(0,1fr)} }
+.insp{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.insp-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 8px 8px 14px;background:var(--surface-2);min-height:44px}
+.insp-h b{font:600 13.5px/1.2 var(--f-display)}
+.insp-r{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;padding:8px 14px;border-top:1px solid var(--line);flex-wrap:wrap;font-size:13.5px}
+.rseg{display:inline-flex;gap:2px;background:var(--surface-3);padding:3px;border-radius:10px}
+.rseg button{border:0;background:none;padding:4px 10px;border-radius:7px;font-size:12.5px;cursor:pointer;color:var(--muted);font-weight:550;min-height:28px}
+.rseg button:hover{color:var(--fg)}
+.rseg button[aria-pressed="true"]{box-shadow:var(--shadow);background:var(--surface);color:var(--c)}
+.rseg .ok{--c:var(--ok)} .rseg .warn{--c:var(--warn)} .rseg .bad{--c:var(--bad)} .rseg .neu{--c:var(--fg)}
+.avrow{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.avrow-h{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.zone.ro{cursor:default}
+.zone.ro:hover{stroke:var(--z-stroke);stroke-width:1.2}
+.sig{width:100%;height:190px;background:var(--paper);border:1.5px dashed var(--line-2);border-radius:12px;touch-action:none;display:block;cursor:crosshair}
+.sig-img{background:var(--paper);border-radius:12px;padding:8px;max-height:150px;width:auto;max-width:100%;align-self:flex-start;border:1px solid var(--line)}
+.cv-err{color:var(--bad);font-weight:550;font-size:13.5px}
+#cv{position:fixed;inset:0;z-index:45;overflow-y:auto;background:var(--bg);--acc:var(--com)}
+.cv-wrap{max-width:760px;margin:0 auto;padding-block:max(16px,env(safe-area-inset-top,0px)) 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.cv-banner{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 10px 10px 14px;border-radius:14px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:550;box-shadow:var(--shadow-md)}
+.cv-banner span{display:inline-flex;align-items:center;gap:8px}
+.cv-head{display:flex;align-items:center;gap:12px;padding:6px 2px}
+.cv-head b{font:650 18px/1 var(--f-display)}
+.cv-head div span{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.cv-head .cv-num{margin-left:auto;text-align:right;font-size:12.5px;color:var(--muted);line-height:1.5}
+.cv-head .cv-num b{font:600 12.5px var(--f-mono);color:var(--fg)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px 18px}
+.kv span{display:block;font-size:12px;color:var(--muted)}
+.kv b{font-weight:550;overflow-wrap:anywhere}
+.cv-foot{text-align:center;font-size:12px;color:var(--faint);display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -428,6 +457,7 @@ table{border-collapse:collapse;width:100%;font-size:inherit}
   <main class="main" id="main"></main>
 </div>
 <div class="modal" id="modal" hidden></div>
+<div id="cv" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -494,6 +524,19 @@ const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplic
 const patioNome = k => (PATIO.find(p=>p[0]===k)||['',k])[1];
 const ITENS_IN = ['Painel sem luzes de alerta','Faróis e lanternas funcionando','Vidros elétricos funcionando','Multimídia e som','Rodas e pneus sem avarias','Estepe, macaco e triângulo','Chave reserva entregue','Pertences pessoais retirados','Tapetes no veículo'];
 const ITENS_OUT = ['Luzes do painel e eletrônicos conferidos','PPF sem bolhas, bordas e cantos selados','Películas sem bolhas, riscos ou poeira','Acabamento e limpeza final','Veículo lavado e seco','Cliente acompanhou a vistoria de saída'];
+const INSPECAO = [
+  {cat:'Pintura e carroceria', itens:[['Pintura geral','aval'],['Para-choques','aval'],['Lentes de faróis e lanternas','aval'],['Vidros e para-brisa','aval'],['Retrovisores','aval'],['Rodas (riscos e ralados)','aval']]},
+  {cat:'Freios', itens:[['Fluido / Reservatório','aval'],['Pastilha / Lona','aval'],['Disco / Tambor','aval'],['Flexíveis','aval'],['Cilindro de roda','aval'],['Freio de mão','aval']]},
+  {cat:'Escapamento', itens:[['Catalisador','aval'],['Intermediário','aval'],['Abraçadeiras / Coxins','aval']]},
+  {cat:'Motor', itens:[['Nível do óleo do motor','aval'],['Filtro de óleo','aval'],['Filtro de ar','aval'],['Nível do reservatório de arrefecimento','aval']]},
+  {cat:'Rodas e pneus', itens:[['Pneus','aval'],['Rodas','aval'],['Válvula (bico)','aval']]},
+  {cat:'Suspensão', itens:[['Amortecedores','aval'],['Molas','aval'],['Bandejas','aval'],['Terminais','aval']]},
+  {cat:'Elétrica e painel', itens:[['Carga da bateria','aval'],['Painel sem luzes de alerta','sn'],['Faróis e lanternas funcionando','sn'],['Luz de freio','sn'],['Luz de alerta','sn'],['Vidros elétricos','sn'],['Multimídia e som','sn']]},
+  {cat:'Itens no veículo', itens:[['Extintor','sn'],['Tapetes','sn'],['Estepe, macaco e triângulo','sn'],['Chave reserva entregue','sn'],['Pertences pessoais retirados','sn']]},
+];
+const RESP = {aval:['Bom','Regular','Ruim','N/A'], sn:['Sim','Não','N/A']};
+const respK = v => ({'Bom':'ok','Sim':'ok','Regular':'warn','Ruim':'bad','Não':'bad','N/A':'neu'}[v]||'neu');
+const TOTAL_INSP = INSPECAO.reduce((s,c)=>s+c.itens.length,0);
 const ZONAS = {
   'parachoque-d':'Para-choque dianteiro','capo':'Capô','parabrisa':'Para-brisa','teto':'Teto','vidro-t':'Vidro traseiro','tampa':'Tampa traseira','parachoque-t':'Para-choque traseiro',
   'paralama-de':'Para-lama diant. esq.','paralama-dd':'Para-lama diant. dir.','porta-de':'Porta diant. esq.','porta-dd':'Porta diant. dir.',
@@ -546,12 +589,13 @@ function gerarTitulos(r){
   }
   return t;
 }
-function novoChk(){ return {itens:{}, avarias:{}, comb:'1/2', km:'', fotos:[], obs:'', resp:TECNICOS[0], concluido:false}; }
+function novoChk(){ return {itens:{}, avarias:{}, avDesc:{}, insp:{}, num:null, ass:{status:''}, comb:'1/2', km:'', fotos:[], obs:'', resp:TECNICOS[0], concluido:false}; }
 function gerarOS(r, num){
   r.os = num ?? nextOS++;
   r.status = 'Ganho';
   if (!['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa = 'Fechamento';
   r.op = {etapa:'aguardando', tecnico:TECNICOS[0], exec:{}, chkIn:novoChk(), chkOut:novoChk()};
+  r.op.chkIn.num = r.os - 19;
   r.fin = {titulos:gerarTitulos(r), conf:{valores:false, forma:false}, liberado:false, nota:''};
 }
 
@@ -620,12 +664,15 @@ const DB = [
   const g = id => DB.find(r=>r.id===id);
   const set = (id, os, etapa, fn) => { const r=g(id); gerarOS(r, os); r.op.etapa = etapa; fn && fn(r); };
   const chkFeito = (c, av={}, km='') => { ITENS_IN.forEach((_,i)=>c.itens[i]=true); c.avarias=av; c.comb='3/4'; c.km=km; c.concluido=true;
+    INSPECAO.forEach((g,ci)=>g.itens.forEach(([,t],ii)=>c.insp[ci+'-'+ii] = t==='sn'?'Sim':'Bom'));
     c.fotos=[{nome:'frente.jpg'},{nome:'traseira.jpg'},{nome:'lateral-esq.jpg'},{nome:'lateral-dir.jpg'},{nome:'painel.jpg'}]; };
-  set('A01', 430, 'pronto', r => { chkFeito(r.op.chkIn, {'parachoque-d':'risco','porta-dd':'risco'}, '1'); r.op.chkIn.obs='Pequeno risco no para-choque dianteiro (lado direito) já existente. Cliente ciente.';
+  set('A01', 430, 'pronto', r => { chkFeito(r.op.chkIn, {'parachoque-d':'risco','porta-dd':'risco'}, '1'); r.op.chkIn.obs='Fotos tiradas no recebimento do veículo, antes da lavagem e descontaminação. Cliente ciente das avarias já existentes.';
+    r.op.chkIn.avDesc = {'parachoque-d':'Risco leve de cerca de 3 cm no lado direito, já existente.', 'porta-dd':'Risco superficial perto da maçaneta.'};
+    r.op.chkIn.insp['0-1'] = 'Regular'; r.op.chkIn.ass = {status:'enviado', enviado:'13/10/2026 às 09:40'};
     r.op.exec = {0:'Diego Martins',1:'Felipe Souza',2:'Felipe Souza'}; ITENS_OUT.slice(0,4).forEach((_,i)=>r.op.chkOut.itens[i]=true); r.fin.conf.valores = true; });
-  set('A02', 431, 'lavagem', r => { chkFeito(r.op.chkIn, {'retro-e':'risco'}, '820'); r.op.exec = {0:'Lucas Pereira',1:'Rogério Lima'}; r.fin.conf.valores = true; });
-  set('A03', 429, 'finalizacao', r => { chkFeito(r.op.chkIn, {'parachoque-t':'amassado'}, '18.400'); r.op.exec={0:'Diego Martins',1:'Felipe Souza'}; r.fin.conf.valores=true; r.fin.conf.forma=true; });
-  set('A04', 428, 'entregue', r => { chkFeito(r.op.chkIn, {}, '5.210'); ITENS_OUT.forEach((_,i)=>r.op.chkOut.itens[i]=true); r.op.chkOut.concluido=true; r.op.exec={0:'Lucas Pereira'};
+  set('A02', 431, 'lavagem', r => { chkFeito(r.op.chkIn, {'retro-e':'risco'}, '820'); r.op.chkIn.avDesc = {'retro-e':'Pequeno risco na capa do retrovisor.'}; r.op.chkIn.ass = {status:'assinado', nome:'Marina Okada', data:'20/10/2026 às 10:15', email:'marina.okada@email.com'}; r.op.exec = {0:'Lucas Pereira',1:'Rogério Lima'}; r.fin.conf.valores = true; });
+  set('A03', 429, 'finalizacao', r => { chkFeito(r.op.chkIn, {'parachoque-t':'amassado'}, '18.400'); r.op.chkIn.avDesc = {'parachoque-t':'Amassado de estacionamento no canto esquerdo.'}; r.op.chkIn.ass = {status:'assinado', nome:'Carlos Menezes', data:'16/10/2026 às 08:52', email:'carlos.menezes@email.com'}; r.op.exec={0:'Diego Martins',1:'Felipe Souza'}; r.fin.conf.valores=true; r.fin.conf.forma=true; });
+  set('A04', 428, 'entregue', r => { chkFeito(r.op.chkIn, {}, '5.210'); r.op.chkIn.ass = {status:'assinado', nome:'Fernanda Lopes', data:'06/10/2026 às 09:12', email:'fernanda.lopes@email.com'}; ITENS_OUT.forEach((_,i)=>r.op.chkOut.itens[i]=true); r.op.chkOut.concluido=true; r.op.exec={0:'Lucas Pereira'};
     r.fin.conf.valores=true; r.fin.conf.forma=true; r.fin.liberado=true; });
   set('A05', 432, 'aguardando');
 })();
@@ -697,6 +744,9 @@ const statusChip = s => chip(s==='Ganho'?'ok':s==='Perdido'?'bad':'info', s);
 function render(){
   renderNav();
   const v = VIEWS[S.view]; main.innerHTML = topbar() + `<div class="view">${v ? v() : ''}</div>`;
+  const cvEl = $('#cv'), rc = S.cv && DB.find(x=>x.id===S.cv.id);
+  if (rc){ cvEl.innerHTML = vCliente(rc, S.cv.modo); cvEl.hidden = false; document.body.style.overflow = 'hidden'; initSig(); }
+  else { cvEl.hidden = true; cvEl.innerHTML = ''; document.body.style.overflow = ''; }
 }
 
 /* ======================= COMERCIAL ======================= */
@@ -1000,8 +1050,9 @@ VIEWS.ordens = () => {
     <td class="mono">${fd(r.ag.entrada)}</td><td class="mono">${fd(r.ag.saida)}</td><td>${esc(r.op.tecnico)}</td></tr>`).join('') || `<tr><td colspan="8"><div class="empty">Nenhuma OS nesse filtro.</div></td></tr>`}
   </tbody></table></div>`;
 };
-function carSVG(av){
-  const z = (id, el) => el.replace('<R', `<rect data-a="zona" data-z="${id}" class="zone ${av[id]||''}"`).replace('<P', `<path data-a="zona" data-z="${id}" class="zone ${av[id]||''}"`)
+function carSVG(av, ro=false){
+  const da = ro ? '' : 'data-a="zona" ';
+  const z = (id, el) => el.replace('<R', `<rect ${da}data-z="${id}" class="zone ${ro?'ro ':''}${av[id]||''}"`).replace('<P', `<path ${da}data-z="${id}" class="zone ${ro?'ro ':''}${av[id]||''}"`)
     .replace('/>', `><title>${ZONAS[id]}${av[id]?' · '+AV_NOME[av[id]]:''}</title></${el.startsWith('<R')?'rect':'path'}>`);
   return `<svg viewBox="0 0 220 450" role="img" aria-label="Vista superior do veículo para marcar avarias">
     ${z('parachoque-d','<R x="42" y="8" width="136" height="30" rx="15"/>')}
@@ -1023,7 +1074,126 @@ function carSVG(av){
     ${z('retro-d','<R x="210" y="140" width="10" height="22" rx="3"/>')}
   </svg>`;
 }
+const TERMO = 'Declaro que conferi a vistoria de entrada do meu veículo e que as condições descritas neste check-list (avarias, fotos e itens deixados no veículo) correspondem ao estado em que ele foi entregue à Wingard. Avarias já existentes e registradas aqui não são de responsabilidade da Wingard.';
+const ART_URL = 'https://claude.ai/artifact/65qTihcLVfK1PUtBtkTtRH';
+const linkAss = r => `${ART_URL}#assinar-${r.os}`;
+const msgAss = r => `Olá, ${r.cliente.nome.split(' ')[0]}! Aqui é da Wingard. Segue o check-list de entrada do seu ${r.veiculo.modelo} (OS ${r.os}), com as fotos e as condições em que o carro chegou. Confira e assine pelo link: ${linkAss(r)}`;
+const respondidos = c => Object.values(c.insp||{}).filter(Boolean).length;
+function assChip(c){
+  const a = c.ass||{};
+  return a.status==='assinado' ? chip('ok','Assinado pelo cliente') : a.status==='enviado' ? chip('warn','Aguardando assinatura') : chip('neu','Assinatura não enviada');
+}
+function checklistEntrada(r){
+  const c = r.op.chkIn, a = c.ass, av = Object.entries(c.avarias).filter(([,v])=>v), n = respondidos(c);
+  return `<div class="grid g-side">
+    <div class="grid" style="align-content:start">
+    <section class="card"><div class="card-h"><div><h3>Check-list de entrada Nº <span class="mono">${c.num}</span></h3><span class="faint" style="font-size:12.5px">Check-list de inspeção · ${fdate(r.ag.entrada||r.data)}</span></div>
+      <span style="display:flex;gap:6px;flex-wrap:wrap">${c.concluido?chip('ok','Concluído'):chip('warn','Em aberto')}${assChip(c)}</span></div>
+      <div class="fields">
+        <div class="field"><label for="k-km">Km</label><input id="k-km" data-b="op.chkIn.km" value="${esc(c.km)}" inputmode="numeric"></div>
+        <div class="field"><label for="k-resp">Vistoria feita por</label><select id="k-resp" data-b="op.chkIn.resp">${[...TECNICOS,...APLICADORES.slice(1)].map(x=>`<option ${x===c.resp?'selected':''}>${x}</option>`).join('')}</select></div>
+      </div>
+      <div class="field"><span class="flabel">Combustível</span><div class="seg">${['Reserva','1/4','1/2','3/4','Cheio'].map(x=>`<button data-a="comb" data-k="chkIn" data-c="${x}" aria-pressed="${c.comb===x}">${x}</button>`).join('')}</div></div>
+    </section>
+    <section class="card"><div class="card-h"><h3>Avaliação da carroceria</h3><span class="faint" style="font-size:12.5px">${av.length} avaria${av.length===1?'':'s'} marcada${av.length===1?'':'s'}</span></div>
+      <div class="vist">
+        <div class="carbox">${carSVG(c.avarias)}
+          <div class="legend"><span><i style="background:var(--z-risco)"></i>Risco</span><span><i style="background:var(--z-amassado)"></i>Amassado</span><span><i style="background:var(--z-trinca)"></i>Trinca</span></div>
+          <span class="faint" style="font-size:12px;text-align:center">Toque numa peça para marcar. Cada toque troca o tipo de avaria.</span></div>
+        <div class="grid" style="align-content:start;gap:10px">
+          <span class="flabel">Descreva cada avaria. É isso que o cliente vai ler no link.</span>
+          ${av.length ? av.map(([k,v])=>`<div class="avrow"><div class="avrow-h"><b>${ZONAS[k]}</b>${chip(v==='risco'?'warn':'bad', AV_NOME[v])}</div>
+            <input id="ad-${k}" data-b="op.chkIn.avDesc.${k}" value="${esc((c.avDesc||{})[k]||'')}" placeholder="Ex.: risco de 3 cm perto da maçaneta"></div>`).join('')
+            : '<div class="empty">Nenhuma avaria marcada. Toque nas peças do desenho para registrar.</div>'}
+        </div>
+      </div></section>
+    <section class="card"><div class="card-h"><div><h3>Inspeção</h3><span class="faint" style="font-size:12.5px">${n} de ${TOTAL_INSP} itens respondidos</span></div>
+      <div class="meter" style="width:160px"><i style="width:${n/TOTAL_INSP*100}%"></i></div></div>
+      ${INSPECAO.map((g,ci)=>`<div class="insp"><div class="insp-h"><b>${g.cat}</b><button class="btn sm ghost" data-a="tudoBom" data-c="${ci}">Marcar tudo ${g.itens[0][1]==='sn'?'Sim':'Bom'}</button></div>
+        ${g.itens.map(([it,t],ii)=>{ const k = ci+'-'+ii, v = c.insp[k];
+          return `<div class="insp-r"><span>${it}</span><span class="rseg">${RESP[t].map(o=>`<button class="${respK(o)}" data-a="resp" data-q="${k}" data-v="${o}" aria-pressed="${v===o}">${o}</button>`).join('')}</span></div>`; }).join('')}</div>`).join('')}
+      <div class="field"><label for="k-obs">Observações finais do check-list</label><textarea id="k-obs" data-b="op.chkIn.obs" placeholder="Ex.: fotos tiradas no recebimento, antes da lavagem e descontaminação.">${esc(c.obs)}</textarea></div>
+    </section>
+    </div>
+    <div class="grid" style="align-content:start">
+      <section class="card ass-card"><div class="card-h"><h3>Assinatura do cliente</h3>${assChip(c)}</div>
+        ${a.status==='assinado' ? `
+          <div class="note ok"><b>Assinado</b>${esc(a.nome)} assinou em ${esc(a.data)}.${a.email?` Cópia enviada para ${esc(a.email)}.`:''}</div>
+          ${a.img?`<img class="sig-img" src="${a.img}" alt="Assinatura de ${esc(a.nome)}">`:''}
+          <button class="btn" data-a="cvAbrir" data-id="${r.id}">${ico('doc')}Ver check-list assinado</button>`
+        : a.status==='enviado' ? `
+          <p class="muted" style="margin:0">Link gerado em ${esc(a.enviado)}. Mande para o cliente pelo WhatsApp ou e-mail. Ele confere tudo pelo celular e assina com o dedo.</p>
+          <div class="field"><label for="ass-link">Link para o cliente</label><input id="ass-link" readonly value="${esc(linkAss(r))}"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="copiar" data-w="link">Copiar link</button><button class="btn" data-a="copiar" data-w="msg">Copiar mensagem de WhatsApp</button></div>
+          <button class="btn ghost" data-a="cvAbrir" data-id="${r.id}">${ico('users')}Ver como o cliente</button>
+          <span class="faint" style="font-size:12px">O link vale até ${fdate(addDia(HOJE,1))} às 22:00.</span>`
+        : `
+          <p class="muted" style="margin:0">Quando terminar a vistoria, gere o link e mande para o cliente. Ele vê os dados do carro, as avarias, as fotos e a inspeção, e assina pelo celular.</p>
+          <button class="btn pri" data-a="gerarLink" data-id="${r.id}">Gerar link de assinatura</button>
+          <button class="btn ghost" data-a="cvAbrir" data-id="${r.id}">${ico('users')}Ver como o cliente</button>`}
+      </section>
+      ${r.obs ? `<section class="note warn"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      <section class="card"><div class="card-h"><h3>Fotos e vídeos</h3><span class="faint mono">${c.fotos.length}</span></div>
+        <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('')}
+          <label class="up">${ico('upload')}Adicionar fotos<input type="file" accept="image/*" multiple data-up="op.chkIn.fotos"></label></div></section>
+      <button class="btn pri" data-a="concluirChk" data-k="chkIn" ${c.concluido?'disabled':''}>${c.concluido?'Checklist concluído':'Concluir checklist de entrada'}</button>
+    </div>
+  </div>`;
+}
+const addDia = (d,n) => { const [y,m,dd] = d.split('-').map(Number); return new Date(Date.UTC(y,m-1,dd+n)).toISOString().slice(0,10); };
+function vCliente(r, modo){
+  const c = r.op.chkIn, a = c.ass, av = Object.entries(c.avarias).filter(([,v])=>v);
+  const kv = (k,v) => `<div><span>${k}</span><b>${v?esc(v):'—'}</b></div>`;
+  return `<div class="cv-wrap">
+    ${modo==='preview'?`<div class="cv-banner"><span>${ico('users')}Pré-visualização: é assim que o cliente vê o link.</span><button class="btn sm" data-a="cvFechar">Voltar ao sistema</button></div>`:''}
+    <header class="cv-head"><span class="logo">${ico('shield')}</span><div><b>Wingard</b><span>Proteção automotiva</span></div>
+      <div class="cv-num">OS <b class="mono">${r.os}</b> · Check-list <b class="mono">${c.num}</b><br>${fdate(r.ag.entrada||r.data)}</div></header>
+    <section class="card"><h1 style="margin:0;font-size:24px">Olá, ${esc(r.cliente.nome.split(' ')[0])}</h1>
+      <p class="muted" style="margin:0">Este é o check-list de entrada do seu <b>${esc(r.veiculo.modelo)}</b>. Confira como o carro chegou à Wingard e assine no final da página.</p></section>
+    <section class="card"><h3>Dados do veículo</h3><div class="kv">
+      ${kv('Cliente',r.cliente.nome)}${kv('Celular',r.cliente.tel)}${kv('Veículo',r.veiculo.modelo)}${kv('Placa',r.veiculo.placa)}
+      ${kv('Km',c.km)}${kv('Ano',r.veiculo.ano)}${kv('Combustível',c.comb)}${kv('Responsável',r.consultor)}</div></section>
+    <section class="card"><h3>Avaliação da carroceria</h3>
+      <div class="vist"><div class="carbox">${carSVG(c.avarias, true)}
+        <div class="legend"><span><i style="background:var(--z-risco)"></i>Risco</span><span><i style="background:var(--z-amassado)"></i>Amassado</span><span><i style="background:var(--z-trinca)"></i>Trinca</span></div></div>
+      <div class="grid" style="align-content:start;gap:8px">${av.length ? av.map(([k,v])=>`<div class="avrow"><div class="avrow-h"><b>${ZONAS[k]}</b>${chip(v==='risco'?'warn':'bad', AV_NOME[v])}</div>
+        <span class="muted" style="font-size:13.5px">${esc((c.avDesc||{})[k]||'Sem descrição.')}</span></div>`).join('') : '<div class="note ok"><b>Sem avarias</b>Nenhuma avaria foi encontrada na carroceria.</div>'}</div></div></section>
+    <section class="card"><div class="card-h"><h3>Fotos e vídeos</h3><span class="faint mono">${c.fotos.length}</span></div>
+      <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('') || '<span class="faint">Nenhuma foto anexada.</span>'}</div></section>
+    <section class="card"><h3>Check-list</h3>
+      ${INSPECAO.map((g,ci)=>`<div class="insp"><div class="insp-h"><b>${g.cat}</b></div>${g.itens.map(([it],ii)=>{ const v = c.insp[ci+'-'+ii];
+        return `<div class="insp-r"><span>${it}</span>${v?chip(respK(v), v):'<span class="faint" style="font-size:12.5px">Não avaliado</span>'}</div>`; }).join('')}</div>`).join('')}</section>
+    ${c.obs?`<section class="card"><h3>Observações finais</h3><p style="margin:0">${esc(c.obs)}</p></section>`:''}
+    ${a.status==='assinado' ? `<section class="card"><div class="note ok"><b>Check-list assinado</b>${esc(a.nome)} assinou em ${esc(a.data)}. Obrigado!</div>
+        ${a.img?`<img class="sig-img" src="${a.img}" alt="Assinatura de ${esc(a.nome)}">`:''}</section>`
+    : `<section class="card"><h3>Termo de vistoria</h3><p style="margin:0;font-size:13.5px">${TERMO}</p>
+        <label class="ck"><input type="checkbox" id="cv-termo"> Li e concordo com o termo e com as condições descritas acima</label></section>
+      <section class="card"><h3>Assinatura do check-list</h3>
+        <div class="fields"><div class="field"><label for="cv-nome">Nome completo</label><input id="cv-nome" value="${esc(r.cliente.nome)}"></div>
+          <div class="field"><label for="cv-mail">E-mail para receber uma cópia</label><input id="cv-mail" type="email" value="${esc(r.cliente.email)}"></div></div>
+        <span class="flabel">Assine com o dedo ou o mouse no quadro abaixo</span>
+        <canvas id="sig" class="sig" aria-label="Quadro de assinatura"></canvas>
+        <div id="cv-err" class="cv-err" hidden></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between"><button class="btn ghost" data-a="sigLimpar">Limpar assinatura</button><button class="btn pri" data-a="assinar" data-id="${r.id}">Assinar check-list</button></div>
+        <span class="faint" style="font-size:12px;text-align:center">Link válido até ${fdate(addDia(HOJE,1))} às 22:00</span></section>`}
+    <footer class="cv-foot">2026 © Wingard · Proteção automotiva${modo==='link'?` · <button class="crumb" style="margin:0" data-a="cvFechar">Abrir o sistema (protótipo)</button>`:''}</footer>
+  </div>`;
+}
+let SIG = {dirty:false};
+function initSig(){
+  const cv = document.getElementById('sig'); if (!cv) return;
+  const dpr = window.devicePixelRatio||1, w = cv.clientWidth, h = cv.clientHeight;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const ctx = cv.getContext('2d'); ctx.scale(dpr,dpr); ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1a1a1a';
+  SIG = {dirty:false, cv, ctx, down:false};
+  const pos = e => { const b = cv.getBoundingClientRect(); return [e.clientX-b.left, e.clientY-b.top]; };
+  cv.addEventListener('pointerdown', e => { SIG.down = true; cv.setPointerCapture(e.pointerId); const [x,y] = pos(e); ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+.1,y+.1); ctx.stroke(); SIG.dirty = true; });
+  cv.addEventListener('pointermove', e => { if (!SIG.down) return; const [x,y] = pos(e); ctx.lineTo(x,y); ctx.stroke(); });
+  const up = () => { SIG.down = false; }; cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+}
 function vistoria(r, tipo){
+  if (tipo==='in') return checklistEntrada(r);
   const c = tipo==='in' ? r.op.chkIn : r.op.chkOut, key = tipo==='in' ? 'chkIn' : 'chkOut', itens = tipo==='in' ? ITENS_IN : ITENS_OUT;
   const av = Object.entries(c.avarias).filter(([,v])=>v);
   const entradaAv = Object.entries(r.op.chkIn.avarias).filter(([,v])=>v);
@@ -1317,7 +1487,8 @@ function docOS(r){
     <h4>Consultores</h4>
     <div class="row"><span><b>Responsável:</b> ${esc(r.consultor.toUpperCase())}</span><span><b>Responsável técnico:</b> ${esc(r.op.tecnico.toUpperCase())}</span></div>
     <h4>Vistoria de entrada</h4>
-    <div>${av.length?av.map(([k,v])=>`${ZONAS[k]}: ${AV_NOME[v]}`).join(' · '):'Sem avarias registradas.'} ${r.op.chkIn.comb?`· Combustível ${r.op.chkIn.comb}`:''}</div>
+    <div>${av.length?av.map(([k,v])=>`${ZONAS[k]}: ${AV_NOME[v]}${(r.op.chkIn.avDesc||{})[k]?' ('+esc(r.op.chkIn.avDesc[k])+')':''}`).join(' · '):'Sem avarias registradas.'} ${r.op.chkIn.comb?`· Combustível ${r.op.chkIn.comb}`:''}</div>
+    <div>Check-list Nº ${r.op.chkIn.num}: ${r.op.chkIn.ass.status==='assinado'?`assinado por ${esc(r.op.chkIn.ass.nome)} em ${esc(r.op.chkIn.ass.data)}`:'aguardando assinatura do cliente'}.</div>
     <h4>Garantia</h4>
     <div>Garantia conforme o fabricante de cada produto aplicado, mediante apresentação desta OS.</div>
     <h4>Observações</h4>
@@ -1388,6 +1559,23 @@ const ACT = {
   ptab: a => { S.ptab = a.dataset.t; render(); },
   zona: a => { const r = cur(), c = S.tab==='out' ? r.op.chkOut : r.op.chkIn, z = a.dataset.z;
     c.avarias[z] = AVARIAS[(AVARIAS.indexOf(c.avarias[z]||'')+1) % AVARIAS.length]; render(); },
+  resp: a => { const c = cur().op.chkIn; c.insp[a.dataset.q] = c.insp[a.dataset.q]===a.dataset.v ? '' : a.dataset.v; render(); },
+  tudoBom: a => { const c = cur().op.chkIn, ci = +a.dataset.c; INSPECAO[ci].itens.forEach(([,t],ii)=>c.insp[ci+'-'+ii] = t==='sn'?'Sim':'Bom'); render(); },
+  gerarLink: a => { const r = DB.find(x=>x.id===a.dataset.id), c = r.op.chkIn, falta = TOTAL_INSP - respondidos(c);
+    c.ass = {status:'enviado', enviado:`${fdate(HOJE)} às ${new Date().toTimeString().slice(0,5)}`}; render();
+    toast(falta ? `Link gerado. Atenção: ${falta} ite${falta===1?'m':'ns'} da inspeção sem resposta.` : 'Link gerado. Copie e mande para o cliente.', falta?'warn':''); },
+  copiar: a => { const r = cur(), txt = a.dataset.w==='msg' ? msgAss(r) : linkAss(r);
+    const ok = () => toast(a.dataset.w==='msg' ? 'Mensagem copiada. Cole no WhatsApp do cliente.' : 'Link copiado.');
+    const falha = () => { const el = $('#ass-link'); if (el){ el.value = txt; el.select(); } toast('Não deu para copiar automaticamente. O texto ficou selecionado no campo do link.','warn'); };
+    try { navigator.clipboard.writeText(txt).then(ok, falha); } catch(e){ falha(); } },
+  cvAbrir: a => { S.cv = {id:a.dataset.id, modo:'preview'}; render(); },
+  cvFechar: () => { S.cv = null; render(); },
+  sigLimpar: () => { if (SIG.ctx){ SIG.ctx.clearRect(0,0,SIG.cv.width,SIG.cv.height); SIG.dirty = false; } },
+  assinar: a => { const r = DB.find(x=>x.id===a.dataset.id), err = $('#cv-err'), nome = $('#cv-nome').value.trim();
+    const msg = !$('#cv-termo').checked ? 'Marque que leu e concorda com o termo.' : !nome ? 'Informe seu nome completo.' : !SIG.dirty ? 'Faça sua assinatura no quadro.' : '';
+    if (msg){ err.textContent = msg; err.hidden = false; return; }
+    r.op.chkIn.ass = {status:'assinado', nome, email:$('#cv-mail').value.trim(), data:`${fdate(HOJE)} às ${new Date().toTimeString().slice(0,5)}`, img:SIG.cv.toDataURL('image/png')};
+    render(); $('#cv').scrollTo(0,0); toast('Check-list assinado. A Wingard já recebeu a sua assinatura.'); },
   comb: a => { cur().op[a.dataset.k].comb = a.dataset.c; render(); },
   concluirChk: a => { const r = cur(), c = r.op[a.dataset.k]; c.concluido = true;
     if (a.dataset.k==='chkIn' && r.op.etapa==='aguardando') r.op.etapa = 'lavagem';
@@ -1464,5 +1652,7 @@ main.addEventListener('keydown', e => {
 main.addEventListener('input', onField);
 main.addEventListener('change', onField);
 
+const mh = location.hash.match(/^#assinar-(\d+)$/);
+if (mh){ const r = DB.find(x=>x.os===+mh[1]); if (r) S.cv = {id:r.id, modo:'link'}; }
 render();
 </script>

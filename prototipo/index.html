@@ -286,6 +286,11 @@ input.num{text-align:right}
 .kv span{display:block;font-size:12px;color:var(--muted)}
 .kv b{font-weight:550;overflow-wrap:anywhere}
 .cv-foot{text-align:center;font-size:12px;color:var(--faint);display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.secnav{position:sticky;top:calc(68px + env(safe-area-inset-top,0px));z-index:6;display:flex;gap:4px;overflow-x:auto;background:color-mix(in srgb,var(--surface-3) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:4px;border-radius:14px;width:fit-content;max-width:100%}
+.secnav button{border:0;background:none;padding:8px 14px;cursor:pointer;color:var(--muted);font-weight:550;border-radius:10px;white-space:nowrap}
+.secnav button:hover{color:var(--fg);background:var(--surface)}
+.ossec{display:flex;flex-direction:column;gap:16px;scroll-margin-top:130px}
+.sec-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -1236,16 +1241,16 @@ function vistoria(r, tipo){
       <div class="vist" style="grid-template-columns:minmax(0,1fr)">
         <div class="grid" style="align-content:start">
           <div class="fields">
-            <div class="field"><label for="k-km">Km</label><input id="k-km" data-b="op.${key}.km" value="${esc(c.km)}" inputmode="numeric"></div>
-            <div class="field"><label for="k-resp">Vistoria feita por</label><select id="k-resp" data-b="op.${key}.resp">${[...TECNICOS,...APLICADORES.slice(1)].map(x=>`<option ${x===c.resp?'selected':''}>${x}</option>`).join('')}</select></div>
+            <div class="field"><label for="ko-km">Km</label><input id="ko-km" data-b="op.${key}.km" value="${esc(c.km)}" inputmode="numeric"></div>
+            <div class="field"><label for="ko-resp">Vistoria feita por</label><select id="ko-resp" data-b="op.${key}.resp">${[...TECNICOS,...APLICADORES.slice(1)].map(x=>`<option ${x===c.resp?'selected':''}>${x}</option>`).join('')}</select></div>
           </div>
           <div class="field"><span class="flabel">Combustível</span><div class="seg">${['Reserva','1/4','1/2','3/4','Cheio'].map(x=>`<button data-a="comb" data-k="${key}" data-c="${x}" aria-pressed="${c.comb===x}">${x}</button>`).join('')}</div></div>
           <div class="checks">${itens.map((it,i)=>`<label class="ck"><input type="checkbox" id="k-${key}-${i}" data-b="op.${key}.itens.${i}" ${c.itens[i]?'checked':''}> ${it}</label>`).join('')}</div>
-          <div class="field"><label for="k-obs">Observações da vistoria</label><textarea id="k-obs" data-b="op.${key}.obs">${esc(c.obs)}</textarea></div>
+          <div class="field"><label for="ko-obs">Observações da vistoria</label><textarea id="ko-obs" data-b="op.${key}.obs">${esc(c.obs)}</textarea></div>
         </div>
       </div></section>
     <div class="grid" style="align-content:start">
-      ${tipo==='out' ? `<section class="card"><div class="card-h"><h3>Avarias registradas na entrada</h3><span class="tag">${entradaAv.length}</span></div>${diagrama(entradaAv,'chkIn',true)}<div class="grid" style="gap:8px">${listaAvariasRO(entradaAv)}</div></section>`:''}
+      ${tipo==='out' ? `<section class="card"><div class="card-h"><h3>Avarias registradas na entrada</h3><span class="tag">${entradaAv.length}</span></div>${entradaAv.length?diagrama(entradaAv,'chkIn',true):''}<div class="grid" style="gap:8px">${listaAvariasRO(entradaAv)}</div></section>`:''}
       ${r.obs ? `<section class="note"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
       <section class="card"><div class="card-h"><h3>Fotos</h3><span class="faint mono">${c.fotos.length}</span></div>
         <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('')}
@@ -1269,10 +1274,10 @@ VIEWS.impressao = () => {
 VIEWS.os = () => {
   const r = cur(); if (!r || !r.os) return '';
   const idx = PATIO.findIndex(p=>p[0]===r.op.etapa);
-  const tabs = [['resumo','Resumo da OS'],['in','Checklist de entrada'],['out','Checklist de saída'],['docs','Impressão']];
+  const secs = [['os-resumo','Resumo da OS',true],['os-in','Checklist de entrada',r.op.chkIn.concluido],['os-out','Checklist de saída',r.op.chkOut.concluido],['os-docs','Impressão',false]];
   const kv = (k,v) => `<div class="field"><span class="flabel">${k}</span><div class="read">${v||'—'}</div></div>`;
-  let body = '';
-  if (S.tab==='resumo') body = `<div class="grid g-side">
+  let resumo = '', docs = '';
+  resumo = `<div class="grid g-side">
     <div class="grid" style="align-content:start">
       <section class="card"><h3>Cliente e veículo</h3><div class="fields">
         ${kv('Cliente',esc(r.cliente.nome))}${kv('CPF',esc(r.cliente.cpf))}${kv('Celular',esc(r.cliente.tel))}
@@ -1295,8 +1300,7 @@ VIEWS.os = () => {
           : '<div class="empty">Nenhuma movimentação registrada nesta sessão.</div>'}</section>
       <section class="note ${r.fin.liberado?'ok':'bad'}"><b>Situação financeira</b>${r.fin.liberado?'Financeiro liberou a entrega do veículo.':`Entrega bloqueada até o Financeiro liberar. ${aReceber(r)>0?'A receber: '+fmt(aReceber(r))+'.':''}`}</section>
     </div></div>`;
-  else if (S.tab==='in' || S.tab==='out') body = vistoria(r, S.tab);
-  else body = `<div class="grid g2">
+  docs = `<div class="grid g2">
     <section class="card"><h2>Ordem de Serviço</h2><p class="muted" style="margin:0">Documento com dados do cliente, veículo, serviços, valores, pagamentos e assinatura. Vai junto com o veículo e fica com o cliente.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="imprimir" data-id="${r.id}" data-t="os">${ico('print')}Imprimir OS ${r.os}</button><button class="btn" data-a="doc" data-t="os">Visualizar</button></div></section>
     <section class="card"><h2>Prisma</h2><p class="muted" style="margin:0">Ficha de produção para o pátio: serviços, aplicador de cada um e autorização do cliente. Sem valores.</p>
@@ -1304,8 +1308,11 @@ VIEWS.os = () => {
   return head(`OS <span class="mono">${r.os}</span> · ${esc(r.veiculo.modelo)}`, `${esc(r.cliente.nome)} · aberta em ${fdate(r.data)} pelo Comercial`,
       `<button class="btn pri" data-a="imprimir" data-id="${r.id}" data-t="os">${ico('print')}Imprimir OS</button>`, `<button class="crumb" data-a="nav" data-v="patio">${ico('back')}Gestão de pátio</button>`) + `
     <div class="stepper">${PATIO.map(([k,n],i)=>`<button data-a="setEtapa" data-id="${r.id}" data-e="${k}" class="${i<idx?'done':i===idx?'now':''}"><small>${i<idx?'FEITO':i===idx?'AGORA':'ETAPA '+(i+1)}</small><b>${n}</b></button>`).join('')}</div>
-    <div class="tabs" role="tablist">${tabs.map(([k,n])=>`<button role="tab" data-a="tab" data-t="${k}" aria-selected="${S.tab===k}">${n}${k==='in'&&r.op.chkIn.concluido||k==='out'&&r.op.chkOut.concluido?' ✓':''}</button>`).join('')}</div>
-    ${body}`;
+    <nav class="secnav" aria-label="Ir para a seção">${secs.map(([id,n,ok],i)=>`<button data-a="ir" data-t="${id}">${n}${i&&i<3&&ok?' ✓':''}</button>`).join('')}</nav>
+    <section class="ossec" id="os-resumo">${resumo}</section>
+    <section class="ossec" id="os-in"><div class="sec-h"><h2>Checklist de entrada</h2>${r.op.chkIn.concluido?chip('ok','Concluído'):chip('warn','Em aberto')}</div>${vistoria(r,'in')}</section>
+    <section class="ossec" id="os-out"><div class="sec-h"><h2>Checklist de saída</h2>${r.op.chkOut.concluido?chip('ok','Concluído'):chip('warn','Em aberto')}</div>${vistoria(r,'out')}</section>
+    <section class="ossec" id="os-docs"><div class="sec-h"><h2>Impressão</h2></div>${docs}</section>`;
 };
 
 /* ======================= FINANCEIRO ======================= */
@@ -1583,6 +1590,7 @@ const ACT = {
   avancar: a => { const r = DB.find(x=>x.id===a.dataset.id), i = PATIO.findIndex(p=>p[0]===r.op.etapa); moverEtapa(r, PATIO[i+1][0]); },
   setEtapa: a => moverEtapa(DB.find(x=>x.id===a.dataset.id), a.dataset.e),
   tab: a => { S.tab = a.dataset.t; render(); },
+  ir: a => { const el = document.getElementById(a.dataset.t); if (el) el.scrollIntoView({behavior:'smooth', block:'start'}); },
   verPerdidos: () => { S.f.st = 'Perdido'; S.f.etapa = 'todas'; S.f.q = ''; go('comercial','atendimentos'); },
   atab: a => { S.atab = a.dataset.t; render(); },
   ptab: a => { S.ptab = a.dataset.t; render(); },

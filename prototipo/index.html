@@ -301,6 +301,19 @@ input.num{text-align:right}
 .secnav button:hover{color:var(--fg);background:var(--surface)}
 .ossec{display:flex;flex-direction:column;gap:16px;scroll-margin-top:130px}
 .sec-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:10px;border-top:1px solid var(--line)}
+.svc-sub td{padding-top:0!important;border-bottom:1px solid var(--line)}
+.svc-main td{border-bottom:0!important}
+.svc-info{display:flex;justify-content:space-between;gap:6px 14px;flex-wrap:wrap;font-size:12.5px;margin:0 0 6px}
+.svc-tab{display:inline-flex;gap:8px;align-items:center;color:var(--faint);white-space:nowrap}
+.timeline{display:flex;flex-direction:column;gap:8px}
+.tl-i{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:14px;align-items:start;text-align:left;width:100%;border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;cursor:pointer}
+.tl-i:hover{border-color:var(--acc)}
+.tl-d,.tl-b,.tl-v{display:flex;flex-direction:column;gap:4px;min-width:0}
+.tl-b .muted{font-size:13px}
+.tl-v{align-items:flex-end}
+@media (max-width:640px){ .tl-i{grid-template-columns:minmax(0,1fr)} .tl-v{align-items:flex-start} }
+tr.off td{opacity:.55}
+.doc .dsc{font-size:10.5px;color:#555;margin-top:1px}
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -550,18 +563,21 @@ const person = (n, sub='') => `<span class="person">${avatar(n)}<span class="cl"
 
 /* ---------- cadastros ---------- */
 const CATALOGO = [
-  {cod:'111', desc:'PPF Full Gloss', valor:16000},
-  {cod:'222', desc:'Película Grafeno Vidros', valor:1300},
-  {cod:'333', desc:'Antitrinco Para-brisa', valor:1500},
-  {cod:'444', desc:'PPF Full Fosco (Matte)', valor:19000},
-  {cod:'555', desc:'PPF Frontal (capô, para-choque e retrovisores)', valor:6500},
-  {cod:'666', desc:'Vitrificação Cerâmica', valor:3500},
-  {cod:'777', desc:'Película Grafeno Para-brisa G50', valor:900},
+  {cod:'111', desc:'PPF Full Gloss', valor:16000, descricao:'Película de proteção de pintura (PPF) transparente com acabamento brilhante em toda a carroceria. Protege contra riscos, pedriscos e manchas.'},
+  {cod:'444', desc:'PPF Full Fosco (Matte)', valor:19000, descricao:'PPF com acabamento fosco em toda a carroceria. Muda o visual da pintura e protege contra riscos e pedriscos.'},
+  {cod:'555', desc:'PPF Frontal (capô, para-choque e retrovisores)', valor:6500, descricao:'PPF nas áreas mais expostas: capô, para-choque dianteiro, para-lamas e retrovisores.'},
+  {cod:'888', desc:'PPF Faróis e Lanternas', valor:1200, descricao:'PPF transparente nos faróis e lanternas contra amarelamento e pedriscos.'},
+  {cod:'222', desc:'Película Grafeno Vidros', valor:1300, descricao:'Película de controle solar com grafeno nas laterais e no vidro traseiro. Reduz o calor e os raios UV.'},
+  {cod:'777', desc:'Película Grafeno Para-brisa G50', valor:900, descricao:'Película de grafeno G50 no para-brisa, com controle de calor sem escurecer a visão.'},
+  {cod:'333', desc:'Antitrinco Para-brisa', valor:1500, descricao:'Película de segurança no para-brisa que ajuda a evitar trincas causadas por pedras.'},
+  {cod:'666', desc:'Vitrificação Cerâmica', valor:3500, descricao:'Revestimento cerâmico na pintura que aumenta o brilho e facilita a limpeza.'},
+  {cod:'890', desc:'Polimento Técnico', valor:1500, descricao:'Correção de pintura em etapas para remover marcas e riscos superficiais antes da proteção.'},
+  {cod:'889', desc:'Envelopamento de Teto Black', valor:1800, descricao:'Envelopamento do teto em vinil preto brilhante.'},
 ];
 const CONSULTORES = ['Letícia de Rezende Siciliano','Rafael Nunes','Camila Duarte'];
 const APLICADORES = ['Diego Martins','Felipe Souza','Lucas Pereira','Rogério Lima'];
 const TECNICOS = ['William Santos','Diego Martins'];
-const CANAIS = ['WhatsApp','Telefone','E-mail','Instagram','Presencial','Indicação'];
+const ORIGENS = ['Lead','Instagram','Google','Cliente de carteira','Indicação','Parceiro','Fachada','Prospecção ativa','Outros'];
 const ETAPAS = ['1º Contato','Tratativa','Potencial de compra','Sem veículo','Follow-up','Fechamento','Pós-venda'];
 const FORMAS = ['PIX','Cartão de crédito','Cartão de débito','Boleto','Dinheiro','Transferência'];
 const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplicacao','Aplicação'],['corte','Corte / Desmontagem'],['finalizacao','Finalização'],['pronto','Pronto p/ entrega'],['entregue','Entregue']];
@@ -591,7 +607,7 @@ const AV_NOME = {risco:'Risco', amassado:'Amassado', trinca:'Trinca / quebra'};
 
 const DEPTS = {
   comercial:  {n:1, icon:'briefcase', nome:'Comercial',   etapa:'Etapa 1 · Venda',     user:'Letícia Siciliano', papel:'Consultora',
-               menu:[['painel','Painel comercial','chart'],['atendimentos','Atendimentos','users'],['novo','Novo atendimento','plus']]},
+               menu:[['painel','Painel comercial','chart'],['atendimentos','Atendimentos','receipt'],['clientes','Clientes','users'],['servicos','Serviços','clipboard'],['novo','Novo atendimento','plus']]},
   operacional:{n:2, icon:'car', nome:'Operacional', etapa:'Etapa 2 · Pátio e OS', user:'William Santos', papel:'Responsável técnico',
                menu:[['patio','Gestão de pátio','board'],['ordens','Ordens de serviço','clipboard'],['impressao','Imprimir OS','print']]},
   financeiro: {n:3, icon:'wallet', nome:'Financeiro',  etapa:'Etapa 3 · Conferência', user:'Tatiane Moura', papel:'Financeiro',
@@ -601,7 +617,7 @@ const DEPTS = {
 /* ---------- registros ---------- */
 function base(){
   return {id:'', data:HOJE, cliente:{nome:'',tel:'',email:'',cpf:'',nasc:'',end:''}, veiculo:{modelo:'',placa:'',ano:'',cor:'',chassi:''},
-    canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'1º Contato', status:'Andamento', servicos:[], desconto:0,
+    origem:'Lead', consultor:CONSULTORES[0], etapa:'1º Contato', status:'Andamento', servicos:[], desconto:0,
     pag:{entrada:0, formaEntrada:'PIX', dataEntrada:HOJE, entradaPaga:false, parcelas:1, formaSaldo:'PIX', quando:'retirada'},
     ag:{entrada:'', saida:''}, motivo:'', resumo:'', obs:'', anexos:[], os:null, op:null, fin:null};
 }
@@ -613,7 +629,7 @@ function mk(o){
   }
   return b;
 }
-const sv = (cod,qtd=1) => { const c = CATALOGO.find(x=>x.cod===cod); return {cod, desc:c.desc, qtd, valor:c.valor}; };
+const sv = (cod,qtd=1) => { const c = CATALOGO.find(x=>x.cod===cod); return {cod, desc:c.desc, qtd, valor:c.valor, det:''}; };
 const subtotal = r => r.servicos.reduce((s,x)=>s+(+x.qtd||0)*(+x.valor||0),0);
 const total = r => Math.max(0, subtotal(r)-(+r.desconto||0));
 const saldo = r => Math.max(0, total(r)-(+r.pag.entrada||0));
@@ -647,7 +663,7 @@ let nextOS = 433, nextId = 14;
 const DB = [
   mk({id:'A01', data:'2026-10-07', cliente:{nome:'Emerson Fugi', tel:'(11) 97100-5577', email:'emerson.fugi@email.com', cpf:'312.456.789-10', nasc:'1984-03-22'},
       veiculo:{modelo:'BMW M3', placa:'RKT-3B47', ano:'2025', cor:'Azul Portimão', chassi:'WBS83AY0XRFR45120'},
-      canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'Fechamento',
+      origem:'Cliente de carteira', consultor:CONSULTORES[0], etapa:'Fechamento',
       servicos:[sv('111'),sv('222'),sv('333')],
       pag:{entrada:9400, formaEntrada:'PIX', dataEntrada:'2026-10-07', entradaPaga:true, formaSaldo:'PIX', quando:'retirada'},
       ag:{entrada:'2026-10-13', saida:'2026-10-19'},
@@ -656,51 +672,51 @@ const DB = [
       anexos:[{nome:'comprovante-pix-entrada.jpg'}]}),
   mk({id:'A02', data:'2026-10-15', cliente:{nome:'Marina Okada', tel:'(11) 98822-4410', email:'marina.okada@email.com', cpf:'228.901.334-07', nasc:'1990-11-02'},
       veiculo:{modelo:'Porsche 911 Carrera T', placa:'PRS-9T11', ano:'2026', cor:'Cinza Ártico'},
-      canal:'Instagram', consultor:CONSULTORES[2], etapa:'Fechamento',
+      origem:'Instagram', consultor:CONSULTORES[2], etapa:'Fechamento',
       servicos:[sv('444'),sv('666')],
       pag:{entrada:11250, formaEntrada:'Cartão de crédito', dataEntrada:'2026-10-15', entradaPaga:true, parcelas:3, formaSaldo:'Cartão de crédito', quando:'parcelado'},
       ag:{entrada:'2026-10-20', saida:'2026-10-27'}, resumo:'PPF fosco completo + vitrificação nas rodas e plásticos. Saldo em 3x no cartão a partir da retirada.',
       anexos:[{nome:'proposta-assinada.pdf'}]}),
   mk({id:'A03', data:'2026-10-09', cliente:{nome:'Carlos Menezes', tel:'(11) 99654-0021', email:'carlos.menezes@email.com', cpf:'401.223.118-55', nasc:'1978-06-14'},
       veiculo:{modelo:'Toyota Corolla Cross XRX', placa:'GHT-2C19', ano:'2024', cor:'Branco Lunar'},
-      canal:'Telefone', consultor:CONSULTORES[1], etapa:'Fechamento',
+      origem:'Cliente de carteira', consultor:CONSULTORES[1], etapa:'Fechamento',
       servicos:[sv('555'),sv('222')],
       pag:{entrada:2000, formaEntrada:'PIX', dataEntrada:'2026-10-09', entradaPaga:true, parcelas:2, formaSaldo:'Boleto', quando:'parcelado'},
       ag:{entrada:'2026-10-16', saida:'2026-10-22'}, resumo:'PPF frontal + película grafeno. Saldo em 2 boletos.'}),
   mk({id:'A04', data:'2026-10-01', cliente:{nome:'Fernanda Lopes', tel:'(11) 97311-8890', email:'fernanda.lopes@email.com', cpf:'355.678.902-41', nasc:'1987-01-30'},
       veiculo:{modelo:'Volvo XC60 Recharge', placa:'VLV-6X60', ano:'2025', cor:'Preto Ônix'},
-      canal:'Indicação', consultor:CONSULTORES[0], etapa:'Pós-venda', desconto:500,
+      origem:'Cliente de carteira', consultor:CONSULTORES[0], etapa:'Pós-venda', desconto:500,
       servicos:[sv('111')],
       pag:{entrada:15500, formaEntrada:'PIX', dataEntrada:'2026-10-01', entradaPaga:true, quando:'retirada'},
       ag:{entrada:'2026-10-06', saida:'2026-10-11'}, resumo:'Indicação do Emerson. Pagamento integral antecipado com desconto.'}),
   mk({id:'A05', data:'2026-10-19', cliente:{nome:'Gustavo Reis', tel:'(11) 98140-7765', email:'gustavo.reis@email.com', cpf:'290.114.563-80', nasc:'1993-09-09'},
       veiculo:{modelo:'Range Rover Evoque', placa:'EVQ-4R22', ano:'2023', cor:'Verde Eiger'},
-      canal:'WhatsApp', consultor:CONSULTORES[1], etapa:'Fechamento',
+      origem:'Lead', consultor:CONSULTORES[1], etapa:'Fechamento',
       servicos:[sv('555'),sv('777'),sv('333')],
       pag:{entrada:3000, formaEntrada:'Transferência', dataEntrada:'2026-10-20', entradaPaga:false, formaSaldo:'Cartão de débito', quando:'retirada'},
       ag:{entrada:'2026-10-24', saida:'2026-10-28'}, resumo:'Cliente vai transferir a entrada até 20/10. Saldo no débito na retirada.'}),
   mk({id:'A06', data:'2026-10-18', cliente:{nome:'Ricardo Alves', tel:'(11) 99201-3348', email:'ricardo.alves@email.com'},
-      veiculo:{modelo:'Jeep Compass Série S', ano:'2025', cor:'Cinza'}, canal:'WhatsApp', consultor:CONSULTORES[0], etapa:'Potencial de compra',
+      veiculo:{modelo:'Jeep Compass Série S', ano:'2025', cor:'Cinza'}, origem:'Lead', consultor:CONSULTORES[0], etapa:'Potencial de compra',
       servicos:[sv('555'),sv('222')], resumo:'Pediu proposta com PPF frontal e película. Quer fazer antes da viagem de dezembro.'}),
   mk({id:'A07', data:'2026-10-12', cliente:{nome:'Juliana Castro', tel:'(11) 98455-1290', email:'juliana.castro@email.com'},
-      veiculo:{modelo:'Audi Q5 Sportback', ano:'2024', cor:'Branco'}, canal:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up',
+      veiculo:{modelo:'Audi Q5 Sportback', ano:'2024', cor:'Branco'}, origem:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up',
       servicos:[sv('111')], resumo:'Enviada proposta PPF Full Gloss. Retornar na sexta.'}),
   mk({id:'A08', data:'2026-10-05', cliente:{nome:'Paulo Henrique Dias', tel:'(11) 97788-2201'},
-      veiculo:{modelo:'Honda Civic Touring', ano:'2022'}, canal:'Telefone', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
+      veiculo:{modelo:'Honda Civic Touring', ano:'2022'}, origem:'Google', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
       servicos:[sv('222'),sv('333')], motivo:'Preço', obs:'Achou o valor alto e fechou com concorrente.'}),
   mk({id:'A09', data:'2026-10-21', cliente:{nome:'Bruno Tanaka', tel:'(11) 96612-4470'},
-      veiculo:{modelo:'Mercedes-Benz C300'}, canal:'Telefone', consultor:CONSULTORES[0], etapa:'1º Contato', resumo:'Ligou perguntando sobre PPF fosco.'}),
+      veiculo:{modelo:'Mercedes-Benz C300'}, origem:'Prospecção ativa', consultor:CONSULTORES[0], etapa:'1º Contato', resumo:'Ligou perguntando sobre PPF fosco.'}),
   mk({id:'A10', data:'2026-10-14', cliente:{nome:'Aline Prado', tel:'(11) 99330-6612', email:'aline.prado@email.com'},
-      veiculo:{modelo:'BYD Seal', ano:'2027'}, canal:'E-mail', consultor:CONSULTORES[2], etapa:'Sem veículo',
+      veiculo:{modelo:'BYD Seal', ano:'2027'}, origem:'Parceiro', consultor:CONSULTORES[2], etapa:'Sem veículo',
       servicos:[sv('444')], obs:'Carro novo chega da concessionária em novembro.'}),
   mk({id:'A11', data:'2026-09-24', cliente:{nome:'Thiago Moreira', tel:'(11) 98002-1188'},
-      veiculo:{modelo:'Chevrolet Camaro SS', ano:'2021'}, canal:'Presencial', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
+      veiculo:{modelo:'Chevrolet Camaro SS', ano:'2021'}, origem:'Fachada', consultor:CONSULTORES[1], etapa:'Tratativa', status:'Perdido',
       servicos:[sv('111')], motivo:'Desistiu do serviço', obs:'Desistiu do serviço, vai vender o carro.'}),
   mk({id:'A12', data:'2026-10-08', cliente:{nome:'Renata Siqueira', tel:'(11) 99412-7730', email:'renata.siqueira@email.com'},
-      veiculo:{modelo:'Tesla Model Y', ano:'2025', cor:'Branco Pérola'}, canal:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up', status:'Perdido',
+      veiculo:{modelo:'Tesla Model Y', ano:'2025', cor:'Branco Pérola'}, origem:'Instagram', consultor:CONSULTORES[2], etapa:'Follow-up', status:'Perdido',
       servicos:[sv('111')], motivo:'Fechou com concorrente', obs:'Fechou com outra loja que entregava em 3 dias.'}),
   mk({id:'A13', data:'2026-10-16', cliente:{nome:'Eduardo Lima', tel:'(11) 98733-1904'},
-      veiculo:{modelo:'Volkswagen Nivus', ano:'2024'}, canal:'WhatsApp', consultor:CONSULTORES[1], etapa:'Follow-up', status:'Perdido',
+      veiculo:{modelo:'Volkswagen Nivus', ano:'2024'}, origem:'Lead', consultor:CONSULTORES[1], etapa:'Follow-up', status:'Perdido',
       servicos:[sv('222'),sv('333')], motivo:'Sem retorno do cliente', obs:'Três tentativas de contato sem resposta.'}),
 ];
 /* gera OS e estado de pátio / financeiro dos exemplos */
@@ -718,7 +734,52 @@ const DB = [
   set('A04', 428, 'entregue', r => { chkFeito(r.op.chkIn, [], '5.210'); r.op.chkIn.ass = {status:'assinado', nome:'Fernanda Lopes', data:'06/10/2026 às 09:12', email:'fernanda.lopes@email.com'}; ITENS_OUT.forEach((_,i)=>r.op.chkOut.itens[i]=true); r.op.chkOut.concluido=true; r.op.exec={0:'Lucas Pereira'};
     r.fin.conf.valores=true; r.fin.conf.forma=true; r.fin.liberado=true; });
   set('A05', 432, 'aguardando');
+  const past = (o, os, exec) => { const r = mk(o); DB.push(r); gerarOS(r, os); r.etapa = 'Pós-venda'; r.op.etapa = 'entregue';
+    chkFeito(r.op.chkIn, [], o.km||''); ITENS_OUT.forEach((_,i)=>r.op.chkOut.itens[i]=true); r.op.chkOut.concluido = true; r.op.exec = {0:exec};
+    r.op.chkIn.ass = {status:'assinado', nome:r.cliente.nome, data:fdate(r.ag.entrada)+' às 09:00'};
+    r.fin.titulos.forEach(t=>{ t.recebido = true; t.dataRec = t.venc; }); r.fin.conf = {valores:true, forma:true}; r.fin.liberado = true; };
+  past({id:'P01', data:'2025-11-18', cliente:{nome:'Emerson Fugi', tel:'(11) 97100-5577'}, veiculo:{modelo:'Audi RS3 Sportback', placa:'AUD-3R55', ano:'2023', cor:'Cinza Nardo'},
+    origem:'Indicação', consultor:CONSULTORES[0], servicos:[sv('666'),sv('222')], pag:{entrada:4800, formaEntrada:'PIX', dataEntrada:'2025-11-18', entradaPaga:true, quando:'retirada'},
+    ag:{entrada:'2025-11-24', saida:'2025-11-26'}, km:'12.300'}, 288, 'Lucas Pereira');
+  past({id:'P02', data:'2026-04-09', cliente:{nome:'Emerson Fugi'}, veiculo:{modelo:'BMW M3'}, origem:'Cliente de carteira', consultor:CONSULTORES[0],
+    servicos:[{...sv('666'), valor:3200, det:'Preço negociado por ser cliente de carteira.'}], pag:{entrada:1600, formaEntrada:'PIX', dataEntrada:'2026-04-09', entradaPaga:true, formaSaldo:'PIX', quando:'retirada'},
+    ag:{entrada:'2026-04-14', saida:'2026-04-15'}, km:'0'}, 351, 'Diego Martins');
+  past({id:'P03', data:'2026-05-20', cliente:{nome:'Fernanda Lopes'}, veiculo:{modelo:'Volvo XC60 Recharge'}, origem:'Indicação', consultor:CONSULTORES[0],
+    servicos:[sv('666')], pag:{entrada:3500, formaEntrada:'Cartão de crédito', dataEntrada:'2026-05-20', entradaPaga:true, quando:'retirada'},
+    ag:{entrada:'2026-05-26', saida:'2026-05-27'}, km:'1.150'}, 362, 'Lucas Pereira');
+  past({id:'P04', data:'2025-12-02', cliente:{nome:'Carlos Menezes'}, veiculo:{modelo:'Toyota Corolla Cross XRX'}, origem:'Google', consultor:CONSULTORES[1],
+    servicos:[sv('222')], pag:{entrada:1300, formaEntrada:'PIX', dataEntrada:'2025-12-02', entradaPaga:true, quando:'retirada'},
+    ag:{entrada:'2025-12-05', saida:'2025-12-05'}, km:'9.800'}, 301, 'Felipe Souza');
 })();
+/* ---------- cadastro de clientes e veículos ---------- */
+let nextCli = 1;
+const novoVei = () => ({modelo:'', placa:'', ano:'', cor:'', chassi:''});
+const novoCli = () => ({id:'C'+String(nextCli++).padStart(3,'0'), nome:'', tel:'', email:'', cpf:'', nasc:'', end:'', veiculos:[novoVei()]});
+(function normalizar(){
+  const cmap = new Map();
+  DB.slice().sort((a,b)=>a.data.localeCompare(b.data)).forEach(r=>{
+    const k = r.cliente.nome.trim().toLowerCase();
+    let c = cmap.get(k);
+    if (!c){ c = r.cliente; c.id = 'C'+String(nextCli++).padStart(3,'0'); c.veiculos = []; cmap.set(k, c); }
+    else { ['tel','email','cpf','nasc','end'].forEach(f=>{ if (!c[f] && r.cliente[f]) c[f] = r.cliente[f]; }); r.cliente = c; }
+    let v = c.veiculos.find(x=>x.modelo.trim().toLowerCase()===r.veiculo.modelo.trim().toLowerCase());
+    if (!v){ v = r.veiculo; c.veiculos.push(v); }
+    else { ['placa','ano','cor','chassi'].forEach(f=>{ if (!v[f] && r.veiculo[f]) v[f] = r.veiculo[f]; }); r.veiculo = v; }
+  });
+})();
+const clientesTodos = () => [...new Set(DB.map(r=>r.cliente))].filter(c=>c.nome.trim()).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+const vendasDe = c => DB.filter(r=>r.cliente===c).sort((a,b)=>a.data.localeCompare(b.data));
+const ganhasDe = c => vendasDe(c).filter(r=>r.status==='Ganho');
+const veiculosDe = c => c.veiculos.filter(v=>v.modelo.trim());
+const diasEntre = (a,b) => Math.round((Date.parse(b)-Date.parse(a))/864e5);
+const fmtDias = d => d==null ? '—' : d>=60 ? `${Math.round(d/30.4)} meses (${d} dias)` : `${d} dia${d===1?'':'s'}`;
+function intervaloMedio(c){
+  const g = ganhasDe(c); if (g.length<2) return null;
+  let s = 0; for (let i=1;i<g.length;i++) s += diasEntre(g[i-1].data, g[i].data);
+  return Math.round(s/(g.length-1));
+}
+const catDe = cod => CATALOGO.find(c=>c.cod===cod) || {};
+
 
 /* contas a pagar (exemplo) */
 const PAGAR = [
@@ -741,7 +802,7 @@ const $ = s => document.querySelector(s);
 const main = $('#main');
 
 function go(dept, view, sel){
-  if (view==='novo'){ const r = mk({id:'A'+String(nextId++).padStart(2,'0'), data:HOJE}); DB.unshift(r); dept='comercial'; view='ficha'; sel=r.id; }
+  if (view==='novo'){ const r = mk({id:'A'+String(nextId++).padStart(2,'0'), data:HOJE}); r.cliente = novoCli(); r.veiculo = r.cliente.veiculos[0]; DB.unshift(r); dept='comercial'; view='ficha'; sel=r.id; }
   if (dept && dept!==S.dept){ S.dept = dept; }
   if (view==='os'){ const ro = DB.find(x=>x.id===sel); view = 'ordens'; S.ordSel = sel; if (ro && ((ro.op.etapa==='entregue') !== (S.f.ord==='entregues')) && S.f.ord!=='todas') S.f.ord = 'todas'; }
   if (view) S.view = view;
@@ -762,7 +823,7 @@ function renderNav(){
     <button class="dept d${d.n}" data-a="dept" data-d="${k}" aria-current="${S.dept===k}">
       <span class="n">${ico(d.icon)}</span><span><strong>${d.nome}</strong><small>${d.etapa.split(' · ')[1]}</small></span><span class="st">${d.n}</span>
     </button>`).join('');
-  const hl = {ficha:'atendimentos', os:'ordens', conf:'acompanhamento'}[S.view] || S.view;
+  const hl = {ficha:'atendimentos', os:'ordens', conf:'acompanhamento', cliente:'clientes'}[S.view] || S.view;
   const d = DEPTS[S.dept];
   $('#menu').innerHTML = `<div class="lbl">Menu · ${d.nome}</div>` + d.menu.map(([v,n,ic])=>`<button data-a="nav" data-v="${v}" aria-current="${hl===v}" class="${v==='novo'?'cta':''}">${ico(ic)}${n}</button>`).join('');
   $('#who').innerHTML = `<span class="av solid">${ini(d.user)}</span><div><b>${d.user}</b><span>${d.papel}</span></div>`;
@@ -784,6 +845,7 @@ function head(title, sub='', right='', crumb=''){
     <h1>${title}</h1>${sub?`<p class="sub">${sub}</p>`:''}</div>
     <div class="phead-r">${right}</div></header>`;
 }
+const difChip = d => Math.abs(d)<.005 ? '' : chip(d<0?'warn':'info', `${Math.round(Math.abs(d)*100)}% ${d<0?'abaixo':'acima'} da tabela`);
 const statusChip = s => chip(s==='Ganho'?'ok':s==='Perdido'?'bad':'info', s);
 function render(){
   renderNav();
@@ -865,6 +927,13 @@ VIEWS.painel = () => {
           <div class="sumline big"><span>Previsto</span><span>${fmt(n.prev)}</span></div></div>`:'<div class="empty">Nenhuma proposta em andamento no período.</div>'}
         <p class="faint" style="font-size:12px;margin:0">A chance de cada tarefa é um exemplo. No sistema final ela é calculada pelo histórico de vendas da Wingard.</p></section>
     </div>
+    <section class="card"><div class="card-h"><div><h3>Resultados por origem do cliente</h3><span class="faint" style="font-size:12.5px">De onde vêm os clientes que compram e os que não fecham</span></div></div>
+      ${(()=>{ const O = ORIGENS.map(o=>{ const at = L.filter(r=>r.origem===o), g = at.filter(r=>r.status==='Ganho'), pr = at.filter(r=>r.status==='Perdido');
+          return {o, at:at.length, g:g.length, fat:g.reduce((t,r)=>t+total(r),0), p:pr.length, pv:pr.reduce((t,r)=>t+total(r),0)}; }).filter(x=>x.at).sort((a,b)=>b.fat-a.fat);
+        return O.length ? `<div style="overflow-x:auto"><table class="tbl nowrap inner-tbl"><thead><tr><th>Origem</th><th class="num">Atendimentos</th><th class="num">Vendas</th><th class="num">Faturado</th><th style="min-width:140px">Participação</th><th class="num">Perdidos</th><th class="num">Conversão</th></tr></thead><tbody>
+          ${O.map(x=>`<tr><td><b>${esc(x.o)}</b></td><td class="num">${x.at}</td><td class="num">${x.g}</td><td class="num">${fmt(x.fat)}</td>
+            <td><div class="bar-track"><div class="bar-fill" style="width:${n.fat?x.fat/n.fat*100:0}%"></div></div></td>
+            <td class="num">${x.p}${x.pv?` <span class="faint">· ${fk(x.pv)}</span>`:''}</td><td class="num">${x.g+x.p?pct(x.g/(x.g+x.p)):'—'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">Nenhum atendimento no período.</div>'; })()}</section>
     <div class="grid g2">
       <section class="card"><div class="card-h"><h3>Faturado por consultor</h3></div>
         <div class="bars">${porCons.map(x=>`<div class="bar-row"><span class="person nm">${avatar(x.c,true)}<span class="nm">${esc(x.c)}</span></span>
@@ -887,7 +956,7 @@ function abaClientes(L){
   const q = (S.f.cq||'').trim().toLowerCase();
   const C = clientes(L).filter(c=>!q || (c.u.cliente.nome+' '+c.u.cliente.tel+' '+c.u.veiculo.modelo).toLowerCase().includes(q));
   return `<section class="card">
-    <div class="card-h"><div><h3>Clientes</h3><span class="faint" style="font-size:12.5px">Quem foi atendido no período. Toque num cliente para abrir o atendimento mais recente.</span></div>
+    <div class="card-h"><div><h3>Clientes</h3><span class="faint" style="font-size:12.5px">Quem foi atendido no período. Toque num cliente para ver o cadastro e todo o histórico de compras.</span></div>
       <input id="f-cq" data-f="cq" placeholder="Buscar cliente, telefone ou veículo" value="${esc(S.f.cq||'')}" style="max-width:300px"></div>
     <div class="tbl-wrap" id="tbl-cli" style="box-shadow:none">${tblClientes(C)}</div>
   </section>`;
@@ -895,9 +964,9 @@ function abaClientes(L){
 function tblClientes(C){
   if (!C.length) return `<div class="empty" style="margin:12px">Nenhum cliente encontrado.</div>`;
   return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Consultor</th><th>Último status</th><th class="num">Atendimentos</th><th class="num">Total fechado</th><th>Último contato</th></tr></thead><tbody>
-  ${C.map(c=>`<tr class="click" data-a="open" data-d="comercial" data-v="ficha" data-id="${c.u.id}">
+  ${C.map(c=>`<tr class="click" data-a="cliOpen" data-id="${c.u.cliente.id}">
     <td>${person(c.u.cliente.nome, c.u.cliente.tel)}</td>
-    <td class="cl"><b>${esc(c.u.veiculo.modelo||'—')}</b><span>${esc([c.u.veiculo.ano,c.u.veiculo.cor].filter(Boolean).join(' · ')||c.u.canal)}</span></td>
+    <td class="cl"><b>${esc(c.u.veiculo.modelo||'—')}</b><span>${esc([c.u.veiculo.ano,c.u.veiculo.cor].filter(Boolean).join(' · ')||c.u.origem)}</span></td>
     <td><span class="person">${avatar(c.u.consultor,true)}${esc(c.u.consultor.split(' ')[0])}</span></td>
     <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td></tr>`).join('')}</tbody></table>`;
 }
@@ -913,10 +982,10 @@ function spark(gan){
 }
 function tblAtend(L){
   if (!L.length) return `<div class="empty" style="margin:12px">Nenhum atendimento com esses filtros.</div>`;
-  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Canal</th><th>Consultor</th><th>Tarefa</th><th>Status</th><th class="num">Valor</th><th>Data</th></tr></thead><tbody>
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Origem</th><th>Consultor</th><th>Tarefa</th><th>Status</th><th class="num">Valor</th><th>Data</th></tr></thead><tbody>
   ${L.map(r=>`<tr class="click" data-a="open" data-d="comercial" data-v="ficha" data-id="${r.id}">
     <td>${person(r.cliente.nome, r.cliente.tel)}</td>
-    <td>${esc(r.veiculo.modelo||'—')}</td><td><span class="tag">${r.canal}</span></td>
+    <td>${esc(r.veiculo.modelo||'—')}</td><td><span class="tag">${esc(r.origem)}</span></td>
     <td><span class="person">${avatar(r.consultor,true)}${esc(r.consultor.split(' ')[0])}</span></td><td>${r.etapa}</td>
     <td>${statusChip(r.status)}${r.os?` <span class="tag">OS ${r.os}</span>`:''}</td>
     <td class="num">${fmt(total(r))}</td><td class="mono">${fd(r.data)}</td></tr>`).join('')}</tbody></table>`;
@@ -949,12 +1018,16 @@ VIEWS.ficha = () => {
   const lock = !!r.os, dis = lock ? 'disabled' : '';
   const inp = (p, label, v, type='text', extra='') => `<div class="field"><label for="i-${p}">${label}</label><input id="i-${p}" type="${type}" data-b="${p}" value="${esc(v)}" ${extra}></div>`;
   const opt = (arr, v) => arr.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
-  const rows = r.servicos.map((s,i)=>`<tr>
-      <td style="min-width:220px"><select id="svc${i}" data-svc="${i}" aria-label="Serviço" ${dis}>${CATALOGO.map(c=>`<option value="${c.cod}" ${c.cod===s.cod?'selected':''}>${c.cod} · ${esc(c.desc)}</option>`).join('')}</select></td>
+  const rows = r.servicos.map((s,i)=>{ const c = catDe(s.cod), dif = c.valor ? (s.valor-c.valor)/c.valor : 0;
+    return `<tr class="svc-main">
+      <td style="min-width:220px"><select id="svc${i}" data-svc="${i}" aria-label="Serviço" ${dis}>${CATALOGO.filter(x=>x.ativo!==false||x.cod===s.cod).map(x=>`<option value="${x.cod}" ${x.cod===s.cod?'selected':''}>${x.cod} · ${esc(x.desc)}</option>`).join('')}</select></td>
       <td style="width:70px"><input id="q${i}" class="num" data-b="servicos.${i}.qtd" data-t="n" value="${s.qtd}" inputmode="numeric" aria-label="Quantidade" ${dis}></td>
-      <td style="width:120px"><input id="v${i}" class="num" data-b="servicos.${i}.valor" data-t="n" value="${s.valor}" inputmode="decimal" aria-label="Valor unitário" ${dis}></td>
+      <td style="width:130px"><input id="v${i}" class="num" data-b="servicos.${i}.valor" data-t="n" value="${s.valor}" inputmode="decimal" aria-label="Valor negociado" ${dis}></td>
       <td class="num" data-rowtot="${i}" style="width:120px">${fmt(s.qtd*s.valor)}</td>
-      <td style="width:36px">${lock?'':`<button class="icon-btn" data-a="rmSvc" data-i="${i}" aria-label="Remover serviço">×</button>`}</td></tr>`).join('');
+      <td style="width:36px">${lock?'':`<button class="icon-btn" data-a="rmSvc" data-i="${i}" aria-label="Remover serviço">×</button>`}</td></tr>
+      <tr class="svc-sub"><td colspan="5"><div class="svc-info"><span class="muted">${esc(c.descricao||'')}</span>
+        <span class="svc-tab">Tabela ${fmt(c.valor)} <span data-rowdiff="${i}">${difChip(dif)}</span></span></div>
+        <input id="sd${i}" data-b="servicos.${i}.det" value="${esc(s.det||'')}" placeholder="Detalhes deste serviço para o cliente (opcional). Ex.: inclui retrovisores e maçanetas" ${dis}></td></tr>`; }).join('');
   const right = r.os
     ? `<button class="btn" data-a="imprimir" data-id="${r.id}" data-t="os">${ico('print')}Imprimir OS</button><button class="btn" data-a="open" data-d="operacional" data-v="os" data-id="${r.id}">Ver OS ${r.os} no Operacional</button><button class="btn" data-a="open" data-d="financeiro" data-v="conf" data-id="${r.id}">Ver no Financeiro</button>`
     : '';
@@ -964,6 +1037,9 @@ VIEWS.ficha = () => {
   <div class="grid g-side">
     <div class="grid">
       <section class="card"><div class="card-h"><h3>Cliente</h3><span class="mono faint">${r.id} · aberto em ${fdate(r.data)}</span></div>
+        ${lock?'':`<div class="field"><label for="i-cli">Cliente cadastrado</label><select id="i-cli" data-cli="1"><option value="">+ Cadastrar novo cliente</option>${clientesTodos().map(c=>`<option value="${c.id}" ${c===r.cliente?'selected':''}>${esc(c.nome)}${c.tel?' · '+esc(c.tel):''}</option>`).join('')}</select>
+          <span class="faint" style="font-size:12px">Escolha um cliente que já comprou para não cadastrar de novo.</span></div>`}
+        ${(()=>{ const g = ganhasDe(r.cliente).filter(x=>x!==r); return g.length ? `<div class="note ok"><b>Cliente de carteira</b>${g.length} compra${g.length===1?'':'s'} anterior${g.length===1?'':'es'}, ${fmt(g.reduce((t,x)=>t+total(x),0))} no total. Última em ${fdate(g[g.length-1].data)}. <button class="btn sm ghost" data-a="cliOpen" data-id="${r.cliente.id}">Ver histórico ${ico('arrow')}</button></div>` : ''; })()}
         <div class="fields">
           ${inp('cliente.nome','Nome completo',r.cliente.nome,'text','data-name="1"')}
           ${inp('cliente.tel','Telefone / celular',r.cliente.tel,'tel')}
@@ -972,14 +1048,16 @@ VIEWS.ficha = () => {
           ${inp('cliente.nasc','Data de nascimento',r.cliente.nasc,'date')}
         </div></section>
       <section class="card"><h3>Veículo</h3>
+        ${!lock && veiculosDe(r.cliente).filter(v=>v!==r.veiculo).length ? `<div class="field"><label for="i-vei">Veículo do cliente</label><select id="i-vei" data-vei="1">${veiculosDe(r.cliente).map((v,i)=>`<option value="${r.cliente.veiculos.indexOf(v)}" ${v===r.veiculo?'selected':''}>${esc(v.modelo)}${v.placa?' · '+esc(v.placa):''}</option>`).join('')}<option value="novo" ${r.veiculo.modelo.trim()?'':'selected'}>+ Outro veículo</option></select></div>` : ''}
         <div class="fields">
           ${inp('veiculo.modelo','Marca e modelo',r.veiculo.modelo)}
           ${inp('veiculo.placa','Placa',r.veiculo.placa)}
           ${inp('veiculo.ano','Ano',r.veiculo.ano)}
           ${inp('veiculo.cor','Cor',r.veiculo.cor)}
-        </div></section>
+        </div>
+        <span class="faint" style="font-size:12px">Só a marca e o modelo são obrigatórios agora. Placa, ano e cor podem ser preenchidos depois, por quem recebe o carro.</span></section>
       <section class="card"><div class="card-h"><h3>Serviços da proposta</h3>${lock?'':`<button class="btn sm" data-a="addSvc">${ico('plus')}Adicionar serviço</button>`}</div>
-        ${r.servicos.length ? `<div style="overflow-x:auto"><table class="tbl inner-tbl"><thead><tr><th>Código · descrição</th><th class="num">Qtd</th><th class="num">Vlr. unitário</th><th class="num">Vlr. total</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
+        ${r.servicos.length ? `<div style="overflow-x:auto"><table class="tbl inner-tbl"><thead><tr><th>Serviço</th><th class="num">Qtd</th><th class="num">Valor negociado</th><th class="num">Vlr. total</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`
           : `<div class="empty">Nenhum serviço ainda. Use “Adicionar serviço” para montar a proposta.</div>`}
         <div class="totals">
           <span class="muted">Subtotal</span><span class="num" id="c-sub">${fmt(subtotal(r))}</span>
@@ -1009,7 +1087,8 @@ VIEWS.ficha = () => {
         <div class="field"><span class="flabel">Status</span><div class="seg status">${[['Andamento','s-and'],['Ganho','s-gan'],['Perdido','s-per']].map(([s,c])=>
           `<button class="${c}" data-a="status" data-s="${s}" aria-pressed="${r.status===s}" ${lock&&s!=='Ganho'?'disabled':''}>${s}</button>`).join('')}</div></div>
         <div class="field"><label for="i-et">Tarefa atual</label><select id="i-et" data-b="etapa">${ETAPAS.map((e,i)=>`<option value="${e}" ${r.etapa===e?'selected':''}>${i+1}. ${e}</option>`).join('')}</select></div>
-        <div class="field"><span class="flabel">Canal do atendimento</span><div class="seg">${CANAIS.map(c=>`<button data-a="canal" data-c="${c}" aria-pressed="${r.canal===c}">${c}</button>`).join('')}</div></div>
+        <div class="field"><label for="i-ori">Origem do cliente</label><select id="i-ori" data-b="origem">${opt(ORIGENS,r.origem)}</select>
+          <span class="faint" style="font-size:12px">Usado nos relatórios comerciais e de marketing.</span></div>
         ${r.status==='Perdido'?`<div class="field"><label for="i-mot">Motivo da perda</label><select id="i-mot" data-b="motivo"><option value="">Escolha o motivo</option>${MOTIVOS.map(m=>`<option ${r.motivo===m?'selected':''}>${m}</option>`).join('')}</select>
           <span class="faint" style="font-size:12px">Orçamento de ${fmt(total(r))} entra em “Orçamentos perdidos” no painel.</span></div>`:''}
         <div class="field"><label for="i-co">Consultor responsável</label><select id="i-co" data-b="consultor">${opt(CONSULTORES,r.consultor)}</select></div>
@@ -1019,9 +1098,10 @@ VIEWS.ficha = () => {
           ${inp('ag.entrada','Entrada do veículo',r.ag.entrada,'date')}
           ${inp('ag.saida','Previsão de saída',r.ag.saida,'date')}
         </div></section>
-      <section class="card"><h3>Proposta e anexos</h3>
-        <div class="field"><label for="i-res">Resumo da proposta</label><textarea id="i-res" data-b="resumo">${esc(r.resumo)}</textarea></div>
-        <div class="field"><label for="i-obs">Observações para o Operacional</label><textarea id="i-obs" data-b="obs">${esc(r.obs)}</textarea></div>
+      <section class="card"><div class="card-h"><h3>Proposta e anexos</h3>${chip('neu','Interno')}</div>
+        <span class="faint" style="font-size:12px">O resumo e as observações ficam só no sistema. Não aparecem na OS, no Prisma nem no link do cliente.</span>
+        <div class="field"><label for="i-res">Resumo interno / agendamento</label><textarea id="i-res" data-b="resumo">${esc(r.resumo)}</textarea></div>
+        <div class="field"><label for="i-obs">Observações internas para a equipe</label><textarea id="i-obs" data-b="obs">${esc(r.obs)}</textarea></div>
         <span class="flabel">Comprovantes e fotos</span>
         <div class="anexos">${r.anexos.map(a=>`<div class="anexo"><div class="foto ${a.src?'':'ph'}" ${a.src?`style="background-image:url('${a.src}')"`:''}></div>${esc(a.nome)}</div>`).join('')}
           <label class="up" style="width:110px">${ico('upload')}Anexar<input type="file" accept="image/*,application/pdf" multiple data-up="anexos"></label></div>
@@ -1043,11 +1123,13 @@ function refreshFicha(){
   const r = cur(); if (!r || S.view!=='ficha') return;
   $('#c-sub').textContent = fmt(subtotal(r)); $('#c-total').textContent = fmt(total(r)); $('#c-saldo').textContent = fmt(saldo(r));
   $('#c-parc').innerHTML = parcPreview(r); $('#c-nome').textContent = r.cliente.nome || 'Novo atendimento';
-  r.servicos.forEach((s,i)=>{ const el = document.querySelector(`[data-rowtot="${i}"]`); if (el) el.textContent = fmt(s.qtd*s.valor); });
+  r.servicos.forEach((s,i)=>{ const el = document.querySelector(`[data-rowtot="${i}"]`); if (el) el.textContent = fmt(s.qtd*s.valor);
+    const d = document.querySelector(`[data-rowdiff="${i}"]`), c = catDe(s.cod); if (d && c.valor) d.innerHTML = difChip((s.valor-c.valor)/c.valor); });
 }
 
 /* ======================= OPERACIONAL ======================= */
 const ordens = () => DB.filter(r=>r.os).sort((a,b)=>b.os-a.os);
+const ordensMes = () => ordens().filter(r=>r.op.etapa!=='entregue' || (r.ag.saida||'').startsWith('2026-10'));
 function finChip(r){
   if (r.fin.liberado) return chip('ok','Financeiro liberou');
   if (r.fin.titulos.some(t=>t.desc==='Entrada'&&!t.recebido)) return chip('bad','Entrada não confirmada');
@@ -1074,7 +1156,7 @@ function ocard(r){
 }
 const STAGE_C = {aguardando:'var(--faint)', lavagem:'var(--av0)', aplicacao:'var(--av3)', corte:'var(--av4)', finalizacao:'var(--warn)', pronto:'var(--ok)'};
 VIEWS.patio = () => {
-  const L = ordens(), ent = L.filter(r=>r.op.etapa==='entregue').length;
+  const L = ordens(), ent = ordensMes().filter(r=>r.op.etapa==='entregue').length;
   return head('Gestão de pátio', 'Onde cada carro está agora. Use a seta para avançar o card quando a etapa terminar, ou para voltar uma etapa se alguém moveu errado. A entrega só é liberada depois do checklist de saída e da liberação do Financeiro.',
     `<span class="tag">${ent} entregue${ent===1?'':'s'} no mês</span>`) + `
   <div class="kanban-wrap"><div class="kanban">
@@ -1152,6 +1234,13 @@ function checklistEntrada(r){
     <section class="card"><div class="card-h"><div><h3>Check-list de entrada Nº <span class="mono">${c.num}</span></h3><span class="faint" style="font-size:12.5px">Check-list de inspeção · ${fdate(r.ag.entrada||r.data)}</span></div>
       <span style="display:flex;gap:6px;flex-wrap:wrap">${c.concluido?chip('ok','Concluído'):chip('warn','Em aberto')}${assChip(c)}</span></div>
       <div class="fields">
+        <div class="field"><label for="ck-placa">Placa</label><input id="ck-placa" data-b="veiculo.placa" data-rr="1" value="${esc(r.veiculo.placa)}" placeholder="Conferir no recebimento"></div>
+        <div class="field"><label for="ck-ano">Ano</label><input id="ck-ano" data-b="veiculo.ano" data-rr="1" value="${esc(r.veiculo.ano)}"></div>
+        <div class="field"><label for="ck-cor">Cor</label><input id="ck-cor" data-b="veiculo.cor" data-rr="1" value="${esc(r.veiculo.cor)}"></div>
+        <div class="field"><label for="ck-chassi">Chassi</label><input id="ck-chassi" data-b="veiculo.chassi" data-rr="1" value="${esc(r.veiculo.chassi)}"></div>
+      </div>
+      ${r.veiculo.placa && r.veiculo.ano && r.veiculo.cor ? '' : '<div class="note warn"><b>Dados do veículo incompletos</b>Quem recebe o carro completa placa, ano e cor aqui. Vale para a venda e para o cadastro do cliente.</div>'}
+      <div class="fields">
         <div class="field"><label for="k-km">Km</label><input id="k-km" data-b="op.chkIn.km" value="${esc(c.km)}" inputmode="numeric"></div>
         <div class="field"><label for="k-resp">Vistoria feita por</label><select id="k-resp" data-b="op.chkIn.resp">${[...TECNICOS,...APLICADORES.slice(1)].map(x=>`<option ${x===c.resp?'selected':''}>${x}</option>`).join('')}</select></div>
       </div>
@@ -1185,7 +1274,7 @@ function checklistEntrada(r){
           <button class="btn pri" data-a="gerarLink" data-id="${r.id}">Gerar link de assinatura</button>
           <button class="btn ghost" data-a="cvAbrir" data-id="${r.id}">${ico('users')}Ver como o cliente</button>`}
       </section>
-      ${r.obs ? `<section class="note warn"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      ${r.obs ? `<section class="note warn"><b>Observações internas · não aparecem para o cliente</b>${esc(r.obs)}</section>`:''}
       <section class="card"><div class="card-h"><h3>Fotos e vídeos</h3><span class="faint mono">${c.fotos.length}</span></div>
         <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('')}
           <label class="up">${ico('upload')}Adicionar fotos<input type="file" accept="image/*" multiple data-up="op.chkIn.fotos"></label></div></section>
@@ -1263,7 +1352,7 @@ function vistoria(r, tipo){
       </div></section>
     <div class="grid" style="align-content:start">
       ${tipo==='out' ? `<section class="card"><div class="card-h"><h3>Avarias registradas na entrada</h3><span class="tag">${entradaAv.length}</span></div>${entradaAv.length?diagrama(entradaAv,'chkIn',true):''}<div class="grid" style="gap:8px">${listaAvariasRO(entradaAv)}</div></section>`:''}
-      ${r.obs ? `<section class="note"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      ${r.obs ? `<section class="note"><b>Observações internas</b>${esc(r.obs)}</section>`:''}
       <section class="card"><div class="card-h"><h3>Fotos</h3><span class="faint mono">${c.fotos.length}</span></div>
         <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('')}
           <label class="up">${ico('upload')}Adicionar fotos<input type="file" accept="image/*" multiple data-up="op.${key}.fotos"></label></div></section>
@@ -1293,7 +1382,11 @@ VIEWS.os = () => {
     <div class="grid" style="align-content:start">
       <section class="card"><h3>Cliente e veículo</h3><div class="fields">
         ${kv('Cliente',esc(r.cliente.nome))}${kv('CPF',esc(r.cliente.cpf))}${kv('Celular',esc(r.cliente.tel))}
-        ${kv('Veículo',esc(r.veiculo.modelo))}${kv('Placa',r.veiculo.placa?`<span class="plate">${esc(r.veiculo.placa)}</span>`:'')}${kv('Cor / ano',esc([r.veiculo.cor,r.veiculo.ano].filter(Boolean).join(' · ')))}
+        ${kv('Veículo',esc(r.veiculo.modelo))}
+        <div class="field"><label for="ov-placa">Placa</label><input id="ov-placa" data-b="veiculo.placa" data-rr="1" value="${esc(r.veiculo.placa)}" placeholder="A preencher no recebimento"></div>
+        <div class="field"><label for="ov-ano">Ano</label><input id="ov-ano" data-b="veiculo.ano" data-rr="1" value="${esc(r.veiculo.ano)}" placeholder="A preencher"></div>
+        <div class="field"><label for="ov-cor">Cor</label><input id="ov-cor" data-b="veiculo.cor" data-rr="1" value="${esc(r.veiculo.cor)}" placeholder="A preencher"></div>
+        <div class="field"><label for="ov-chassi">Chassi</label><input id="ov-chassi" data-b="veiculo.chassi" data-rr="1" value="${esc(r.veiculo.chassi)}" placeholder="Opcional"></div>
         ${kv('Entrada',fdate(r.ag.entrada))}${kv('Previsão de saída',fdate(r.ag.saida))}${kv('Consultor',esc(r.consultor))}
       </div></section>
       <section class="card"><div class="card-h"><h3>Serviços e aplicadores</h3></div>
@@ -1305,17 +1398,17 @@ VIEWS.os = () => {
       </section>
     </div>
     <div class="grid" style="align-content:start">
-      ${r.resumo?`<section class="note"><b>Agendamento</b>${esc(r.resumo).replace(/\n/g,'<br>')}</section>`:''}
-      ${r.obs?`<section class="note warn"><b>Observações do Comercial</b>${esc(r.obs)}</section>`:''}
+      ${r.resumo?`<section class="note"><b>Agendamento · interno</b>${esc(r.resumo).replace(/\n/g,'<br>')}</section>`:''}
+      ${r.obs?`<section class="note warn"><b>Observações internas · não saem na impressão</b>${esc(r.obs)}</section>`:''}
       <section class="card"><div class="card-h"><h3>Histórico do pátio</h3><span class="faint" style="font-size:12px">quem moveu e quando</span></div>
         ${(r.op.hist||[]).length ? `<div>${r.op.hist.map(h=>`<div class="sumline"><span>${h.volta?chip('warn','Voltou'):chip('info','Avançou')} ${esc(h.de)} → <b>${esc(h.para)}</b></span><span class="faint" style="white-space:nowrap">${esc(h.quem.split(' ')[0])} · hoje ${h.hora}</span></div>`).join('')}</div>`
           : '<div class="empty">Nenhuma movimentação registrada nesta sessão.</div>'}</section>
       <section class="note ${r.fin.liberado?'ok':'bad'}"><b>Situação financeira</b>${r.fin.liberado?'Financeiro liberou a entrega do veículo.':`Entrega bloqueada até o Financeiro liberar. ${aReceber(r)>0?'A receber: '+fmt(aReceber(r))+'.':''}`}</section>
     </div></div>`;
   docs = `<div class="grid g2">
-    <section class="card"><h2>Ordem de Serviço</h2><p class="muted" style="margin:0">Documento com dados do cliente, veículo, serviços, valores, pagamentos e assinatura. Vai junto com o veículo e fica com o cliente.</p>
+    <section class="card"><h2>Ordem de Serviço</h2><p class="muted" style="margin:0">Dados do cliente e do veículo, apontamentos do check-list, serviços com descrição, valor total, forma de pagamento e assinatura. As observações internas não saem na impressão.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="imprimir" data-id="${r.id}" data-t="os">${ico('print')}Imprimir OS ${r.os}</button><button class="btn" data-a="doc" data-t="os">Visualizar</button></div></section>
-    <section class="card"><h2>Prisma</h2><p class="muted" style="margin:0">Ficha de produção para o pátio: serviços, aplicador de cada um e autorização do cliente. Sem valores.</p>
+    <section class="card"><h2>Prisma</h2><p class="muted" style="margin:0">Ficha de serviço com o aplicador de cada item, valor total, forma de pagamento e autorização do cliente.</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri" data-a="imprimir" data-id="${r.id}" data-t="prisma">${ico('print')}Imprimir Prisma ${r.os}</button><button class="btn" data-a="doc" data-t="prisma">Visualizar</button></div></section></div>`;
   return `<div class="os-top"><div><h2 class="os-title">OS <span class="mono">${r.os}</span> · ${esc(r.veiculo.modelo)}</h2><p class="sub">${esc(r.cliente.nome)} · aberta em ${fdate(r.data)} pelo Comercial</p></div>
       <button class="btn pri" data-a="imprimir" data-id="${r.id}" data-t="os">${ico('print')}Imprimir OS</button></div>
@@ -1329,7 +1422,7 @@ VIEWS.os = () => {
 
 /* ======================= FINANCEIRO ======================= */
 VIEWS.acompanhamento = () => {
-  const L = ordens();
+  const L = ordensMes();
   const tot = L.reduce((s,r)=>s+total(r),0), rec = L.reduce((s,r)=>s+recebido(r),0), pend = L.reduce((s,r)=>s+aReceber(r),0);
   const aguard = L.filter(r=>!r.fin.liberado).length;
   const atencao = L.filter(r=>!r.fin.liberado).map(r=>{
@@ -1427,7 +1520,7 @@ VIEWS.conf = () => {
   </div>`;
 };
 function titulosTodos(){
-  return ordens().flatMap(r=>r.fin.titulos.map((t,i)=>({r,t,i}))).sort((a,b)=>a.t.venc.localeCompare(b.t.venc));
+  return ordensMes().flatMap(r=>r.fin.titulos.map((t,i)=>({r,t,i}))).sort((a,b)=>a.t.venc.localeCompare(b.t.venc));
 }
 VIEWS.receber = () => {
   const f = S.f, all = titulosTodos();
@@ -1510,56 +1603,143 @@ VIEWS.dre = () => {
 };
 
 /* ======================= DOCUMENTOS ======================= */
-function docOS(r){
+VIEWS.clientes = () => {
+  const q = (S.f.cliq||'').trim().toLowerCase();
+  const C = clientesTodos().filter(c=>!q || (c.nome+' '+c.tel+' '+veiculosDe(c).map(v=>v.modelo+' '+v.placa).join(' ')).toLowerCase().includes(q));
+  return head('Clientes', 'Cada cliente tem um cadastro só. Todas as vendas, veículos e serviços dele ficam no histórico.',
+      `<button class="btn pri" data-a="nav" data-v="novo">${ico('plus')}Novo atendimento</button>`) + `
+    <div class="filters"><input class="grow" id="f-cliq" data-f="cliq" placeholder="Buscar cliente, telefone, veículo ou placa" value="${esc(S.f.cliq||'')}"></div>
+    <div class="tbl-wrap" id="tbl-cli2">${tblClientes2(C)}</div>`;
+};
+function tblClientes2(C){
+  if (!C.length) return `<div class="empty" style="margin:12px">Nenhum cliente encontrado.</div>`;
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículos</th><th class="num">Compras</th><th class="num">Total comprado</th><th>Última compra</th><th>Intervalo médio entre compras</th><th>Origem</th></tr></thead><tbody>
+  ${C.map(c=>{ const g = ganhasDe(c), v = vendasDe(c), ult = g[g.length-1], vs = veiculosDe(c);
+    return `<tr class="click" data-a="cliOpen" data-id="${c.id}"><td>${person(c.nome, c.tel)}</td>
+      <td class="cl"><b>${esc(vs.map(x=>x.modelo).join(', ')||'—')}</b><span>${vs.length} veículo${vs.length===1?'':'s'}</span></td>
+      <td class="num">${g.length}${v.length>g.length?` <span class="faint">/ ${v.length} atend.</span>`:''}</td>
+      <td class="num">${fmt(g.reduce((s,r)=>s+total(r),0))}</td><td class="mono">${ult?fdate(ult.data):'—'}</td>
+      <td>${g.length>1?fmtDias(intervaloMedio(c)):'<span class="faint">1ª compra</span>'}</td><td><span class="tag">${esc(v[0].origem)}</span></td></tr>`; }).join('')}
+  </tbody></table>`;
+}
+VIEWS.cliente = () => {
+  const c = clientesTodos().find(x=>x.id===S.cli); if (!c) return '';
+  const v = vendasDe(c), g = ganhasDe(c), tot = g.reduce((s,r)=>s+total(r),0), im = intervaloMedio(c), ult = g[g.length-1];
+  const fld = (f,l,t='text') => `<div class="field"><label for="cp-${f}">${l}</label><input id="cp-${f}" type="${t}" data-cf="${f}" value="${esc(c[f]||'')}"></div>`;
+  return head(esc(c.nome), `Cliente desde ${fdate(v[0].data)} · origem: ${esc(v[0].origem)}`,
+      `<button class="btn pri" data-a="novaVendaCli" data-id="${c.id}">${ico('plus')}Nova venda para este cliente</button>`,
+      `<button class="crumb" data-a="nav" data-v="clientes">${ico('back')}Clientes</button>`) + `
+  <div class="kpis">
+    <div class="kpi hl"><span class="k"><i class="ki">${ico('trend')}</i>Total comprado</span><span class="v">${fmt(tot)}</span><span class="d">${g.length} compra${g.length===1?'':'s'}</span></div>
+    <div class="kpi"><span class="k"><i class="ki">${ico('receipt')}</i>Ticket médio</span><span class="v">${fmt(g.length?tot/g.length:0)}</span><span class="d">por compra</span></div>
+    <div class="kpi"><span class="k"><i class="ki">${ico('clock')}</i>Intervalo entre compras</span><span class="v">${im==null?'—':im+' dias'}</span><span class="d">${im==null?'precisa de 2 compras para calcular':'em média'}</span></div>
+    <div class="kpi"><span class="k"><i class="ki">${ico('calendar')}</i>Última compra</span><span class="v">${ult?fdate(ult.data):'—'}</span><span class="d">${ult?`há ${fmtDias(diasEntre(ult.data, HOJE))}`:'nenhuma compra fechada'}</span></div>
+  </div>
+  <div class="grid g-side">
+    <section class="card"><div class="card-h"><h3>Histórico de compras</h3><span class="tag">${v.length} atendimento${v.length===1?'':'s'}</span></div>
+      <div class="timeline">${v.slice().reverse().map((r,i,arr)=>{ const ant = arr.slice(i+1).find(x=>x.status==='Ganho');
+        return `<button class="tl-i" data-a="open" data-d="comercial" data-v="ficha" data-id="${r.id}">
+          <span class="tl-d"><b class="mono">${fdate(r.data)}</b>${r.os?`<span class="tag">OS ${r.os}</span>`:''}</span>
+          <span class="tl-b"><b>${esc(r.veiculo.modelo||'Veículo a definir')}</b><span class="muted">${r.servicos.map(s=>esc(s.desc)).join(' · ')||'Sem serviços'}</span>
+            <span class="faint" style="font-size:12px">${esc(r.origem)} · ${esc(r.consultor.split(' ')[0])}${r.status==='Ganho'&&ant?` · ${fmtDias(diasEntre(ant.data, r.data))} depois da compra anterior`:''}</span></span>
+          <span class="tl-v"><b>${fmt(total(r))}</b>${statusChip(r.status)}</span></button>`; }).join('')}</div></section>
+    <div class="grid" style="align-content:start">
+      <section class="card"><h3>Dados do cliente</h3>
+        <div class="fields">${fld('nome','Nome completo')}${fld('tel','Telefone / celular','tel')}${fld('email','E-mail','email')}${fld('cpf','CPF')}${fld('nasc','Data de nascimento','date')}${fld('end','Endereço')}</div>
+        <span class="faint" style="font-size:12px">Alterações aqui valem para todas as vendas deste cliente.</span></section>
+      <section class="card"><div class="card-h"><h3>Veículos</h3><span class="tag">${veiculosDe(c).length}</span></div>
+        ${veiculosDe(c).map(x=>{ const n = v.filter(r=>r.veiculo===x && r.status==='Ganho').length;
+          return `<div class="avrow"><div class="avrow-h"><b>${esc(x.modelo)}</b>${x.placa?`<span class="plate">${esc(x.placa)}</span>`:chip('warn','Placa a preencher')}</div>
+            <span class="muted" style="font-size:13px">${esc([x.ano,x.cor].filter(Boolean).join(' · ')||'Ano e cor a preencher no recebimento')} · ${n} serviço${n===1?'':'s'} fechado${n===1?'':'s'}</span></div>`; }).join('') || '<div class="empty">Nenhum veículo cadastrado.</div>'}</section>
+    </div>
+  </div>`;
+};
+VIEWS.servicos = () => {
+  const mes = DB.filter(r=>r.status==='Ganho' && r.data.startsWith('2026-10'));
+  return head('Serviços', 'Lista de serviços vendidos pela Wingard. O vendedor escolhe daqui na hora da venda. O preço é o de tabela e pode ser alterado na venda para o valor negociado.') + `
+  <section class="card"><h3>Novo serviço</h3>
+    <div class="fields">
+      <div class="field"><label for="ns-n">Nome do serviço</label><input id="ns-n" placeholder="Ex.: PPF de colunas"></div>
+      <div class="field" style="grid-column:span 2"><label for="ns-d">Descrição</label><input id="ns-d" placeholder="O que está incluído no serviço"></div>
+      <div class="field"><label for="ns-v">Preço de tabela (R$)</label><input id="ns-v" class="num" inputmode="decimal" placeholder="0,00"></div>
+    </div>
+    <div><button class="btn pri" data-a="addServ">${ico('plus')}Cadastrar serviço</button></div></section>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Código</th><th>Serviço</th><th>Descrição</th><th class="num">Preço de tabela</th><th class="num">Vendas no mês</th><th>Ativo</th></tr></thead><tbody>
+  ${CATALOGO.map((c,i)=>{ const n = mes.reduce((s,r)=>s+r.servicos.filter(x=>x.cod===c.cod).length,0);
+    return `<tr class="${c.ativo===false?'off':''}"><td class="mono">${c.cod}</td>
+      <td style="min-width:200px"><input id="cat-n-${i}" data-cat="${i}.desc" value="${esc(c.desc)}" aria-label="Nome do serviço ${c.cod}"></td>
+      <td style="min-width:300px"><textarea id="cat-d-${i}" data-cat="${i}.descricao" rows="2" style="min-height:54px" aria-label="Descrição do serviço ${c.cod}">${esc(c.descricao||'')}</textarea></td>
+      <td style="width:150px"><input id="cat-v-${i}" class="num" data-cat="${i}.valor" data-t="n" value="${c.valor}" inputmode="decimal" aria-label="Preço de tabela ${c.cod}"></td>
+      <td class="num">${n}</td>
+      <td><label class="ck" style="padding:6px 10px"><input type="checkbox" id="cat-a-${i}" data-cat="${i}.ativo" ${c.ativo===false?'':'checked'}> ${c.ativo===false?'Inativo':'Ativo'}</label></td></tr>`; }).join('')}
+  </tbody></table></div>`;
+};
+/* ---------- documentos para o cliente (sem observações internas) ---------- */
+function pagResumo(r){
+  const e = +r.pag.entrada||0, s = saldo(r), t = r.fin ? r.fin.titulos.filter(x=>x.desc!=='Entrada') : [];
+  const partes = [];
+  if (e) partes.push(`entrada de ${fmt(e)} via ${r.pag.formaEntrada}`);
+  if (s) partes.push(r.pag.quando==='retirada' ? `saldo de ${fmt(s)} via ${r.pag.formaSaldo} na retirada do veículo` : `saldo de ${fmt(s)} em ${t.length||r.pag.parcelas}x no ${r.pag.formaSaldo}`);
+  return partes.length ? partes.join(' + ') : 'a combinar';
+}
+function docCliVei(r){
+  return `<div class="row"><span><b>Cliente:</b> ${esc(r.cliente.nome.toUpperCase())}</span><span><b>CPF/CNPJ:</b> ${esc(r.cliente.cpf)}</span><span><b>Celular:</b> ${esc(r.cliente.tel)}</span><span><b>E-mail:</b> ${esc(r.cliente.email)}</span></div>
+    <div class="row"><span><b>Endereço:</b> ${esc(r.cliente.end)}</span></div>
+    <div class="row"><span><b>Veículo:</b> ${esc(r.veiculo.modelo)}</span><span><b>Placa:</b> ${esc(r.veiculo.placa)}</span><span><b>Ano:</b> ${esc(r.veiculo.ano)}</span><span><b>Cor:</b> ${esc(r.veiculo.cor)}</span><span><b>Km:</b> ${esc(r.op.chkIn.km)}</span><span><b>Chassi:</b> ${esc(r.veiculo.chassi)}</span></div>
+    <div class="row"><span><b>Entrada do veículo:</b> ${fdate(r.ag.entrada)}</span><span><b>Previsão de entrega:</b> ${fdate(r.ag.saida)}</span><span><b>Consultor:</b> ${esc(r.consultor)}</span></div>`;
+}
+function docServicos(r, exec=false){
+  return `<table><thead><tr><th>Código</th><th>Serviço contratado</th><th class="r">Qtd</th>${exec?'<th>Executor</th>':''}<th class="r">Vlr. Unitário</th><th class="r">Vlr. Total</th></tr></thead><tbody>
+    ${r.servicos.map((s,i)=>`<tr><td>${s.cod}</td><td><b>${esc(s.desc.toUpperCase())}</b>${catDe(s.cod).descricao?`<div class="dsc">${esc(catDe(s.cod).descricao)}</div>`:''}${s.det?`<div class="dsc">${esc(s.det)}</div>`:''}</td><td class="r">${s.qtd}</td>${exec?`<td>${esc(r.op.exec[i]||'')}</td>`:''}<td class="r">${fmt(s.valor)}</td><td class="r">${fmt(s.qtd*s.valor)}</td></tr>`).join('')}
+    <tr><td colspan="${exec?5:4}" class="r"><b>Serviços:</b></td><td class="r">${fmt(subtotal(r))}</td></tr>
+    ${+r.desconto?`<tr><td colspan="${exec?5:4}" class="r"><b>Desconto:</b></td><td class="r">− ${fmt(r.desconto)}</td></tr>`:''}
+    <tr><td colspan="${exec?5:4}" class="r"><b>Valor total:</b></td><td class="r"><b>${fmt(total(r))}</b></td></tr></tbody></table>`;
+}
+function docPagamento(r){
   const t = r.fin.titulos, n = t.length;
-  const av = r.op.chkIn.marcas;
+  return `<div style="margin-bottom:6px"><b>Forma de pagamento:</b> ${pagResumo(r)}.</div>
+    <table><thead><tr><th>Vencimento</th><th>Forma</th><th>Descrição</th><th class="r">Valor</th><th>Parcela</th><th>Situação</th></tr></thead><tbody>
+    ${t.map((x,i)=>`<tr><td>${fdate(x.venc)}</td><td>${esc(x.forma)}</td><td>${x.desc}</td><td class="r">${fmt(x.valor)}</td><td>${i+1}/${n}</td><td>${x.recebido?'Pago':'Em aberto'}</td></tr>`).join('')}
+    <tr><td colspan="3" class="r"><b>Total</b></td><td class="r"><b>${fmt(t.reduce((s,x)=>s+x.valor,0))}</b></td><td colspan="2"></td></tr></tbody></table>`;
+}
+function docApontamentos(r){
+  const c = r.op.chkIn, av = c.marcas;
+  const alertas = INSPECAO.flatMap((g,ci)=>g.itens.map(([it],ii)=>({g:g.cat, it, v:c.insp[ci+'-'+ii]}))).filter(x=>x.v && !['Bom','Sim','N/A'].includes(x.v));
+  const n = respondidos(c);
+  return `${diagrama(av,'chkIn',true)}
+    <div><b>Avarias:</b> ${av.length?av.map((m,i)=>`${i+1}. ${pecaEm(m.x,m.y).peca}: ${AV_NOME[m.t]}${m.d?' ('+esc(m.d)+')':''}`).join(' · '):'nenhuma avaria registrada.'}</div>
+    <div><b>Inspeção:</b> ${n?`${n} itens verificados. ${alertas.length?'Pontos de atenção: '+alertas.map(x=>`${esc(x.it)} (${x.v})`).join(', ')+'.':'Todos em bom estado.'}`:'não realizada.'}</div>
+    <div><b>Combustível:</b> ${esc(c.comb)} · <b>Km:</b> ${esc(c.km)||'—'}${c.obs?` · <b>Vistoria:</b> ${esc(c.obs)}`:''}</div>
+    <div>Check-list Nº ${c.num}: ${c.ass.status==='assinado'?`assinado por ${esc(c.ass.nome)} em ${esc(c.ass.data)}`:'aguardando assinatura do cliente'}.</div>`;
+}
+function docOS(r){
   return `<div class="doc">
     <div class="dt"><span class="ttl">Ordem de Serviço</span><span class="logo">WINGARD</span></div>
     <div class="dt" style="margin-top:14px"><span class="big">Nº ${r.os}</span><span class="big">Data ${fdate(r.data)}</span></div>
-    <div class="row"><span><b>Cliente:</b> ${esc(r.cliente.nome.toUpperCase())}</span><span><b>CPF/CNPJ:</b> ${esc(r.cliente.cpf)}</span><span><b>Celular:</b> ${esc(r.cliente.tel)}</span></div>
-    <div class="row"><span><b>Endereço:</b> ${esc(r.cliente.end)}</span></div>
-    <div class="row"><span><b>Veículo:</b> ${esc(r.veiculo.modelo)}</span><span><b>Placa:</b> ${esc(r.veiculo.placa)}</span><span><b>Km:</b> ${esc(r.op.chkIn.km)}</span><span><b>Ano:</b> ${esc(r.veiculo.ano)}</span><span><b>Chassi:</b> ${esc(r.veiculo.chassi)}</span></div>
-    ${r.resumo?`<div class="cap">Agendamento</div><div>${esc(r.resumo).replace(/\n/g,'<br>')}</div>`:''}
-    ${r.obs?`<div class="cap">Observações</div><div>${esc(r.obs)}</div>`:''}
-    <h4>Serviços</h4>
-    <table><thead><tr><th>Código</th><th>Descrição</th><th class="r">Qtd</th><th class="r">Vlr. Unitário</th><th class="r">Vlr. Total</th></tr></thead><tbody>
-      ${r.servicos.map(s=>`<tr><td>${s.cod}</td><td>${esc(s.desc.toUpperCase())}</td><td class="r">${s.qtd}</td><td class="r">${fmt(s.valor)}</td><td class="r">${fmt(s.qtd*s.valor)}</td></tr>`).join('')}
-      <tr><td colspan="4" class="r"><b>Serviços:</b></td><td class="r">${fmt(subtotal(r))}</td></tr>
-      ${+r.desconto?`<tr><td colspan="4" class="r"><b>Desconto:</b></td><td class="r">− ${fmt(r.desconto)}</td></tr>`:''}
-      <tr><td colspan="4" class="r"><b>Total Venda:</b></td><td class="r"><b>${fmt(total(r))}</b></td></tr></tbody></table>
-    <h4>Pagamentos</h4>
-    <table><thead><tr><th>Data</th><th>Documento</th><th class="r">$ Parcela</th><th>Parcela(s)</th><th>Situação</th></tr></thead><tbody>
-      ${t.map((x,i)=>`<tr><td>${fdate(x.venc)}</td><td>${esc(x.forma)} · ${x.desc}</td><td class="r">${fmt(x.valor)}</td><td>${i+1}/${n}</td><td>${x.recebido?'Pago':'Em aberto'}</td></tr>`).join('')}
-      <tr><td colspan="2" class="r"><b>$ Total das Parcelas</b></td><td class="r"><b>${fmt(t.reduce((s,x)=>s+x.valor,0))}</b></td><td colspan="2"></td></tr></tbody></table>
-    <h4>Consultores</h4>
-    <div class="row"><span><b>Responsável:</b> ${esc(r.consultor.toUpperCase())}</span><span><b>Responsável técnico:</b> ${esc(r.op.tecnico.toUpperCase())}</span></div>
-    <h4>Vistoria de entrada</h4>
-    ${diagrama(av,'chkIn',true)}
-    <div>${av.length?av.map((m,i)=>`${i+1}. ${pecaEm(m.x,m.y).peca}: ${AV_NOME[m.t]}${m.d?' ('+esc(m.d)+')':''}`).join(' · '):'Sem avarias registradas.'} ${r.op.chkIn.comb?`· Combustível ${r.op.chkIn.comb}`:''}</div>
-    <div>Check-list Nº ${r.op.chkIn.num}: ${r.op.chkIn.ass.status==='assinado'?`assinado por ${esc(r.op.chkIn.ass.nome)} em ${esc(r.op.chkIn.ass.data)}`:'aguardando assinatura do cliente'}.</div>
+    ${docCliVei(r)}
+    <h4>Serviços contratados</h4>${docServicos(r)}
+    <h4>Pagamento</h4>${docPagamento(r)}
+    <h4>Apontamentos do check-list de entrada</h4>${docApontamentos(r)}
     <h4>Garantia</h4>
     <div>Garantia conforme o fabricante de cada produto aplicado, mediante apresentação desta OS.</div>
-    <h4>Observações</h4>
-    <div class="lines"><div></div><div></div></div>
-    <div class="sig"><div>${esc(r.consultor)}<br>Wingard</div><div>${esc(r.cliente.nome)}<br>Cliente</div></div>
+    <h4>Acordo</h4>
+    <div>Declaro estar de acordo com os serviços, os valores, a forma de pagamento e as condições do veículo descritos nesta Ordem de Serviço.</div>
+    <div class="sig"><div>${esc(r.consultor)}<br>Wingard</div><div>${esc(r.cliente.nome)}<br>Assinatura do cliente</div></div>
   </div>`;
 }
 function docPrisma(r){
   return `<div class="doc">
-    <div class="dt"><span class="big">Nº ${r.os}</span><span class="big">Data ${fdate(r.data)}</span></div>
-    <div class="row" style="margin-top:8px"><span><b>Cliente:</b> ${esc(r.cliente.nome.toUpperCase())}</span><span><b>Tel:</b> ${esc(r.cliente.tel)}</span></div>
-    <div class="row"><span><b>Veículo:</b> ${esc(r.veiculo.modelo)}</span><span><b>Placa:</b> ${esc(r.veiculo.placa)}</span><span><b>Km:</b> ${esc(r.op.chkIn.km)}</span><span><b>Ano:</b> ${esc(r.veiculo.ano)}</span><span><b>Chassi:</b> ${esc(r.veiculo.chassi)}</span></div>
-    ${r.resumo?`<div class="cap">Agendamento</div><div>${esc(r.resumo).replace(/\n/g,'<br>')}</div>`:''}
-    ${r.obs?`<div class="cap">Observações</div><div>${esc(r.obs)}</div>`:''}
-    <h4>Produtos e Serviços</h4>
-    <table><thead><tr><th>Código</th><th>Referência</th><th>Descrição</th><th>End.</th><th class="r">Qtd</th><th>Executor</th></tr></thead><tbody>
-      ${r.servicos.map((s,i)=>`<tr><td>${s.cod}</td><td></td><td>${esc(s.desc.toUpperCase())}</td><td></td><td class="r">${s.qtd}</td><td>${esc(r.op.exec[i]||'')}</td></tr>`).join('')}
-    </tbody></table>
+    <div class="dt"><span class="ttl">Prisma · Ficha de serviço</span><span class="logo">WINGARD</span></div>
+    <div class="dt" style="margin-top:14px"><span class="big">Nº ${r.os}</span><span class="big">Data ${fdate(r.data)}</span></div>
+    ${docCliVei(r)}
+    <h4>Serviços contratados</h4>${docServicos(r, true)}
+    <div style="margin-top:6px"><b>Forma de pagamento:</b> ${pagResumo(r)}.</div>
+    <div><b>Responsável técnico:</b> ${esc(r.op.tecnico)}</div>
+    <h4>Apontamentos do check-list de entrada</h4>${docApontamentos(r)}
     <div class="sig"><div>${esc(r.consultor.toUpperCase())}<br>Responsável</div><div>${esc(r.cliente.nome.toUpperCase())}<br>Autorização do cliente</div></div>
-    <h4>Observações</h4>
-    <div class="lines"><div></div><div></div><div></div><div></div><div></div></div>
   </div>`;
 }
+
 function abrirDoc(tipo, r = cur()){
   const m = $('#modal');
   m.innerHTML = `<div class="modal-in"><div class="modal-bar"><span><b>${tipo==='os'?'Ordem de Serviço':'Prisma'} ${r.os}</b> · folha A4<br><small style="opacity:.75">No link de visualização do Claude a impressora pode ficar bloqueada. Abrindo o arquivo no navegador, imprime normalmente.</small></span>
@@ -1581,7 +1761,13 @@ const ACT = {
   fset: a => { S.f[a.dataset.k] = a.dataset.val; render(); },
   status: a => { const r = cur(); r.status = a.dataset.s; if (r.status==='Ganho' && !['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa='Fechamento'; render();
     if (r.status==='Ganho' && !r.os) toast('Status ganho. Use “Fechar venda e gerar OS” para enviar ao Operacional e ao Financeiro.','warn'); },
-  canal: a => { cur().canal = a.dataset.c; render(); },
+  cliOpen: a => { S.cli = a.dataset.id; go('comercial','cliente'); },
+  novaVendaCli: a => { const c = clientesTodos().find(x=>x.id===a.dataset.id), vs = veiculosDe(c);
+    const r = mk({id:'A'+String(nextId++).padStart(2,'0'), data:HOJE, origem:'Cliente de carteira'}); r.cliente = c; r.veiculo = vs[vs.length-1] || (c.veiculos.push(novoVei()), c.veiculos[c.veiculos.length-1]);
+    DB.unshift(r); go('comercial','ficha', r.id); toast(`Nova venda aberta para ${c.nome}. Os dados do cadastro já vieram preenchidos.`); },
+  addServ: () => { const n = $('#ns-n').value.trim(), v = parseFloat($('#ns-v').value.replace(/\./g,'').replace(',','.'));
+    if (!n || !(v>0)) return toast('Informe o nome e o preço de tabela do serviço.','bad');
+    const cod = String(Math.max(...CATALOGO.map(c=>+c.cod))+1); CATALOGO.push({cod, desc:n, valor:v, descricao:$('#ns-d').value.trim()}); render(); toast(`Serviço ${cod} cadastrado. Já aparece na lista da venda.`); },
   addSvc: () => { cur().servicos.push(sv('111')); render(); },
   rmSvc: a => { cur().servicos.splice(+a.dataset.i,1); render(); },
   salvar: () => toast('Atendimento salvo.'),
@@ -1677,7 +1863,9 @@ document.addEventListener('keydown', e => { if (e.key==='Escape') $('#modal').hi
 function onField(e){
   const el = e.target;
   if (el.dataset.f){ S.f[el.dataset.f] = el.value;
-    if (e.type==='change' && ['fq','cq','q'].includes(el.dataset.f)) return;
+    if (e.type==='change' && ['fq','cq','q','cliq'].includes(el.dataset.f)) return;
+    if (el.dataset.f==='cliq'){ S.f.cliq = el.value; const q = el.value.trim().toLowerCase();
+      $('#tbl-cli2').innerHTML = tblClientes2(clientesTodos().filter(c=>!q || (c.nome+' '+c.tel+' '+veiculosDe(c).map(v=>v.modelo+' '+v.placa).join(' ')).toLowerCase().includes(q))); return; }
     if (el.dataset.f==='fq'){ S.f.fq = el.value; const q = el.value.trim().toLowerCase(), f = S.f;
       $('#tbl-fin').innerHTML = tblFin(ordens().filter(r=>(f.fst==='todos' || (f.fst==='pendente' ? !r.fin.liberado : r.fin.liberado)) && (!q || (r.cliente.nome+' '+r.veiculo.modelo+' '+r.os).toLowerCase().includes(q)))); }
     else if (el.dataset.f==='cq'){ const L = DB.filter(r=>noPeriodo(r.data,S.f.periodo) && (S.f.cons==='todos'||r.consultor===S.f.cons)), q = el.value.trim().toLowerCase();
@@ -1690,6 +1878,18 @@ function onField(e){
     let n = files.length; if (!n) return;
     files.forEach(f => { const rd = new FileReader(); rd.onload = () => { arr.push({nome:f.name, src: f.type.startsWith('image/') ? rd.result : ''}); if (--n===0) render(); }; rd.readAsDataURL(f); });
     return; }
+  if (el.dataset.cli!=null && e.type==='change'){ const r = cur();
+    if (el.value){ const c = clientesTodos().find(x=>x.id===el.value), vs = veiculosDe(c); r.cliente = c; r.veiculo = vs[vs.length-1] || c.veiculos[0];
+      if (r.origem==='Lead' && ganhasDe(c).length) r.origem = 'Cliente de carteira'; }
+    else { r.cliente = novoCli(); r.veiculo = r.cliente.veiculos[0]; }
+    render(); return; }
+  if (el.dataset.vei!=null && e.type==='change'){ const r = cur();
+    if (el.value==='novo'){ const v = novoVei(); r.cliente.veiculos.push(v); r.veiculo = v; } else r.veiculo = r.cliente.veiculos[+el.value];
+    render(); return; }
+  if (el.dataset.cf!=null){ const c = clientesTodos().find(x=>x.id===S.cli); if (c) c[el.dataset.cf] = el.value; return; }
+  if (el.dataset.cat!=null){ const [i,f] = el.dataset.cat.split('.'), c = CATALOGO[+i];
+    if (f==='ativo'){ if (e.type==='change'){ c.ativo = el.checked; render(); } return; }
+    c[f] = el.dataset.t==='n' ? (parseFloat(String(el.value).replace(',','.'))||0) : el.value; return; }
   if (el.dataset.svc!=null && e.type==='change'){
     const s = cur().servicos[+el.dataset.svc], c = CATALOGO.find(x=>x.cod===el.value); Object.assign(s, {cod:c.cod, desc:c.desc, valor:c.valor}); render(); return; }
   const p = el.dataset.b; if (!p) return;

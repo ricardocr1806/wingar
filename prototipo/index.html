@@ -582,18 +582,15 @@ const ETAPAS = ['1º Contato','Tratativa','Potencial de compra','Sem veículo','
 const FORMAS = ['PIX','Cartão de crédito','Cartão de débito','Boleto','Dinheiro','Transferência'];
 const PATIO = [['aguardando','Aguardando entrada'],['lavagem','Lavagem'],['aplicacao','Aplicação'],['corte','Corte / Desmontagem'],['finalizacao','Finalização'],['pronto','Pronto p/ entrega'],['entregue','Entregue']];
 const patioNome = k => (PATIO.find(p=>p[0]===k)||['',k])[1];
-const ITENS_IN = ['Painel sem luzes de alerta','Faróis e lanternas funcionando','Vidros elétricos funcionando','Multimídia e som','Rodas e pneus sem avarias','Estepe, macaco e triângulo','Chave reserva entregue','Pertences pessoais retirados','Tapetes no veículo'];
+const ITENS_IN = ['Faróis e lanternas funcionando','Vidros elétricos funcionando','Multimídia e som','Rodas e pneus sem avarias','Estepe, macaco e triângulo','Chave reserva entregue','Pertences pessoais retirados','Tapetes no veículo'];
 const ITENS_OUT = ['Luzes do painel e eletrônicos conferidos','PPF sem bolhas, bordas e cantos selados','Películas sem bolhas, riscos ou poeira','Acabamento e limpeza final','Veículo lavado e seco','Cliente acompanhou a vistoria de saída'];
 const INSPECAO = [
   {cat:'Pintura e carroceria', itens:[['Pintura geral','aval'],['Para-choques','aval'],['Lentes de faróis e lanternas','aval'],['Vidros e para-brisa','aval'],['Retrovisores','aval'],['Rodas (riscos e ralados)','aval']]},
-  {cat:'Freios', itens:[['Fluido / Reservatório','aval'],['Pastilha / Lona','aval'],['Disco / Tambor','aval'],['Flexíveis','aval'],['Cilindro de roda','aval'],['Freio de mão','aval']]},
-  {cat:'Escapamento', itens:[['Catalisador','aval'],['Intermediário','aval'],['Abraçadeiras / Coxins','aval']]},
-  {cat:'Motor', itens:[['Nível do óleo do motor','aval'],['Filtro de óleo','aval'],['Filtro de ar','aval'],['Nível do reservatório de arrefecimento','aval']]},
   {cat:'Rodas e pneus', itens:[['Pneus','aval'],['Rodas','aval'],['Válvula (bico)','aval']]},
-  {cat:'Suspensão', itens:[['Amortecedores','aval'],['Molas','aval'],['Bandejas','aval'],['Terminais','aval']]},
-  {cat:'Elétrica e painel', itens:[['Carga da bateria','aval'],['Painel sem luzes de alerta','sn'],['Faróis e lanternas funcionando','sn'],['Luz de freio','sn'],['Luz de alerta','sn'],['Vidros elétricos','sn'],['Multimídia e som','sn']]},
+  {cat:'Elétrica e painel', itens:[['Faróis e lanternas funcionando','sn'],['Luz de freio','sn'],['Luz de alerta','sn'],['Vidros elétricos','sn'],['Multimídia e som','sn']]},
   {cat:'Itens no veículo', itens:[['Extintor','sn'],['Tapetes','sn'],['Estepe, macaco e triângulo','sn'],['Chave reserva entregue','sn'],['Pertences pessoais retirados','sn']]},
 ];
+const NAO_AVALIADOS = 'Itens mecânicos (motor, freios, suspensão, escapamento e bateria) não são avaliados nem testados pela equipe Wingard.';
 const RESP = {aval:['Bom','Regular','Ruim','N/A'], sn:['Sim','Não','N/A']};
 const respK = v => ({'Bom':'ok','Sim':'ok','Regular':'warn','Ruim':'bad','Não':'bad','N/A':'neu'}[v]||'neu');
 const TOTAL_INSP = INSPECAO.reduce((s,c)=>s+c.itens.length,0);
@@ -1218,7 +1215,7 @@ function listaAvariasRO(M){
       ${m.d?`<span class="muted" style="font-size:13.5px">${esc(m.d)}</span>`:''}</div>`; }).join('')
     : '<div class="note ok"><b>Sem avarias</b>Nenhuma avaria foi encontrada na carroceria.</div>';
 }
-const TERMO = 'Declaro que conferi a vistoria de entrada do meu veículo e que as condições descritas neste check-list (avarias, fotos e itens deixados no veículo) correspondem ao estado em que ele foi entregue à Wingard. Avarias já existentes e registradas aqui não são de responsabilidade da Wingard.';
+const TERMO = 'Declaro que conferi a vistoria de entrada do meu veículo e que as condições descritas neste check-list (avarias, fotos e itens deixados no veículo) correspondem ao estado em que ele foi entregue à Wingard. Avarias já existentes e registradas aqui não são de responsabilidade da Wingard. ' + NAO_AVALIADOS;
 const ART_URL = 'https://claude.ai/artifact/65qTihcLVfK1PUtBtkTtRH';
 const linkAss = r => `${ART_URL}#assinar-${r.os}`;
 const msgAss = r => `Olá, ${r.cliente.nome.split(' ')[0]}! Aqui é da Wingard. Segue o check-list de entrada do seu ${r.veiculo.modelo} (OS ${r.os}), com as fotos e as condições em que o carro chegou. Confira e assine pelo link: ${linkAss(r)}`;
@@ -1249,7 +1246,7 @@ function checklistEntrada(r){
     <section class="card"><div class="card-h"><h3>Avaliação da carroceria</h3><span class="faint" style="font-size:12.5px">${av.length} avaria${av.length===1?'':'s'} marcada${av.length===1?'':'s'}</span></div>
       ${blocoAvarias(c,'chkIn')}
 </section>
-    <section class="card"><div class="card-h"><div><h3>Inspeção</h3><span class="faint" style="font-size:12.5px">${n} de ${TOTAL_INSP} itens respondidos</span></div>
+    <section class="card"><div class="card-h"><div><h3>Inspeção</h3><span class="faint" style="font-size:12.5px">${n} de ${TOTAL_INSP} itens respondidos · ${NAO_AVALIADOS}</span></div>
       <div class="meter" style="width:160px"><i style="width:${n/TOTAL_INSP*100}%"></i></div></div>
       ${INSPECAO.map((g,ci)=>`<div class="insp"><div class="insp-h"><b>${g.cat}</b><button class="btn sm ghost" data-a="tudoBom" data-c="${ci}">Marcar tudo ${g.itens[0][1]==='sn'?'Sim':'Bom'}</button></div>
         ${g.itens.map(([it,t],ii)=>{ const k = ci+'-'+ii, v = c.insp[k];
@@ -1300,7 +1297,7 @@ function vCliente(r, modo){
       <div class="grid" style="gap:8px">${listaAvariasRO(c.marcas)}</div></section>
     <section class="card"><div class="card-h"><h3>Fotos e vídeos</h3><span class="faint mono">${c.fotos.length}</span></div>
       <div class="fotos">${c.fotos.map(f=>`<div class="foto ${f.src?'':'ph'}" ${f.src?`style="background-image:url('${f.src}')"`:''}>${f.src?'':esc(f.nome)}</div>`).join('') || '<span class="faint">Nenhuma foto anexada.</span>'}</div></section>
-    <section class="card"><h3>Check-list</h3>
+    <section class="card"><h3>Check-list</h3><span class="faint" style="font-size:12.5px">${NAO_AVALIADOS}</span>
       ${INSPECAO.map((g,ci)=>`<div class="insp"><div class="insp-h"><b>${g.cat}</b></div>${g.itens.map(([it],ii)=>{ const v = c.insp[ci+'-'+ii];
         return `<div class="insp-r"><span>${it}</span>${v?chip(respK(v), v):'<span class="faint" style="font-size:12.5px">Não avaliado</span>'}</div>`; }).join('')}</div>`).join('')}</section>
     ${c.obs?`<section class="card"><h3>Observações finais</h3><p style="margin:0">${esc(c.obs)}</p></section>`:''}
@@ -1708,7 +1705,7 @@ function docApontamentos(r){
   const n = respondidos(c);
   return `${diagrama(av,'chkIn',true)}
     <div><b>Avarias:</b> ${av.length?av.map((m,i)=>`${i+1}. ${pecaEm(m.x,m.y).peca}: ${AV_NOME[m.t]}${m.d?' ('+esc(m.d)+')':''}`).join(' · '):'nenhuma avaria registrada.'}</div>
-    <div><b>Inspeção:</b> ${n?`${n} itens verificados. ${alertas.length?'Pontos de atenção: '+alertas.map(x=>`${esc(x.it)} (${x.v})`).join(', ')+'.':'Todos em bom estado.'}`:'não realizada.'}</div>
+    <div><b>Inspeção:</b> ${n?`${n} itens verificados. ${NAO_AVALIADOS} ${alertas.length?'Pontos de atenção: '+alertas.map(x=>`${esc(x.it)} (${x.v})`).join(', ')+'.':'Todos em bom estado.'}`:'não realizada.'}</div>
     <div><b>Combustível:</b> ${esc(c.comb)} · <b>Km:</b> ${esc(c.km)||'—'}${c.obs?` · <b>Vistoria:</b> ${esc(c.obs)}`:''}</div>
     <div>Check-list Nº ${c.num}: ${c.ass.status==='assinado'?`assinado por ${esc(c.ass.nome)} em ${esc(c.ass.data)}`:'aguardando assinatura do cliente'}.</div>`;
 }

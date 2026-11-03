@@ -987,7 +987,7 @@ function tblClientes(C){
     <td>${person(c.u.cliente.nome, c.u.cliente.tel)}</td>
     <td class="cl"><b>${esc(c.u.veiculo.modelo||'—')}</b><span>${esc([c.u.veiculo.ano,c.u.veiculo.cor].filter(Boolean).join(' · ')||c.u.origem)}</span></td>
     <td><span class="person">${avatar(c.u.consultor,true)}${esc(c.u.consultor.split(' ')[0])}</span></td>
-    <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.u.cliente.id}" title="Editar cliente" aria-label="Editar ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.u.cliente.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('trash')}</button></td></tr>`).join('')}</tbody></table>`;
+    <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.u.cliente.id}" title="Editar atendimento" aria-label="Editar ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.u.cliente.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('trash')}</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function spark(gan){
@@ -1638,7 +1638,7 @@ function tblClientes2(C){
       <td class="cl"><b>${esc(vs.map(x=>x.modelo).join(', ')||'—')}</b><span>${vs.length} veículo${vs.length===1?'':'s'}</span></td>
       <td class="num">${g.length}${v.length>g.length?` <span class="faint">/ ${v.length} atend.</span>`:''}</td>
       <td class="num">${fmt(g.reduce((s,r)=>s+total(r),0))}</td><td class="mono">${ult?fdate(ult.data):'—'}</td>
-      <td>${g.length>1?fmtDias(intervaloMedio(c)):'<span class="faint">1ª compra</span>'}</td><td><span class="tag">${esc(v[0].origem)}</span></td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.id}" title="Editar cliente" aria-label="Editar ${esc(c.nome)}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.nome)}">${ico('trash')}</button></td></tr>`; }).join('')}
+      <td>${g.length>1?fmtDias(intervaloMedio(c)):'<span class="faint">1ª compra</span>'}</td><td><span class="tag">${esc(v[0].origem)}</span></td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.id}" title="Editar atendimento" aria-label="Editar ${esc(c.nome)}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.nome)}">${ico('trash')}</button></td></tr>`; }).join('')}
   </tbody></table>`;
 }
 VIEWS.cliente = () => {
@@ -1780,16 +1780,7 @@ const ACT = {
   fset: a => { S.f[a.dataset.k] = a.dataset.val; render(); },
   status: a => { const r = cur(); r.status = a.dataset.s; if (r.status==='Ganho' && !['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa='Fechamento'; render();
     if (r.status==='Ganho' && !r.os) toast('Status ganho. Use “Fechar venda e gerar OS” para enviar ao Operacional e ao Financeiro.','warn'); },
-  cliEditar: a => { const c = cliPorId(a.dataset.id); if (!c) return;
-    const f = (k,l,t='text') => `<div class="field"><label for="dl-${k}">${l}</label><input id="dl-${k}" type="${t}" value="${esc(c[k]||'')}"></div>`;
-    dialogo(`<div class="dlg-h"><span class="dlg-ic">${ico('edit')}</span><div><h2>Editar cliente</h2><p class="muted">${esc(c.nome||'Sem nome')}</p></div></div>
-      <div class="fields">${f('nome','Nome completo')}${f('tel','Telefone / celular','tel')}${f('email','E-mail','email')}${f('cpf','CPF')}${f('nasc','Data de nascimento','date')}${f('end','Endereço')}</div>
-      <div id="dl-err" class="cv-err" hidden></div>
-      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Cancelar</button><button class="btn pri" data-a="cliSalvar" data-id="${c.id}">Salvar alterações</button></div>`);
-    setTimeout(()=>{ const el = $('#dl-nome'); if (el) el.focus(); }, 30); },
-  cliSalvar: a => { const c = cliPorId(a.dataset.id), nome = $('#dl-nome').value.trim();
-    if (!nome){ const e = $('#dl-err'); e.textContent = 'Informe o nome do cliente.'; e.hidden = false; return; }
-    ['nome','tel','email','cpf','nasc','end'].forEach(k=>c[k] = $('#dl-'+k).value.trim()); fecharDlg(); render(); toast(`Cadastro de ${c.nome} atualizado.`); },
+  cliEditar: a => { const c = cliPorId(a.dataset.id); if (!c) return; const v = vendasDe(c); go('comercial','ficha', v[v.length-1].id); },
   cliExcluir: a => { const c = cliPorId(a.dataset.id); if (!c) return;
     const v = vendasDe(c), os = v.filter(r=>r.os);
     dialogo(`<div class="dlg-h"><span class="dlg-ic del">${ico('trash')}</span><div><span class="muted">Excluir cliente</span><h2>${esc(c.nome||'Sem nome')}</h2>${c.tel?`<p class="muted">${esc(c.tel)}</p>`:''}</div></div>

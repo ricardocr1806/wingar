@@ -314,6 +314,22 @@ input.num{text-align:right}
 @media (max-width:640px){ .tl-i{grid-template-columns:minmax(0,1fr)} .tl-v{align-items:flex-start} }
 tr.off td{opacity:.55}
 .doc .dsc{font-size:10.5px;color:#555;margin-top:1px}
+.row-acts{width:1%;white-space:nowrap;text-align:right}
+.icon-act{width:34px;height:34px;display:inline-grid;place-items:center;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer;margin-left:6px}
+.icon-act:hover{color:var(--acc);border-color:var(--acc)}
+.icon-act.del:hover{color:var(--bad);border-color:var(--bad);background:color-mix(in srgb,var(--bad) 8%,var(--surface))}
+.btn.del-btn:hover{color:var(--bad);border-color:var(--bad)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff;box-shadow:0 6px 16px color-mix(in srgb,var(--bad) 30%,transparent)}
+.btn.danger:hover{filter:brightness(1.06)}
+.dlg{position:fixed;inset:0;z-index:55;background:var(--scrim);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:grid;place-items:center;padding-block:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));overflow-y:auto}
+.dlg-card{width:100%;max-width:520px;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);padding:22px;display:flex;flex-direction:column;gap:16px;animation:pop2 .18s ease-out}
+.dlg-h{display:flex;gap:14px;align-items:center}
+.dlg-h h2{font-size:21px}
+.dlg-h p{margin:2px 0 0}
+.dlg-ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,transparent)}
+.dlg-ic.del{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.dlg-acts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+@keyframes pop2{from{transform:scale(.97);opacity:.6}to{transform:none;opacity:1}}
 .tabbar{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center}
 .tabbar .filters select{min-width:0}
 .kpis:has(> :nth-child(4)){grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -515,6 +531,7 @@ table{border-collapse:collapse;width:100%;font-size:inherit}
 </div>
 <div class="modal" id="modal" hidden></div>
 <div id="cv" hidden></div>
+<div class="dlg" id="dlg" hidden></div>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -554,6 +571,8 @@ const ICONS = {
   back:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
   arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
   print:'<path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/>',
+  edit:'<path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
   upload:'<path d="M12 16V4M7 9l5-5 5 5M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
 };
 const ico = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
@@ -764,6 +783,7 @@ const novoCli = () => ({id:'C'+String(nextCli++).padStart(3,'0'), nome:'', tel:'
     else { ['placa','ano','cor','chassi'].forEach(f=>{ if (!v[f] && r.veiculo[f]) v[f] = r.veiculo[f]; }); r.veiculo = v; }
   });
 })();
+const cliPorId = id => DB.map(r=>r.cliente).find(c=>c.id===id);
 const clientesTodos = () => [...new Set(DB.map(r=>r.cliente))].filter(c=>c.nome.trim()).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
 const vendasDe = c => DB.filter(r=>r.cliente===c).sort((a,b)=>a.data.localeCompare(b.data));
 const ganhasDe = c => vendasDe(c).filter(r=>r.status==='Ganho');
@@ -807,6 +827,8 @@ function go(dept, view, sel){
   if (view==='os') S.tab = 'resumo';
   render(); window.scrollTo(0,0);
 }
+function dialogo(html){ const d = $('#dlg'); d.innerHTML = `<div class="dlg-card" role="dialog" aria-modal="true">${html}</div>`; d.hidden = false; }
+function fecharDlg(){ const d = $('#dlg'); d.hidden = true; d.innerHTML = ''; }
 function toast(msg, kind=''){
   const t = $('#toast'); t.className = 'toast '+kind; t.textContent = msg; t.hidden = false;
   clearTimeout(toast._t); toast._t = setTimeout(()=>t.hidden=true, 3800);
@@ -960,12 +982,12 @@ function abaClientes(L){
 }
 function tblClientes(C){
   if (!C.length) return `<div class="empty" style="margin:12px">Nenhum cliente encontrado.</div>`;
-  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Consultor</th><th>Último status</th><th class="num">Atendimentos</th><th class="num">Total fechado</th><th>Último contato</th></tr></thead><tbody>
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículo</th><th>Consultor</th><th>Último status</th><th class="num">Atendimentos</th><th class="num">Total fechado</th><th>Último contato</th><th></th></tr></thead><tbody>
   ${C.map(c=>`<tr class="click" data-a="cliOpen" data-id="${c.u.cliente.id}">
     <td>${person(c.u.cliente.nome, c.u.cliente.tel)}</td>
     <td class="cl"><b>${esc(c.u.veiculo.modelo||'—')}</b><span>${esc([c.u.veiculo.ano,c.u.veiculo.cor].filter(Boolean).join(' · ')||c.u.origem)}</span></td>
     <td><span class="person">${avatar(c.u.consultor,true)}${esc(c.u.consultor.split(' ')[0])}</span></td>
-    <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td></tr>`).join('')}</tbody></table>`;
+    <td>${statusChip(c.u.status)}</td><td class="num">${c.rs.length}</td><td class="num">${fmt(c.fechado)}</td><td class="mono">${fd(c.u.data)}</td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.u.cliente.id}" title="Editar cliente" aria-label="Editar ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.u.cliente.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.u.cliente.nome||'cliente sem nome')}">${ico('trash')}</button></td></tr>`).join('')}</tbody></table>`;
 }
 
 function spark(gan){
@@ -1610,21 +1632,21 @@ VIEWS.clientes = () => {
 };
 function tblClientes2(C){
   if (!C.length) return `<div class="empty" style="margin:12px">Nenhum cliente encontrado.</div>`;
-  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículos</th><th class="num">Compras</th><th class="num">Total comprado</th><th>Última compra</th><th>Intervalo médio entre compras</th><th>Origem</th></tr></thead><tbody>
+  return `<table class="tbl nowrap"><thead><tr><th>Cliente</th><th>Veículos</th><th class="num">Compras</th><th class="num">Total comprado</th><th>Última compra</th><th>Intervalo médio entre compras</th><th>Origem</th><th></th></tr></thead><tbody>
   ${C.map(c=>{ const g = ganhasDe(c), v = vendasDe(c), ult = g[g.length-1], vs = veiculosDe(c);
     return `<tr class="click" data-a="cliOpen" data-id="${c.id}"><td>${person(c.nome, c.tel)}</td>
       <td class="cl"><b>${esc(vs.map(x=>x.modelo).join(', ')||'—')}</b><span>${vs.length} veículo${vs.length===1?'':'s'}</span></td>
       <td class="num">${g.length}${v.length>g.length?` <span class="faint">/ ${v.length} atend.</span>`:''}</td>
       <td class="num">${fmt(g.reduce((s,r)=>s+total(r),0))}</td><td class="mono">${ult?fdate(ult.data):'—'}</td>
-      <td>${g.length>1?fmtDias(intervaloMedio(c)):'<span class="faint">1ª compra</span>'}</td><td><span class="tag">${esc(v[0].origem)}</span></td></tr>`; }).join('')}
+      <td>${g.length>1?fmtDias(intervaloMedio(c)):'<span class="faint">1ª compra</span>'}</td><td><span class="tag">${esc(v[0].origem)}</span></td><td class="row-acts"><button class="icon-act" data-a="cliEditar" data-id="${c.id}" title="Editar cliente" aria-label="Editar ${esc(c.nome)}">${ico('edit')}</button><button class="icon-act del" data-a="cliExcluir" data-id="${c.id}" title="Excluir cliente" aria-label="Excluir ${esc(c.nome)}">${ico('trash')}</button></td></tr>`; }).join('')}
   </tbody></table>`;
 }
 VIEWS.cliente = () => {
-  const c = clientesTodos().find(x=>x.id===S.cli); if (!c) return '';
+  const c = cliPorId(S.cli); if (!c) return '';
   const v = vendasDe(c), g = ganhasDe(c), tot = g.reduce((s,r)=>s+total(r),0), im = intervaloMedio(c), ult = g[g.length-1];
   const fld = (f,l,t='text') => `<div class="field"><label for="cp-${f}">${l}</label><input id="cp-${f}" type="${t}" data-cf="${f}" value="${esc(c[f]||'')}"></div>`;
-  return head(esc(c.nome), `Cliente desde ${fdate(v[0].data)} · origem: ${esc(v[0].origem)}`,
-      `<button class="btn pri" data-a="novaVendaCli" data-id="${c.id}">${ico('plus')}Nova venda para este cliente</button>`,
+  return head(esc(c.nome||'Sem nome'), `Cliente desde ${fdate(v[0].data)} · origem: ${esc(v[0].origem)}`,
+      `<button class="btn" data-a="cliEditar" data-id="${c.id}">${ico('edit')}Editar</button><button class="btn del-btn" data-a="cliExcluir" data-id="${c.id}">${ico('trash')}Excluir</button><button class="btn pri" data-a="novaVendaCli" data-id="${c.id}">${ico('plus')}Nova venda para este cliente</button>`,
       `<button class="crumb" data-a="nav" data-v="clientes">${ico('back')}Clientes</button>`) + `
   <div class="kpis">
     <div class="kpi hl"><span class="k"><i class="ki">${ico('trend')}</i>Total comprado</span><span class="v">${fmt(tot)}</span><span class="d">${g.length} compra${g.length===1?'':'s'}</span></div>
@@ -1758,6 +1780,28 @@ const ACT = {
   fset: a => { S.f[a.dataset.k] = a.dataset.val; render(); },
   status: a => { const r = cur(); r.status = a.dataset.s; if (r.status==='Ganho' && !['Fechamento','Pós-venda'].includes(r.etapa)) r.etapa='Fechamento'; render();
     if (r.status==='Ganho' && !r.os) toast('Status ganho. Use “Fechar venda e gerar OS” para enviar ao Operacional e ao Financeiro.','warn'); },
+  cliEditar: a => { const c = cliPorId(a.dataset.id); if (!c) return;
+    const f = (k,l,t='text') => `<div class="field"><label for="dl-${k}">${l}</label><input id="dl-${k}" type="${t}" value="${esc(c[k]||'')}"></div>`;
+    dialogo(`<div class="dlg-h"><span class="dlg-ic">${ico('edit')}</span><div><h2>Editar cliente</h2><p class="muted">${esc(c.nome||'Sem nome')}</p></div></div>
+      <div class="fields">${f('nome','Nome completo')}${f('tel','Telefone / celular','tel')}${f('email','E-mail','email')}${f('cpf','CPF')}${f('nasc','Data de nascimento','date')}${f('end','Endereço')}</div>
+      <div id="dl-err" class="cv-err" hidden></div>
+      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Cancelar</button><button class="btn pri" data-a="cliSalvar" data-id="${c.id}">Salvar alterações</button></div>`);
+    setTimeout(()=>{ const el = $('#dl-nome'); if (el) el.focus(); }, 30); },
+  cliSalvar: a => { const c = cliPorId(a.dataset.id), nome = $('#dl-nome').value.trim();
+    if (!nome){ const e = $('#dl-err'); e.textContent = 'Informe o nome do cliente.'; e.hidden = false; return; }
+    ['nome','tel','email','cpf','nasc','end'].forEach(k=>c[k] = $('#dl-'+k).value.trim()); fecharDlg(); render(); toast(`Cadastro de ${c.nome} atualizado.`); },
+  cliExcluir: a => { const c = cliPorId(a.dataset.id); if (!c) return;
+    const v = vendasDe(c), os = v.filter(r=>r.os);
+    dialogo(`<div class="dlg-h"><span class="dlg-ic del">${ico('trash')}</span><div><span class="muted">Excluir cliente</span><h2>${esc(c.nome||'Sem nome')}</h2>${c.tel?`<p class="muted">${esc(c.tel)}</p>`:''}</div></div>
+      <p style="margin:0;font-size:15px"><b>Deseja realmente excluir este cliente?</b></p>
+      <p class="muted" style="margin:0">Também ${v.length===1?'será excluído 1 atendimento':`serão excluídos ${v.length} atendimentos`} ligado${v.length===1?'':'s'} a ele${os.length?`, incluindo ${os.length===1?'a':'as'} OS ${os.map(r=>r.os).join(', ')} e os recebimentos no Financeiro`:''}. Não dá para desfazer.</p>
+      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Não, manter cliente</button><button class="btn danger" data-a="cliExcluirSim" data-id="${c.id}">Sim, excluir</button></div>`);
+    setTimeout(()=>{ const el = document.querySelector('#dlg [data-a="dlgFechar"]'); if (el) el.focus(); }, 30); },
+  cliExcluirSim: a => { const c = cliPorId(a.dataset.id); if (!c) return fecharDlg(); const nome = c.nome || 'Cliente sem nome';
+    for (let i=DB.length-1; i>=0; i--) if (DB[i].cliente===c) DB.splice(i,1);
+    fecharDlg(); if (S.view==='cliente' || (S.view==='ficha' && !cur())) S.view = 'clientes';
+    if (S.ordSel && !DB.find(r=>r.id===S.ordSel)) S.ordSel = null; render(); toast(`${nome} foi excluído.`); },
+  dlgFechar: () => fecharDlg(),
   cliOpen: a => { S.cli = a.dataset.id; go('comercial','cliente'); },
   novaVendaCli: a => { const c = clientesTodos().find(x=>x.id===a.dataset.id), vs = veiculosDe(c);
     const r = mk({id:'A'+String(nextId++).padStart(2,'0'), data:HOJE, origem:'Cliente de carteira'}); r.cliente = c; r.veiculo = vs[vs.length-1] || (c.veiculos.push(novoVei()), c.veiculos[c.veiculos.length-1]);
@@ -1855,7 +1899,8 @@ document.addEventListener('click', e => {
   const f = ACT[a.dataset.a]; if (f){ e.preventDefault(); f(a, e); }
 });
 $('#modal').addEventListener('click', e => { if (e.target.id==='modal') $('#modal').hidden = true; });
-document.addEventListener('keydown', e => { if (e.key==='Escape') $('#modal').hidden = true; });
+document.addEventListener('keydown', e => { if (e.key==='Escape'){ $('#modal').hidden = true; fecharDlg(); } });
+$('#dlg').addEventListener('click', e => { if (e.target.id==='dlg') fecharDlg(); });
 
 function onField(e){
   const el = e.target;
@@ -1883,7 +1928,7 @@ function onField(e){
   if (el.dataset.vei!=null && e.type==='change'){ const r = cur();
     if (el.value==='novo'){ const v = novoVei(); r.cliente.veiculos.push(v); r.veiculo = v; } else r.veiculo = r.cliente.veiculos[+el.value];
     render(); return; }
-  if (el.dataset.cf!=null){ const c = clientesTodos().find(x=>x.id===S.cli); if (c) c[el.dataset.cf] = el.value; return; }
+  if (el.dataset.cf!=null){ const c = cliPorId(S.cli); if (c) c[el.dataset.cf] = el.value; return; }
   if (el.dataset.cat!=null){ const [i,f] = el.dataset.cat.split('.'), c = CATALOGO[+i];
     if (f==='ativo'){ if (e.type==='change'){ c.ativo = el.checked; render(); } return; }
     c[f] = el.dataset.t==='n' ? (parseFloat(String(el.value).replace(',','.'))||0) : el.value; return; }

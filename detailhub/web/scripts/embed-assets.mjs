@@ -32,7 +32,10 @@ writeFileSync(join(RAIZ, 'worker-embedded.mjs'), `import worker from './worker.j
 import { FILES } from './embedded-assets.mjs';
 
 const cache = new Map();
-function servir(pathname) {
+function servir(bruto) {
+  // o navegador pede /app/%5Bslug%5D/..., e os arquivos estão guardados como /app/[slug]/...
+  let pathname = bruto;
+  try { pathname = decodeURIComponent(bruto); } catch {}
   const f = FILES[pathname];
   if (!f) return null;
   let corpo = cache.get(pathname);

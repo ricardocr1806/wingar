@@ -6,5 +6,9 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "observability": { "enabled": true },
   "workers_dev": true,
-  "preview_urls": false
+  "preview_urls": false,
+  "routes": [
+    { "pattern": "detailhub.com.br", "custom_domain": true },
+    { "pattern": "www.detailhub.com.br", "custom_domain": true }
+  ]
 }

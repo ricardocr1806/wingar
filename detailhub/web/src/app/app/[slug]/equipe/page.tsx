@@ -3,7 +3,7 @@ import { ACOES, MODULOS, NIVEL_NOME, chave, efetivas, type Cargo, type Perm } fr
 import { Aviso, Cadeado, Check } from '@/app/ui';
 import { empresaDoUsuario } from '../dados';
 import { alternarPermissao, criarCargo, excluirCargo, salvarMembro } from './actions';
-import { Convidar } from './Convidar';
+import { AdicionarUsuario } from '@/app/usuarios/AdicionarUsuario';
 
 export const metadata = { title: 'Equipe e cargos · DetailHub' };
 
@@ -119,9 +119,8 @@ export default async function Equipe({ params, searchParams }: {
       </section>
 
       {gere && (
-        <section className="card"><h3>Convidar para a equipe</h3>
-          {atribuiveis.length ? <Convidar slug={slug} empresaId={emp.id} cargos={atribuiveis.map(({ id, nome }) => ({ id, nome }))} />
-            : <p className="muted">Crie um cargo primeiro para poder convidar alguém.</p>}
+        <section className="card"><h3>Adicionar usuário</h3>
+          <AdicionarUsuario empresaId={emp.id} volta={`/app/${slug}/equipe`} cargos={atribuiveis.map(({ id, nome }) => ({ id, nome }))} />
           {!!convites?.length && (<div>
             <span className="faint" style={{ fontSize: 12.5 }}>Convites aguardando</span>
             <table className="lista"><tbody>{convites.map((cv) => (

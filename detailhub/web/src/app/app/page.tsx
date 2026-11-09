@@ -12,6 +12,7 @@ export default async function Empresas() {
     sb.rpc('eh_dono_plataforma'),
     sb.from('empresas').select('id, nome, slug, ativa').order('nome'),
   ]);
+  if (dono) redirect('/plataforma');
   const lista = (empresas ?? []).filter((e) => dono || e.ativa);
   if (!dono && lista.length === 1) redirect(`/app/${lista[0].slug}`);
 

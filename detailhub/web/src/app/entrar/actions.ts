@@ -62,5 +62,5 @@ export async function definirSenha(_: Estado, f: FormData): Promise<Estado> {
   const sb = await supabaseServer();
   const { error } = await sb.auth.updateUser({ password: senha });
   if (error) return { erro: mensagemErro(error) };
-  redirect('/app');
+  redirect(destinoSeguro(f.get('next')));
 }

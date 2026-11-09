@@ -109,3 +109,15 @@ table.lista{width:100%;border-collapse:collapse;font-size:14px}
   .lado form{margin:0 0 0 auto}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* painel administrativo */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow)}
+.kpi span{font-size:13px;color:var(--muted);font-weight:500}
+.kpi b{font-size:34px;line-height:1.1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi small{font-size:12.5px;color:var(--faint)}
+.kpi.destaque{background:linear-gradient(145deg,color-mix(in srgb,var(--acc) 85%,#000),color-mix(in srgb,var(--acc) 55%,#000));border-color:transparent;color:#fff}
+.kpi.destaque span,.kpi.destaque small{color:rgba(255,255,255,.82)}
+.mods{display:inline-flex;gap:4px}.mods i{width:10px;height:10px;border-radius:3px}
+.ck{display:flex;align-items:center;gap:8px;font-weight:500;color:var(--fg);font-size:13.5px}.ck input{width:auto;min-height:0}
+.lista select{width:auto;min-height:36px;font-size:13.5px}

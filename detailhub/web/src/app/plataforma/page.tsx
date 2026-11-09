@@ -1,80 +1,70 @@
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
 import { usuarioAtual } from '@/lib/supabase/server';
-import { ACOES, MODULOS, chave } from '@/lib/acesso';
-import { Aviso, Check, Marca } from '@/app/ui';
-import { Convidar } from '@/app/app/[slug]/equipe/Convidar';
-import { alternarAtiva, alternarTeto, convidarAdmin, criarEmpresa } from './actions';
+import { MODULOS } from '@/lib/acesso';
+import { Aviso } from '@/app/ui';
+import { criarEmpresa } from './actions';
 
-export const metadata = { title: 'Painel da plataforma · DetailHub' };
+type Linha = { id: string; nome: string; slug: string; ativa: boolean; criada_em: string; usuarios: number; usuarios_ativos: number; pendentes: number; modulos: string[]; ultimo_acesso: string | null };
+const data = (s: string | null) => (s ? new Date(s).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }) : '—');
+const quando = (s: string | null) => {
+  if (!s) return 'Nunca acessou';
+  const d = Math.floor((Date.now() - new Date(s).getTime()) / 864e5);
+  return d <= 0 ? 'Hoje' : d === 1 ? 'Ontem' : `Há ${d} dias`;
+};
 
-export default async function Plataforma({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
-  const { sb, user } = await usuarioAtual();
-  if (!user) redirect('/entrar?next=/plataforma');
-  const { data: dono } = await sb.rpc('eh_dono_plataforma');
-  if (!dono) notFound();
+export default async function Painel({ searchParams }: { searchParams: Promise<{ erro?: string; ok?: string }> }) {
   const { erro, ok } = await searchParams;
-  const [{ data: empresas }, { data: teto }, { data: admins }, { data: membros }] = await Promise.all([
-    sb.from('empresas').select('id, nome, slug, ativa, criada_em').order('criada_em'),
-    sb.from('empresa_teto').select('empresa_id, modulo, acao'),
-    sb.from('cargos').select('id, empresa_id').eq('nivel', 'admin_empresa'),
-    sb.from('membros').select('empresa_id, ativo'),
-  ]);
-  const tetoDe = (id: string) => new Set((teto ?? []).filter((t) => t.empresa_id === id).map((t) => chave(t.modulo, t.acao)));
-  const admDe = (id: string) => (admins ?? []).find((a) => a.empresa_id === id)?.id ?? '';
-  const qtd = (id: string) => (membros ?? []).filter((m) => m.empresa_id === id && m.ativo).length;
+  const { sb, user } = await usuarioAtual();
+  const { data: rows } = await sb.rpc('resumo_empresas');
+  const L = (rows ?? []) as Linha[];
+  const ativas = L.filter((e) => e.ativa).length;
+  const usuarios = L.reduce((s, e) => s + Number(e.usuarios_ativos), 0);
+  const pendentes = L.reduce((s, e) => s + Number(e.pendentes), 0);
+  const primeiro = String(user?.user_metadata?.full_name ?? '').split(' ')[0];
 
   return (
-    <div className="conteudo" style={{ margin: '0 auto' }}>
-      <div className="topo">
-        <div><Marca href="/app" /><h1 style={{ marginTop: 16 }}>Painel da plataforma</h1>
-          <p className="muted">Só você vê esta página. Aqui você cria empresas, decide o que cada uma pode usar e convida o administrador.</p></div>
-        <form action="/sair" method="post"><button className="btn sm">Sair</button></form>
-      </div>
+    <>
+      <div className="topo"><div><span className="faint" style={{ fontSize: 13 }}>Painel administrativo</span><h1>{primeiro ? `Olá, ${primeiro}` : 'Visão geral'}</h1>
+        <p className="muted">Todas as empresas que usam o DetailHub, num lugar só.</p></div>
+        <a className="btn pri" href="#nova">+ Nova empresa</a></div>
       <Aviso erro={erro} ok={ok} />
 
-      <section className="card"><h3>Nova empresa</h3>
-        <form action={criarEmpresa} className="linha">
-          <label>Nome da empresa<input name="nome" required minLength={2} maxLength={120} placeholder="Ex.: Wingard Proteção Automotiva" /></label>
-          <label>Endereço no sistema<input name="slug" pattern="[a-z0-9-]*" maxLength={60} placeholder="wingard (opcional)" /></label>
-          <button className="btn pri">Criar empresa</button>
-        </form>
-        <span className="faint" style={{ fontSize: 12.5 }}>A empresa nasce com todos os módulos liberados e com o cargo de Administrador.</span>
+      <div className="kpis">
+        <div className="kpi destaque"><span>Empresas ativas</span><b>{ativas}</b><small>{L.length - ativas ? `${L.length - ativas} desativada${L.length - ativas === 1 ? '' : 's'}` : 'nenhuma desativada'}</small></div>
+        <div className="kpi"><span>Usuários ativos</span><b>{usuarios}</b><small>em todas as empresas</small></div>
+        <div className="kpi"><span>Acessos pendentes</span><b>{pendentes}</b><small>adicionados que ainda não entraram</small></div>
+        <div className="kpi"><span>Total de empresas</span><b>{L.length}</b><small>clientes da plataforma</small></div>
+      </div>
+
+      <section className="card" id="empresas">
+        <div className="card-h"><h3>Empresas</h3><span className="chip">{L.length}</span></div>
+        {L.length ? (
+          <div className="mx-wrap"><table className="lista">
+            <thead><tr><th>Empresa</th><th>Situação</th><th>Usuários</th><th>Pendentes</th><th>Módulos</th><th>Último acesso</th><th>Desde</th><th /></tr></thead>
+            <tbody>{L.map((e) => (
+              <tr key={e.id}>
+                <td><Link href={`/plataforma/empresas/${e.id}`} style={{ textDecoration: 'none' }}><b>{e.nome}</b></Link><div className="faint mono" style={{ fontSize: 12 }}>/{e.slug}</div></td>
+                <td>{e.ativa ? <span className="chip ok">Ativa</span> : <span className="chip bad">Desativada</span>}</td>
+                <td>{e.usuarios_ativos}{Number(e.usuarios) > Number(e.usuarios_ativos) && <span className="faint"> · {Number(e.usuarios) - Number(e.usuarios_ativos)} bloq.</span>}</td>
+                <td>{Number(e.pendentes) ? <span className="chip">{e.pendentes}</span> : '—'}</td>
+                <td><span className="mods">{MODULOS.filter((m) => m.codigo !== 'equipe').map((m) => (
+                  <i key={m.codigo} title={m.nome} style={{ background: e.modulos.includes(m.codigo) ? m.cor : 'var(--surface-3)' }} />))}</span></td>
+                <td>{quando(e.ultimo_acesso)}</td>
+                <td>{data(e.criada_em)}</td>
+                <td><Link className="btn sm" href={`/plataforma/empresas/${e.id}`}>Gerenciar</Link></td>
+              </tr>))}</tbody>
+          </table></div>
+        ) : <div className="vazio">Nenhuma empresa ainda. Cadastre a primeira logo abaixo.</div>}
       </section>
 
-      {(empresas ?? []).map((e) => {
-        const t = tetoDe(e.id);
-        return (
-          <section key={e.id} className="card">
-            <div className="card-h">
-              <div><h3>{e.nome}</h3><span className="faint mono" style={{ fontSize: 12.5 }}>/app/{e.slug} · {qtd(e.id)} pessoa{qtd(e.id) === 1 ? '' : 's'}</span></div>
-              <div className="linha" style={{ alignItems: 'center' }}>
-                {e.ativa ? <span className="chip ok">Ativa</span> : <span className="chip bad">Desativada</span>}
-                <Link className="btn sm" href={`/app/${e.slug}`}>Entrar como suporte</Link>
-                <form action={alternarAtiva}><input type="hidden" name="empresa_id" value={e.id} /><input type="hidden" name="ativa" value={e.ativa ? '0' : '1'} />
-                  <button className={`btn sm ${e.ativa ? 'perigo' : ''}`}>{e.ativa ? 'Desativar' : 'Reativar'}</button></form>
-              </div>
-            </div>
-            <div>
-              <span className="faint" style={{ fontSize: 12.5 }}>O que esta empresa pode usar (teto do plano). Tirar daqui tira de todos na empresa, inclusive do administrador.</span>
-              <div className="mx-wrap"><table className="mx">
-                <thead><tr><th>Área</th>{ACOES.map((a) => <th key={a.codigo}>{a.nome}</th>)}</tr></thead>
-                <tbody>{MODULOS.map((m) => (
-                  <tr key={m.codigo}><td style={{ ['--c' as string]: m.cor }}><i />{m.nome}</td>
-                    {ACOES.map((a) => { const on = t.has(chave(m.codigo, a.codigo)); return (
-                      <td key={a.codigo}><form action={alternarTeto}>
-                        <input type="hidden" name="empresa_id" value={e.id} /><input type="hidden" name="modulo" value={m.codigo} />
-                        <input type="hidden" name="acao" value={a.codigo} /><input type="hidden" name="ligar" value={on ? '0' : '1'} />
-                        <button className={`cel ${on ? 'on' : ''}`} aria-pressed={on} aria-label={`${m.nome}: ${a.nome}`}>{on ? <Check /> : null}</button>
-                      </form></td>); })}
-                  </tr>))}</tbody>
-              </table></div>
-            </div>
-            <Convidar slug={e.slug} empresaId={e.id} cargos={[{ id: admDe(e.id), nome: 'Administrador' }]} acao={convidarAdmin} titulo="Convidar administrador" />
-          </section>
-        );
-      })}
-      {!empresas?.length && <div className="vazio">Nenhuma empresa ainda. Crie a primeira acima.</div>}
-    </div>
+      <section className="card" id="nova"><h3>Nova empresa</h3>
+        <form action={criarEmpresa} className="linha">
+          <label>Nome da empresa<input name="nome" required minLength={2} maxLength={120} placeholder="Ex.: WinGuard Proteção Automotiva" /></label>
+          <label>Endereço no sistema<input name="slug" pattern="[a-z0-9-]*" maxLength={60} placeholder="winguard (opcional)" /></label>
+          <button className="btn pri">Criar empresa</button>
+        </form>
+        <span className="faint" style={{ fontSize: 12.5 }}>Depois de criar, você cai na página da empresa para adicionar o administrador e a equipe.</span>
+      </section>
+    </>
   );
 }

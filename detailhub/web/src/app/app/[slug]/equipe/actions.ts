@@ -2,7 +2,6 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
-import { SITE_URL } from '@/lib/supabase/config';
 import { mensagemErro } from '@/lib/erros';
 
 const txt = (f: FormData, k: string) => String(f.get(k) ?? '').trim();
@@ -58,16 +57,3 @@ export async function salvarMembro(f: FormData) {
   voltar(slug);
 }
 
-export type EstadoConvite = { erro?: string; link?: string; email?: string };
-export async function convidar(_: EstadoConvite, f: FormData): Promise<EstadoConvite> {
-  const email = txt(f, 'email').toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { erro: 'Informe um e-mail válido.' };
-  const sb = await supabaseServer();
-  const { data, error } = await sb.rpc('criar_convite', {
-    p_empresa: txt(f, 'empresa_id'), p_email: email, p_cargo: txt(f, 'cargo_id'),
-    p_escopo: txt(f, 'escopo') === 'proprios' ? 'proprios' : 'todos',
-  });
-  if (error) return { erro: /row-level/.test(error.message) ? 'Você não pode convidar alguém para esse cargo: ele tem permissões que você não tem.' : mensagemErro(error) };
-  revalidatePath(`/app/${txt(f, 'slug')}/equipe`);
-  return { link: `${SITE_URL}/convite/${data}`, email };
-}

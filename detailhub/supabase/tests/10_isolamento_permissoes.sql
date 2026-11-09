@@ -163,3 +163,15 @@ select teste.erro($$select * from public.usuario_por_email('admin@wingard.test')
 reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
 select teste.erro($$select * from public.usuario_por_email('admin@wingard.test')$$, 'usuário logado também não procura contas por e-mail (só o servidor)');
 reset role;
+
+-- ============ painel do dono
+select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select teste.ok((select count(*) from public.resumo_empresas()) = 2, 'dono vê o resumo de todas as empresas no painel');
+select teste.ok((select usuarios from public.resumo_empresas() where slug = 'wingard') = 4, 'painel conta os usuários da Wingard');
+select teste.ok((select count(*) from public.usuarios_da_empresa(:'emp_a')) = 4, 'dono vê a lista de usuários da Wingard');
+reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
+select teste.erro('select * from public.resumo_empresas()', 'administrador de empresa não vê o painel da plataforma');
+select teste.erro(format('select * from public.usuarios_da_empresa(%L)', :'emp_a'), 'administrador de outra empresa não vê os usuários da Wingard');
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select teste.erro(format('select * from public.usuarios_da_empresa(%L)', :'emp_a'), 'vendedor não vê a lista de usuários (sem permissão de equipe)');
+reset role;

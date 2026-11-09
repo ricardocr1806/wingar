@@ -27,3 +27,18 @@ Ninguém libera para outra pessoa uma permissão que não tem. Tudo isso é gara
 ```
 
 Precisa de PostgreSQL 15+ instalado (`initdb`, `pg_ctl`, `psql`).
+
+## Sistema (telas)
+
+`web/` — Next.js com login do Supabase (e-mail e senha, Google e convite).
+
+- `/entrar` — entrar, criar conta, esqueci a senha e "Continuar com Google".
+- `/convite/[código]` — aceitar convite (só funciona com o e-mail convidado).
+- `/app` — empresas da pessoa; `/app/[empresa]` — módulos liberados pelo cargo.
+- `/app/[empresa]/equipe` — cargos, permissões, pessoas e convites.
+- `/plataforma` — painel do dono da plataforma (criar empresas, teto, convidar administrador).
+
+```bash
+cd web && cp .env.example .env.local   # preencha com os dados do Supabase
+npm install && npm run dev
+```

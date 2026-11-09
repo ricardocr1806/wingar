@@ -60,7 +60,6 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
       <section className="card" id="nova"><h3>Nova empresa</h3>
         <form action={criarEmpresa} className="linha">
           <label>Nome da empresa<input name="nome" required minLength={2} maxLength={120} placeholder="Nome da empresa" /></label>
-          <label>Endereço no sistema<input name="slug" pattern="[a-z0-9-]*" maxLength={60} placeholder="Opcional: gerado a partir do nome" /></label>
           <button className="btn pri">Criar empresa</button>
         </form>
         <span className="faint" style={{ fontSize: 12.5 }}>Depois de criar, você cai na página da empresa para adicionar o administrador e a equipe.</span>

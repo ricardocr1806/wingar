@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { MODULOS } from '@/lib/acesso';
+import { redirect } from 'next/navigation';
 import { empresaDoUsuario } from './dados';
+import { APRESENTACAO } from '@/generated/apresentacao';
 
 const ETAPA: Record<string, string> = { comercial: 'Etapa 2', operacional: 'Etapa 3', financeiro: 'Etapa 4' };
 
 export default async function InicioEmpresa({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const { emp, pode } = await empresaDoUsuario(slug);
+  if (APRESENTACAO[slug]) redirect(`/apresentacao?empresa=${slug}`);
   const visiveis = MODULOS.filter((m) => pode.has(`${m.codigo}:ver`));
   return (
     <>

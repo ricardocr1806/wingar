@@ -46,7 +46,7 @@ export default async function Empresa({ params, searchParams }: { params: Promis
           <p className="muted">{emp.ativa ? 'Ativa' : 'Desativada'} · desde {new Date(emp.criada_em).toLocaleDateString('pt-BR')} · {U.filter((u) => u.ativo).length} usuário(s) ativo(s)</p></div>
         <div className="linha" style={{ alignItems: 'center' }}>
           {emp.ativa ? <span className="chip ok">Ativa</span> : <span className="chip bad">Desativada</span>}
-          {APRESENTACAO[emp.slug] && <a className="btn pri" href={`https://${emp.slug}.detailhub.com.br/`} target="_blank" rel="noopener">Abrir {emp.slug}.detailhub.com.br</a>}
+          {APRESENTACAO[emp.slug] && <a className="btn pri" href={`/apresentacao?empresa=${emp.slug}`} target="_blank" rel="noopener">Abrir a plataforma da {emp.nome}</a>}
           <Link className="btn" href={`/app/${emp.slug}`}>Área interna</Link>
           <form action={alternarAtiva}><input type="hidden" name="empresa_id" value={id} /><input type="hidden" name="ativa" value={emp.ativa ? '0' : '1'} />
             <button className={`btn ${emp.ativa ? 'perigo' : ''}`}>{emp.ativa ? 'Desativar empresa' : 'Reativar empresa'}</button></form>

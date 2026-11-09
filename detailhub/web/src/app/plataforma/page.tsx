@@ -52,7 +52,7 @@ export default async function Painel({ searchParams }: { searchParams: Promise<{
                   <i key={m.codigo} title={m.nome} style={{ background: e.modulos.includes(m.codigo) ? m.cor : 'var(--surface-3)' }} />))}</span></td>
                 <td>{quando(e.ultimo_acesso)}</td>
                 <td>{data(e.criada_em)}</td>
-                <td style={{ whiteSpace: 'nowrap' }}><a className="btn sm pri" href={APRESENTACAO[e.slug] ? `https://${e.slug}.detailhub.com.br/` : `/app/${e.slug}`} target="_blank" rel="noopener">Abrir</a> <Link className="btn sm" href={`/plataforma/empresas/${e.id}`}>Gerenciar</Link></td>
+                <td style={{ whiteSpace: 'nowrap' }}><a className="btn sm pri" href={APRESENTACAO[e.slug] ? `/apresentacao?empresa=${e.slug}` : `/app/${e.slug}`} target="_blank" rel="noopener">Abrir</a> <Link className="btn sm" href={`/plataforma/empresas/${e.id}`}>Gerenciar</Link></td>
               </tr>))}</tbody>
           </table></div>
         ) : <div className="vazio">Nenhuma empresa ainda. Cadastre a primeira logo abaixo.</div>}

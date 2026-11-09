@@ -1,6 +1,7 @@
 'use client';
 import { useActionState, useState } from 'react';
 import { cadastrar, entrar, recuperar, entrarComGoogle, type Estado } from './actions';
+import { CampoSenha } from '../CampoSenha';
 
 type Modo = 'entrar' | 'cadastrar' | 'recuperar';
 
@@ -36,7 +37,7 @@ export function Formularios({ next, erroGoogle }: { next: string; erroGoogle: bo
         <form action={aE} className="campos">
           <input type="hidden" name="next" value={next} />
           <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
-          <label>Senha<input name="senha" type="password" autoComplete="current-password" required /></label>
+          <label>Senha<CampoSenha name="senha" autoComplete="current-password" /></label>
           <button className="btn pri" disabled={pE}>{pE ? 'Entrando…' : 'Entrar'}</button>
           <button type="button" className="link" onClick={() => setModo('recuperar')}>Esqueci minha senha</button>
         </form>
@@ -46,7 +47,7 @@ export function Formularios({ next, erroGoogle }: { next: string; erroGoogle: bo
           <input type="hidden" name="next" value={next} />
           <label>Nome completo<input name="nome" autoComplete="name" required /></label>
           <label>E-mail<input name="email" type="email" autoComplete="email" required /></label>
-          <label>Senha<input name="senha" type="password" autoComplete="new-password" minLength={8} required />
+          <label>Senha<CampoSenha name="senha" autoComplete="new-password" minLength={8} />
             <span className="dica">Pelo menos 8 caracteres, com letras e números.</span></label>
           <button className="btn pri" disabled={pC}>{pC ? 'Criando…' : 'Criar conta'}</button>
         </form>

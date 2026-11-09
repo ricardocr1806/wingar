@@ -1,0 +1,151 @@
+-- Testes de segurança da base de acesso.
+-- Cada bloco entra como uma pessoa diferente e confere o que ela consegue ver ou fazer.
+\set QUIET on
+create schema teste;
+grant usage on schema teste to anon, authenticated;
+create function teste.ok(c boolean, msg text) returns void language plpgsql as $$
+begin
+  if c is not true then raise exception 'FALHOU: %', msg; end if;
+  raise notice 'ok   %', msg;
+end $$;
+create function teste.erro(cmd text, msg text) returns void language plpgsql as $$
+begin
+  begin execute cmd;
+  exception when others then raise notice 'ok   % (bloqueado: %)', msg, sqlerrm; return; end;
+  raise exception 'FALHOU (deveria ter sido bloqueado): %', msg;
+end $$;
+create function teste.linhas(cmd text) returns bigint language plpgsql as $$
+declare n bigint; begin execute cmd; get diagnostics n = row_count; return n; end $$;
+grant execute on all functions in schema teste to anon, authenticated;
+
+-- pessoas
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-00000000d0d0', 'dono@detailhub.com.br'),
+  ('00000000-0000-0000-0000-0000000000a1', 'admin@wingard.test'),
+  ('00000000-0000-0000-0000-0000000000a2', 'financeiro@wingard.test'),
+  ('00000000-0000-0000-0000-0000000000a3', 'vendedor@wingard.test'),
+  ('00000000-0000-0000-0000-0000000000a4', 'assistente@wingard.test'),
+  ('00000000-0000-0000-0000-0000000000b1', 'admin@outra.test'),
+  ('00000000-0000-0000-0000-0000000000ff', 'curioso@qualquer.test');
+insert into public.plataforma_admins (user_id) values ('00000000-0000-0000-0000-00000000d0d0');
+\set dono      '00000000-0000-0000-0000-00000000d0d0'
+\set adm_a     '00000000-0000-0000-0000-0000000000a1'
+\set fin_a     '00000000-0000-0000-0000-0000000000a2'
+\set vend_a    '00000000-0000-0000-0000-0000000000a3'
+\set assist_a  '00000000-0000-0000-0000-0000000000a4'
+\set adm_b     '00000000-0000-0000-0000-0000000000b1'
+\set curioso   '00000000-0000-0000-0000-0000000000ff'
+
+select teste.ok((select count(*) from public.perfis) = 7, 'perfil criado sozinho para cada cadastro');
+
+-- ============ dono da plataforma cria as empresas
+select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select public.criar_empresa('Wingard Proteção Automotiva', 'wingard') as emp_a \gset
+select public.criar_empresa('Outra Estética', 'outra') as emp_b \gset
+select id as cargo_adm_a from public.cargos where empresa_id = :'emp_a' and nivel = 'admin_empresa' \gset
+select id as cargo_adm_b from public.cargos where empresa_id = :'emp_b' and nivel = 'admin_empresa' \gset
+select public.criar_convite(:'emp_a', 'Admin@Wingard.test ', :'cargo_adm_a') as conv_adm_a \gset
+select public.criar_convite(:'emp_b', 'admin@outra.test', :'cargo_adm_b') as conv_adm_b \gset
+select teste.ok((select count(*) from public.convites where token_hash = :'conv_adm_a') = 0, 'o código do convite não fica salvo no banco, só o hash');
+
+-- ============ administradores aceitam os convites
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.ok(public.aceitar_convite(:'conv_adm_a') = :'emp_a'::uuid, 'administrador da Wingard aceitou o convite');
+select teste.erro(format('select public.aceitar_convite(%L)', :'conv_adm_a'), 'convite não pode ser usado duas vezes');
+select teste.erro(format('select public.aceitar_convite(%L)', :'conv_adm_b'), 'convite enviado para outro e-mail não funciona');
+select teste.erro(format('select public.aceitar_convite(%L)', 'codigo-inventado'), 'convite inventado não funciona');
+reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
+select public.aceitar_convite(:'conv_adm_b');
+
+-- ============ administrador da Wingard monta a equipe
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+insert into public.cargos (empresa_id, nome, nivel, pai_id) values (:'emp_a', 'Gerente financeiro', 'admin_area', :'cargo_adm_a') returning id as cargo_fin \gset
+insert into public.cargos (empresa_id, nome, nivel, pai_id) values (:'emp_a', 'Vendedor', 'equipe', :'cargo_adm_a') returning id as cargo_vend \gset
+insert into public.cargo_permissoes (cargo_id, empresa_id, modulo, acao)
+  select :'cargo_fin', :'emp_a', m, a from (values ('financeiro','ver'),('financeiro','editar'),('financeiro','excluir'),('financeiro','aprovar'),('financeiro','exportar'),
+                                                    ('comercial','ver'),('operacional','ver'),('equipe','ver'),('equipe','editar')) v(m, a);
+insert into public.cargo_permissoes (cargo_id, empresa_id, modulo, acao) values (:'cargo_vend', :'emp_a', 'comercial', 'ver'), (:'cargo_vend', :'emp_a', 'comercial', 'editar');
+select public.criar_convite(:'emp_a', 'financeiro@wingard.test', :'cargo_fin') as conv_fin \gset
+select public.criar_convite(:'emp_a', 'vendedor@wingard.test', :'cargo_vend', 'proprios') as conv_vend \gset
+select teste.erro(format('select public.criar_convite(%L, %L, %L)', :'emp_a', 'outro@x.test', :'cargo_adm_a'), 'administrador da empresa não convida outro administrador (só o dono da plataforma)');
+select teste.ok(teste.linhas(format('delete from public.cargo_permissoes where cargo_id = %L', :'cargo_adm_a')) = 0, 'administrador da empresa não altera as próprias permissões de administrador');
+select teste.erro(format('update public.cargos set nivel = %L where id = %L', 'admin_area', :'cargo_vend'), 'ninguém muda o nível de um cargo, só o dono da plataforma');
+
+reset role; select set_config('request.jwt.claim.sub', :'fin_a', false); set role authenticated;
+select public.aceitar_convite(:'conv_fin');
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select public.aceitar_convite(:'conv_vend');
+
+-- ============ isolamento entre empresas
+reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
+select teste.ok((select count(*) from public.empresas) = 1, 'administrador da Outra Estética só enxerga a própria empresa');
+select teste.ok((select count(*) from public.empresas where id = :'emp_a') = 0, 'Outra Estética não vê a Wingard');
+select teste.ok((select count(*) from public.cargos where empresa_id = :'emp_a') = 0, 'Outra Estética não vê os cargos da Wingard');
+select teste.ok((select count(*) from public.membros where empresa_id = :'emp_a') = 0, 'Outra Estética não vê a equipe da Wingard');
+select teste.ok((select count(*) from public.perfis where email like '%wingard%') = 0, 'Outra Estética não vê nome nem e-mail de quem trabalha na Wingard');
+select teste.ok((select count(*) from public.auditoria where empresa_id = :'emp_a') = 0, 'Outra Estética não vê o histórico da Wingard');
+select teste.ok(not public.tem_permissao(:'emp_a', 'comercial', 'ver'), 'administrador de outra empresa não tem permissão nenhuma na Wingard');
+select teste.erro(format('insert into public.cargos (empresa_id, nome, nivel, pai_id) values (%L, %L, %L, %L)', :'emp_a', 'Infiltrado', 'equipe', :'cargo_adm_b'), 'não dá para criar cargo na empresa dos outros');
+select teste.ok(teste.linhas(format('update public.empresas set nome = %L where id = %L', 'Hackeada', :'emp_a')) = 0, 'não dá para alterar a empresa dos outros');
+
+reset role; select set_config('request.jwt.claim.sub', :'curioso', false); set role authenticated;
+select teste.ok((select count(*) from public.empresas) = 0, 'quem criou conta sem convite não vê empresa nenhuma');
+select teste.ok((select count(*) from public.cargos) + (select count(*) from public.membros) + (select count(*) from public.perfis where user_id <> auth.uid()) = 0, 'quem não tem convite não vê cargos, equipe nem outras pessoas');
+select teste.erro($$select public.criar_empresa('Pirata', 'pirata')$$, 'só o dono da plataforma cria empresas');
+
+reset role; set role anon;
+select teste.erro('select count(*) from public.empresas', 'visitante sem login não lê nada');
+reset role;
+
+-- ============ vendedor: só o Comercial
+select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select teste.ok(public.tem_permissao(:'emp_a', 'comercial', 'editar'), 'vendedor pode criar e editar no Comercial');
+select teste.ok(not public.tem_permissao(:'emp_a', 'financeiro', 'ver'), 'vendedor não vê o Financeiro');
+select teste.ok(not public.tem_permissao(:'emp_a', 'operacional', 'ver'), 'vendedor não vê o Operacional');
+select teste.ok((select count(*) from public.minhas_permissoes(:'emp_a')) = 2, 'menu do vendedor mostra só o que ele pode usar');
+select teste.ok((select escopo from public.membros where user_id = auth.uid()) = 'proprios', 'vendedor configurado para ver só os próprios atendimentos');
+select teste.erro(format('insert into public.cargos (empresa_id, nome, nivel, pai_id) values (%L, %L, %L, %L)', :'emp_a', 'Chefe', 'equipe', :'cargo_adm_a'), 'vendedor não cria cargos');
+select teste.ok(teste.linhas(format('update public.membros set cargo_id = %L where user_id = auth.uid()', :'cargo_fin')) = 0, 'vendedor não se promove sozinho');
+select teste.ok((select count(*) from public.auditoria) = 0, 'vendedor não lê o histórico de alterações');
+
+-- ============ gerente financeiro: administra só a área dele
+reset role; select set_config('request.jwt.claim.sub', :'fin_a', false); set role authenticated;
+select teste.ok(public.tem_permissao(:'emp_a', 'financeiro', 'aprovar'), 'gerente financeiro aprova no Financeiro');
+select teste.ok(not public.tem_permissao(:'emp_a', 'comercial', 'editar'), 'gerente financeiro só vê o Comercial, não edita');
+select teste.erro(format('select public.criar_convite(%L, %L, %L)', :'emp_a', 'novo@x.test', :'cargo_vend'), 'gerente financeiro não convida vendedor (o cargo tem permissão que ele não tem)');
+insert into public.cargos (empresa_id, nome, nivel, pai_id) values (:'emp_a', 'Assistente financeiro', 'equipe', :'cargo_fin') returning id as cargo_assist \gset
+insert into public.cargo_permissoes (cargo_id, empresa_id, modulo, acao) values (:'cargo_assist', :'emp_a', 'financeiro', 'ver'), (:'cargo_assist', :'emp_a', 'financeiro', 'editar');
+select teste.ok(true, 'gerente financeiro criou o cargo de Assistente financeiro');
+select teste.erro(format('insert into public.cargo_permissoes (cargo_id, empresa_id, modulo, acao) values (%L, %L, %L, %L)', :'cargo_assist', :'emp_a', 'comercial', 'editar'), 'gerente financeiro não libera o que não tem (editar no Comercial)');
+select public.criar_convite(:'emp_a', 'assistente@wingard.test', :'cargo_assist') as conv_assist \gset
+select teste.ok(teste.linhas(format('update public.membros set cargo_id = %L where user_id = auth.uid()', :'cargo_adm_a')) = 0, 'gerente financeiro não muda o próprio cargo');
+select teste.ok((select count(*) from public.auditoria where empresa_id = :'emp_a') > 0, 'gerente financeiro vê o histórico da Wingard');
+
+reset role; select set_config('request.jwt.claim.sub', :'assist_a', false); set role authenticated;
+select public.aceitar_convite(:'conv_assist');
+select teste.ok(public.tem_permissao(:'emp_a', 'financeiro', 'editar'), 'assistente financeiro entrou e edita no Financeiro');
+
+-- ============ tirar permissão de cima tira de todos abaixo
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+delete from public.cargo_permissoes where cargo_id = :'cargo_fin' and modulo = 'financeiro' and acao = 'editar';
+reset role; select set_config('request.jwt.claim.sub', :'assist_a', false); set role authenticated;
+select teste.ok(not public.tem_permissao(:'emp_a', 'financeiro', 'editar'), 'administrador tirou "editar" do gerente financeiro e o assistente perdeu junto');
+select teste.ok(public.tem_permissao(:'emp_a', 'financeiro', 'ver'), 'assistente continua vendo o Financeiro');
+
+-- ============ teto da empresa definido pelo dono da plataforma
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+delete from public.empresa_teto where empresa_id = :'emp_a' and modulo = 'financeiro' and acao = 'excluir';
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.ok(not public.tem_permissao(:'emp_a', 'financeiro', 'excluir'), 'dono da plataforma tirou "excluir" do Financeiro: nem o administrador da Wingard tem mais');
+select teste.ok(public.tem_permissao(:'emp_a', 'financeiro', 'ver'), 'o resto do Financeiro continua liberado');
+select teste.erro(format('insert into public.empresa_teto values (%L, %L, %L)', :'emp_a', 'financeiro', 'excluir'), 'administrador da empresa não aumenta o próprio teto');
+select teste.ok((select count(*) from public.auditoria where tabela = 'empresa_teto' and acao = 'delete') = 1, 'a mudança de teto ficou registrada no histórico');
+
+-- ============ empresa desativada (ex.: falta de pagamento)
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+update public.empresas set ativa = false where id = :'emp_a';
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select teste.ok((select count(*) from public.empresas) = 0 and not public.tem_permissao(:'emp_a', 'comercial', 'ver'), 'empresa desativada: a equipe perde o acesso na hora');
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select teste.ok((select count(*) from public.empresas) = 2, 'dono da plataforma continua vendo todas as empresas');
+reset role;

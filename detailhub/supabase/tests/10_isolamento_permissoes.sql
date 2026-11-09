@@ -149,3 +149,17 @@ select teste.ok((select count(*) from public.empresas) = 0 and not public.tem_pe
 reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
 select teste.ok((select count(*) from public.empresas) = 2, 'dono da plataforma continua vendo todas as empresas');
 reset role;
+
+-- ============ acesso direto (tela "crie sua senha")
+select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select public.criar_convite(:'emp_a', 'Novo@Wingard.test', :'cargo_vend', 'todos', 'Pessoa Nova') as conv_novo \gset
+select public.criar_convite(:'emp_a', 'novo@wingard.test', :'cargo_vend', 'todos', 'Pessoa Nova') as conv_novo2 \gset
+select teste.ok((select count(*) from public.convites where email = 'novo@wingard.test' and aceito_em is null) = 1, 'convidar de novo o mesmo e-mail substitui o convite antigo');
+reset role; set role anon;
+select teste.ok((select empresa from public.ver_convite(:'conv_novo2')) = 'Wingard Proteção Automotiva', 'quem tem o link vê para qual empresa é o acesso, mesmo sem login');
+select teste.ok((select count(*) from public.ver_convite('codigo-inventado')) = 0, 'código inventado não mostra nada');
+select teste.ok((select conta_ativa from public.ver_convite(:'conv_fin')) = false, 'conta sem senha aparece como não ativada');
+select teste.erro($$select * from public.usuario_por_email('admin@wingard.test')$$, 'visitante não consegue procurar contas por e-mail');
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select teste.erro($$select * from public.usuario_por_email('admin@wingard.test')$$, 'usuário logado também não procura contas por e-mail (só o servidor)');
+reset role;

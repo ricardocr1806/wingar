@@ -6,6 +6,7 @@ import { Aviso, Check } from '@/app/ui';
 import { AdicionarUsuario } from '@/app/usuarios/AdicionarUsuario';
 import { cancelarAcesso, salvarUsuario } from '@/app/usuarios/actions';
 import { alternarAtiva, alternarTeto } from '../../actions';
+import { APRESENTACAO } from '@/generated/apresentacao';
 
 type Usuario = { user_id: string; nome: string | null; email: string; cargo_id: string; cargo: string; nivel: keyof typeof NIVEL_NOME; escopo: string; ativo: boolean; ultimo_acesso: string | null };
 const quando = (s: string | null) => {
@@ -40,7 +41,8 @@ export default async function Empresa({ params, searchParams }: { params: Promis
           <p className="muted">{emp.ativa ? 'Ativa' : 'Desativada'} · desde {new Date(emp.criada_em).toLocaleDateString('pt-BR')} · {U.filter((u) => u.ativo).length} usuário(s) ativo(s)</p></div>
         <div className="linha" style={{ alignItems: 'center' }}>
           {emp.ativa ? <span className="chip ok">Ativa</span> : <span className="chip bad">Desativada</span>}
-          <Link className="btn" href={`/app/${emp.slug}`}>Entrar no sistema da empresa</Link>
+          {APRESENTACAO[emp.slug] && <a className="btn pri" href={`https://${emp.slug}.detailhub.com.br/`} target="_blank" rel="noopener">Abrir {emp.slug}.detailhub.com.br</a>}
+          <Link className="btn" href={`/app/${emp.slug}`}>Área interna</Link>
           <form action={alternarAtiva}><input type="hidden" name="empresa_id" value={id} /><input type="hidden" name="ativa" value={emp.ativa ? '0' : '1'} />
             <button className={`btn ${emp.ativa ? 'perigo' : ''}`}>{emp.ativa ? 'Desativar empresa' : 'Reativar empresa'}</button></form>
         </div>

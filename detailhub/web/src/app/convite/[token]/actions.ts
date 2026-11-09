@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { supabaseServer } from '@/lib/supabase/server';
 import { mensagemErro } from '@/lib/erros';
 import { enviarEmailDeAcesso } from '@/lib/acessos';
+import { inicioDaEmpresa } from '@/lib/nav';
+import { APRESENTACAO } from '@/generated/apresentacao';
 
 export async function aceitar(f: FormData) {
   const token = String(f.get('token') ?? '');
@@ -12,7 +14,7 @@ export async function aceitar(f: FormData) {
   const { data: empresaId, error } = await sb.rpc('aceitar_convite', { p_token: token });
   if (error) redirect(`/convite/${encodeURIComponent(token)}?erro=${encodeURIComponent(mensagemErro(error))}`);
   const { data: emp } = await sb.from('empresas').select('slug').eq('id', empresaId).maybeSingle();
-  const destino = emp ? `/app/${emp.slug}` : '/app';
+  const destino = emp ? inicioDaEmpresa(emp.slug, !!APRESENTACAO[emp.slug]) : '/app';
   // Primeira vez no sistema: cria a senha antes de continuar
   redirect(contaAtiva ? destino : `/nova-senha?next=${encodeURIComponent(destino)}`);
 }

@@ -16,7 +16,7 @@ export default async function Entrar({ searchParams }: { searchParams: Promise<R
       <Marca />
       <h1>Gestão completa da sua estética automotiva</h1>
       <p className="muted">Da venda à entrega: comercial, pátio, laudos e financeiro num lugar só.</p>
-      <Formularios next={next} erroGoogle={sp.erro === 'google'} />
+      <Formularios next={next} erroGoogle={sp.erro === 'google'} modoInicial={sp.modo === 'cadastrar' ? 'cadastrar' : 'entrar'} />
     </main>
   );
 }

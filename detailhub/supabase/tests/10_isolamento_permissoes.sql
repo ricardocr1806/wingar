@@ -175,3 +175,30 @@ select teste.erro(format('select * from public.usuarios_da_empresa(%L)', :'emp_a
 reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
 select teste.erro(format('select * from public.usuarios_da_empresa(%L)', :'emp_a'), 'vendedor não vê a lista de usuários (sem permissão de equipe)');
 reset role;
+
+-- ============ links para o cliente
+select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+update public.empresas set ativa = true where slug = 'wingard';
+select public.criar_link_visualizacao(:'emp_a', 7) as link_ver \gset
+select public.criar_convite(:'emp_a', null, :'cargo_adm_a') as conv_aberto \gset
+reset role; set role anon;
+select teste.ok(public.abrir_link_visualizacao(:'link_ver') = 'wingard', 'link de visualização abre a Wingard sem login');
+select teste.ok(public.abrir_link_visualizacao('inventado') is null, 'link inventado não abre nada');
+select teste.erro('select count(*) from public.links_visualizacao', 'visitante não lista os links');
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.ok((select count(*) from public.links_visualizacao) = 0, 'administrador da empresa não vê os links do dono');
+select teste.erro(format('select public.criar_link_visualizacao(%L)', :'emp_a'), 'administrador da empresa não cria link de visualização');
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+update public.links_visualizacao set ativo = false;
+reset role; set role anon;
+select teste.ok(public.abrir_link_visualizacao(:'link_ver') is null, 'link desativado pelo dono para de funcionar');
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c1', 'novo.admin@wingard.test');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c1', false); set role authenticated;
+select teste.ok(public.aceitar_convite(:'conv_aberto') = :'emp_a'::uuid, 'convite aberto: quem abriu virou administrador da Wingard');
+select teste.ok(public.tem_permissao(:'emp_a', 'equipe', 'editar'), 'o novo administrador já pode montar a equipe');
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c2', 'outro@x.test');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c2', false); set role authenticated;
+select teste.erro(format('select public.aceitar_convite(%L)', :'conv_aberto'), 'convite aberto só pode ser usado uma vez');
+reset role;

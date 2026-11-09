@@ -5,8 +5,8 @@ import { CampoSenha } from '../CampoSenha';
 
 type Modo = 'entrar' | 'cadastrar' | 'recuperar';
 
-export function Formularios({ next, erroGoogle }: { next: string; erroGoogle: boolean }) {
-  const [modo, setModo] = useState<Modo>('entrar');
+export function Formularios({ next, erroGoogle, modoInicial = 'entrar' }: { next: string; erroGoogle: boolean; modoInicial?: Modo }) {
+  const [modo, setModo] = useState<Modo>(modoInicial);
   const [eE, aE, pE] = useActionState<Estado, FormData>(entrar, {});
   const [eC, aC, pC] = useActionState<Estado, FormData>(cadastrar, {});
   const [eR, aR, pR] = useActionState<Estado, FormData>(recuperar, {});

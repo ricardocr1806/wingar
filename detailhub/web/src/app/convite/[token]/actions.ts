@@ -10,7 +10,8 @@ export async function aceitar(f: FormData) {
   const token = String(f.get('token') ?? '');
   const sb = await supabaseServer();
   const { data: info } = await sb.rpc('ver_convite', { p_token: token });
-  const contaAtiva = (info as { conta_ativa: boolean }[] | null)?.[0]?.conta_ativa;
+  const i0 = (info as { conta_ativa: boolean; email: string | null }[] | null)?.[0];
+  const contaAtiva = !i0?.email || i0?.conta_ativa;
   const { data: empresaId, error } = await sb.rpc('aceitar_convite', { p_token: token });
   if (error) redirect(`/convite/${encodeURIComponent(token)}?erro=${encodeURIComponent(mensagemErro(error))}`);
   const { data: emp } = await sb.from('empresas').select('slug').eq('id', empresaId).maybeSingle();

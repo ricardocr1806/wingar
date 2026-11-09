@@ -5,7 +5,7 @@ import { aceitar, reenviarLink } from './actions';
 import { SessaoDoLink } from './SessaoDoLink';
 
 export const metadata = { title: 'Acesso · DetailHub' };
-type Info = { email: string; empresa: string; empresa_slug: string; cargo: string; expirado: boolean; usado: boolean; conta_ativa: boolean };
+type Info = { email: string | null; empresa: string; empresa_slug: string; cargo: string; expirado: boolean; usado: boolean; conta_ativa: boolean };
 
 export default async function Convite({ params, searchParams }: {
   params: Promise<{ token: string }>; searchParams: Promise<{ erro?: string; enviado?: string }>;
@@ -21,7 +21,7 @@ export default async function Convite({ params, searchParams }: {
   if (!c) corpo = <div className="auth-card"><p>Este link de acesso não existe. Peça um novo para quem te adicionou.</p></div>;
   else if (c.usado) corpo = <div className="auth-card"><p>Este acesso já foi usado.</p><Link className="btn pri" href="/entrar">Entrar no DetailHub</Link></div>;
   else if (c.expirado) corpo = <div className="auth-card"><p>Este link venceu. Peça para quem te adicionou te adicionar de novo.</p></div>;
-  else if (user && user.email?.toLowerCase() === c.email) corpo = (
+  else if (user && (!c.email || user.email?.toLowerCase() === c.email)) corpo = (
     <div className="auth-card">
       <p>Você foi adicionado à <b>{c.empresa}</b> como <b>{c.cargo}</b>.</p>
       <form action={aceitar}><input type="hidden" name="token" value={token} /><button className="btn pri" style={{ width: '100%' }}>Entrar na {c.empresa}</button></form>
@@ -30,6 +30,13 @@ export default async function Convite({ params, searchParams }: {
     <div className="auth-card">
       <p>Este acesso é para <b>{c.email}</b>, mas você está logado como <b>{user.email}</b>.</p>
       <form action="/sair" method="post"><button className="btn">Sair e entrar com o e-mail certo</button></form>
+    </div>);
+  else if (!c.email) corpo = (
+    <div className="auth-card">
+      <p>Você foi convidado para ser <b>{c.cargo}</b> da <b>{c.empresa}</b> no DetailHub.</p>
+      <p className="muted" style={{ fontSize: 13.5 }}>Crie sua conta com o seu e-mail e uma senha. Depois de confirmar o e-mail, volte para este link e clique em entrar.</p>
+      <Link className="btn pri" href={`/entrar?next=${volta}&modo=cadastrar`}>Criar minha conta</Link>
+      <Link className="btn" href={`/entrar?next=${volta}`}>Já tenho conta</Link>
     </div>);
   else corpo = (
     <div className="auth-card">

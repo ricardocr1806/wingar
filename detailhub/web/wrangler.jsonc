@@ -9,6 +9,7 @@
   "preview_urls": false,
   "routes": [
     { "pattern": "detailhub.com.br", "custom_domain": true },
-    { "pattern": "www.detailhub.com.br", "custom_domain": true }
+    { "pattern": "www.detailhub.com.br", "custom_domain": true },
+    { "pattern": "wingard.detailhub.com.br", "custom_domain": true }
   ]
 }

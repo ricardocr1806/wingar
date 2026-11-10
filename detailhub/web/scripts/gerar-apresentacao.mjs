@@ -8,6 +8,8 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
+  ['<span class="av solid" title="${d.user}">${ini(d.user)}</span>',
+   '<span class="av solid" title="${window.DH_ACESSO ? esc(window.DH_ACESSO.nome) : d.user}">${ini(window.DH_ACESSO ? window.DH_ACESSO.nome : d.user)}</span>'],
   // aviso interno do protótipo: não aparece para o cliente
   ['<div class="demo"><b>Protótipo</b>Histórico real importado do CRM (1.031 negócios). O que for alterado aqui não é salvo.</div>', ''],
   ['/* ---------- registros ---------- */',
@@ -22,7 +24,7 @@ function renderNav(){`],
   ["  $('#who').innerHTML = `<span class=\"av solid\">${ini(d.user)}</span><div><b>${d.user}</b><span>${d.papel}</span></div>`;",
    `  $('#who').innerHTML = \`<span class="av solid">\${ini(d.user)}</span><div><b>\${d.user}</b><span>\${d.papel}</span></div>\`;
   if (window.DH_ACESSO) { const A = window.DH_ACESSO;
-    $('#perfil').innerHTML = (A.configurar ? \`<a class="btn sm" href="\${A.configurar}" style="width:100%;justify-content:center">Configurações</a>\` : '') + \`<form action="/sair" method="post" style="margin-top:8px"><button class="btn sm ghost" style="width:100%">Sair</button></form>\`;
+    $('#perfil').innerHTML = (A.configurar ? \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">Configurações</button>\` : '') + \`<form action="/sair" method="post" style="margin-top:8px"><button class="btn sm ghost" style="width:100%">Sair</button></form>\`;
     $('#who').innerHTML = \`<span class="av solid">\${ini(A.nome)}</span><div><b>\${esc(A.nome)}</b><span>\${esc(A.cargo)}</span></div>\`; }`],
 ];
 function adaptar(html) {
@@ -30,7 +32,8 @@ function adaptar(html) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = html.replace(de, para);
   }
-  return html.replace(/<body>/, '<body>');
+  const extra = readFileSync(raiz + 'scripts/config-na-apresentacao.js', 'utf8');
+  return html + `\n<script>\n${extra}\n</script>\n`;
 }
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {
   const corpo = adaptar(readFileSync(dir + f, 'utf8'));

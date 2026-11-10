@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
     admin: pode.has('equipe:editar'),
     nome: String(user.user_metadata?.full_name || user.email || ''),
     cargo: dono ? 'Administrador total' : String((m?.cargos as unknown as { nome?: string } | null)?.nome ?? ''),
-    configurar: pode.has('equipe:editar') ? `/app/${slug}/configuracoes` : '',
+    configurar: pode.has('equipe:editar') ? 'sim' : '',
+    slug,
   };
   if (!acesso.modulos.length) return new NextResponse('Seu acesso ainda não tem nenhuma área liberada. Fale com o administrador da empresa.', { status: 403, headers: { 'content-type': 'text/plain; charset=utf-8' } });
   const pagina = html.replace('<!--DH_ACESSO-->', `<script>window.DH_ACESSO=${JSON.stringify(acesso).replace(/</g, '\\u003c')}</script>`);

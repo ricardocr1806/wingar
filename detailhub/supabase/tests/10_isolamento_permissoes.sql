@@ -202,3 +202,22 @@ insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c2
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000c2', false); set role authenticated;
 select teste.erro(format('select public.aceitar_convite(%L)', :'conv_aberto'), 'convite aberto só pode ser usado uma vez');
 reset role;
+
+-- ============ limite de pessoas e áreas padrão
+select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select public.criar_empresa('Quantum Estética', 'quantum') as emp_q \gset
+select teste.ok((select count(*) from public.cargos where empresa_id = :'emp_q') = 4, 'empresa nova já nasce com Administrador, Financeiro, Comercial e Operacional');
+update public.empresas set limite_usuarios = 2 where id = :'emp_q';
+select id as cargo_com_q from public.cargos where empresa_id = :'emp_q' and nome = 'Comercial' \gset
+select id as cargo_adm_q from public.cargos where empresa_id = :'emp_q' and nivel = 'admin_empresa' \gset
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000d1', 'adm@quantum.test');
+insert into public.membros (empresa_id, user_id, cargo_id) values (:'emp_q', '00000000-0000-0000-0000-0000000000d1', :'cargo_adm_q');
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-0000000000d1', false); set role authenticated;
+select public.criar_convite(:'emp_q', 'a@quantum.test', :'cargo_com_q');
+select public.criar_convite(:'emp_q', 'b@quantum.test', :'cargo_com_q');
+select teste.ok((select livres from public.vagas_da_empresa(:'emp_q')) = 0, 'contador de vagas: 2 de 2 usadas');
+select teste.erro(format('select public.criar_convite(%L, %L, %L)', :'emp_q', 'c@quantum.test', :'cargo_com_q'), 'administrador não passa do limite de pessoas do plano');
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+select teste.ok(public.criar_convite(:'emp_q', 'outro.adm@quantum.test', :'cargo_adm_q') is not null, 'administradores não contam no limite (o dono adiciona mesmo com as vagas cheias)');
+reset role;

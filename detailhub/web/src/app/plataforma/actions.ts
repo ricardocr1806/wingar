@@ -34,3 +34,12 @@ export async function alternarTeto(f: FormData) {
   revalidatePath(`/plataforma/empresas/${id}`);
   redirect(`/plataforma/empresas/${id}${error ? '?erro=' + encodeURIComponent(mensagemErro(error)) : ''}#modulos`);
 }
+
+export async function salvarLimite(f: FormData) {
+  const id = txt(f, 'empresa_id');
+  const n = Math.max(1, Math.min(500, Number(txt(f, 'limite')) || 5));
+  const sb = await supabaseServer();
+  const { error } = await sb.from('empresas').update({ limite_usuarios: n }).eq('id', id);
+  revalidatePath(`/plataforma/empresas/${id}`);
+  redirect(`/plataforma/empresas/${id}?${error ? 'erro=' + encodeURIComponent(mensagemErro(error)) : 'ok=' + encodeURIComponent(`Limite do plano: ${n} pessoas.`)}`);
+}

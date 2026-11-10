@@ -16,8 +16,7 @@ export function AdicionarUsuario({ empresaId, cargos, volta }: {
       <div className="linha">
         <label>Nome<input name="nome" required minLength={2} placeholder="Nome da pessoa" autoComplete="off" /></label>
         <label>E-mail<input name="email" type="email" required placeholder="pessoa@empresa.com.br" autoComplete="off" /></label>
-        <label>Cargo<select name="cargo_id">{cargos.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label>
-        <label>Vê os registros<select name="escopo"><option value="todos">De todos</option><option value="proprios">Só os próprios</option></select></label>
+        <label>Área<select name="cargo_id">{cargos.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></label>
       </div>
       <div className="linha" style={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <label className="ck"><input type="checkbox" name="enviar" defaultChecked /> Mandar o acesso por e-mail agora</label>

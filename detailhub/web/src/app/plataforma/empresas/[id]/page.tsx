@@ -5,7 +5,7 @@ import { ACOES, MODULOS, NIVEL_NOME, chave } from '@/lib/acesso';
 import { Aviso, Check } from '@/app/ui';
 import { AdicionarUsuario } from '@/app/usuarios/AdicionarUsuario';
 import { cancelarAcesso, salvarUsuario } from '@/app/usuarios/actions';
-import { alternarAtiva, alternarTeto } from '../../actions';
+import { alternarAtiva, alternarTeto, salvarLimite } from '../../actions';
 import { APRESENTACAO } from '@/generated/apresentacao';
 import { LinksCliente } from '../../LinksCliente';
 import { desativarLinkVer } from '../../links';
@@ -22,7 +22,7 @@ export default async function Empresa({ params, searchParams }: { params: Promis
   const { id } = await params;
   const { erro, ok } = await searchParams;
   const { sb } = await usuarioAtual();
-  const { data: emp } = await sb.from('empresas').select('id, nome, slug, ativa, criada_em').eq('id', id).maybeSingle();
+  const { data: emp } = await sb.from('empresas').select('id, nome, slug, ativa, criada_em, limite_usuarios').eq('id', id).maybeSingle();
   if (!emp) notFound();
   const [{ data: us }, { data: cargos }, { data: teto }, { data: conv }, { data: links }] = await Promise.all([
     sb.rpc('usuarios_da_empresa', { p_empresa: id }),
@@ -98,6 +98,13 @@ export default async function Empresa({ params, searchParams }: { params: Promis
       <section className="card"><h3>Adicionar usuário</h3>
         <AdicionarUsuario empresaId={id} volta={volta} cargos={C.map(({ id, nome }) => ({ id, nome }))} />
         <span className="faint" style={{ fontSize: 12.5 }}>A pessoa recebe um e-mail para entrar na {emp.nome} e criar a senha. Para adicionar de novo alguém com o link vencido, é só adicionar outra vez.</span>
+      </section>
+
+      <section className="card"><div className="card-h"><div><h3>Plano</h3><span className="faint" style={{ fontSize: 12.5 }}>Quantas pessoas o administrador da {emp.nome} pode colocar (administradores não contam).</span></div>
+        <form action={salvarLimite} className="linha" style={{ alignItems: 'end' }}><input type="hidden" name="empresa_id" value={id} />
+          <label>Limite de pessoas<input name="limite" type="number" min={1} max={500} defaultValue={emp.limite_usuarios} style={{ width: 120 }} /></label>
+          <button className="btn sm">Salvar</button></form></div>
+        <a className="btn sm" href={`/app/${emp.slug}/configuracoes`}>Abrir as Configurações da {emp.nome}</a>
       </section>
 
       <section className="card">

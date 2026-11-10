@@ -26,8 +26,8 @@
 
   VIEWS.config = () => {
     const C = S.cfg;
-    const topo = `<header class="phead"><div><div class="eyebrow"><span class="dot"></span>Administração</div><h1>Configurações</h1>
-      <p class="sub">Quem acessa o sistema e o que cada pessoa vê. Só o administrador enxerga esta tela.</p></div></header>`;
+    const topo = `<header class="phead"><div><div class="eyebrow"><span class="dot"></span>Administração</div><h1>Colaboradores</h1>
+      <p class="sub">Quem acessa o sistema e o que cada colaborador vê. Só o administrador enxerga esta tela.</p></div></header>`;
     if (!C) return topo + `<div class="card"><p class="muted">Carregando…</p></div>`;
     if (C.erro) return topo + `<div class="card"><p class="muted">${esc(C.erro)}</p></div>`;
     const areas = C.areas.filter((x) => C.dono || !x.admin);
@@ -35,14 +35,14 @@
     const novo = S.cfgNovo;
     return topo + `
       <div class="kpis">
-        <div class="kpi hl"><span class="k">Pessoas no plano</span><span class="v">${C.usados} de ${C.limite}</span><span class="d">${C.livres ? `${C.livres} vaga${C.livres === 1 ? '' : 's'} livre${C.livres === 1 ? '' : 's'}` : 'todas as vagas em uso'} · administradores não contam</span></div>
+        <div class="kpi hl"><span class="k">Colaboradores no plano</span><span class="v">${C.usados} de ${C.limite}</span><span class="d">${C.livres ? `${C.livres} vaga${C.livres === 1 ? '' : 's'} livre${C.livres === 1 ? '' : 's'}` : 'todas as vagas em uso'} · administradores não contam</span></div>
         <div class="kpi"><span class="k">Seu acesso</span><span class="v" style="font-size:22px">${C.dono ? 'Administrador total' : 'Administrador do sistema'}</span><span class="d">${C.dono ? 'Dono da plataforma' : esc(C.empresa)}</span></div>
       </div>
       <section class="card"><h3>Áreas de acesso</h3>
         <div class="fields">${C.areas.map((x) => `<div class="field"><b>${esc(x.nome)}</b><span class="faint" style="font-size:13px">${esc(x.descricao)}</span></div>`).join('')}</div>
       </section>
-      <section class="card"><div class="card-h"><h3>Pessoas</h3>${chip('neu', String(C.pessoas.length))}</div>
-        <div class="tbl-wrap" style="box-shadow:none"><table class="tbl"><thead><tr><th>Pessoa</th><th>Área</th><th>Acesso</th><th>Último acesso</th><th></th></tr></thead><tbody>
+      <section class="card"><div class="card-h"><h3>Colaboradores</h3>${chip('neu', String(C.pessoas.length))}</div>
+        <div class="tbl-wrap" style="box-shadow:none"><table class="tbl"><thead><tr><th>Colaborador</th><th>Área</th><th>Acesso</th><th>Último acesso</th><th></th></tr></thead><tbody>
         ${C.pessoas.map((p) => {
           const fixo = p.eu || (!C.dono && p.admin);
           return `<tr><td class="cl"><b>${esc(p.nome || p.email)}${p.eu ? ' · você' : ''}</b><span>${esc(p.email)}</span></td>
@@ -56,16 +56,16 @@
           <table class="tbl"><tbody>${C.pendentes.map((x) => `<tr><td class="cl"><b>${esc(x.nome || x.email || 'Link de acesso')}</b><span>${esc(x.email || '')}</span></td><td>${esc(x.area)}</td>
             <td style="text-align:right"><button class="btn sm" data-a="cfgCancelar" data-c="${x.id}">Cancelar</button></td></tr>`).join('')}</tbody></table></div>` : ''}
       </section>
-      <section class="card"><h3>Adicionar pessoa</h3>
+      <section class="card"><h3>Adicionar colaborador</h3>
         ${C.livres > 0 || C.dono ? `<div class="fields">
-            <div class="field"><label for="cfg-nome">Nome</label><input id="cfg-nome" placeholder="Nome da pessoa" autocomplete="off"></div>
+            <div class="field"><label for="cfg-nome">Nome</label><input id="cfg-nome" placeholder="Nome do colaborador" autocomplete="off"></div>
             <div class="field"><label for="cfg-email">E-mail</label><input id="cfg-email" type="email" placeholder="pessoa@empresa.com.br" autocomplete="off"></div>
             <div class="field"><label for="cfg-area">Área</label><select id="cfg-area">${opt(areas.find((x) => x.nome === 'Comercial')?.id)}</select></div>
           </div>
           <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
             <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="cfg-enviar" checked> Mandar o acesso por e-mail agora</label>
-            <button class="btn pri" data-a="cfgAdd">Adicionar pessoa</button></div>`
-          : `<p class="muted">Todas as ${C.limite} vagas do plano estão em uso. Bloqueie alguém para liberar uma vaga ou fale com o DetailHub para aumentar o plano.</p>`}
+            <button class="btn pri" data-a="cfgAdd">Adicionar colaborador</button></div>`
+          : `<p class="muted">Todas as ${C.limite} vagas do plano estão em uso. Bloqueie um colaborador para liberar uma vaga ou fale com o DetailHub para aumentar o plano.</p>`}
         ${novo ? `<div class="note ok"><b>${esc(novo.nome)} foi adicionado</b>${novo.enviado ? `O acesso foi enviado para ${esc(novo.email)}. ` : ''}${novo.aviso ? esc(novo.aviso) + ' ' : ''}Se preferir, mande este link pelo WhatsApp (vale 7 dias):
           <div style="display:flex;gap:8px;margin-top:8px"><input id="cfg-link" readonly value="${esc(novo.link)}" style="flex:1"><button class="btn sm" data-a="cfgCopiar">Copiar</button></div></div>` : ''}
       </section>`;

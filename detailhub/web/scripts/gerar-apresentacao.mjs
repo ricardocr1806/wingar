@@ -9,7 +9,7 @@ const paginas = {};
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
   ['<span class="av solid" title="${d.user}">${ini(d.user)}</span>',
-   '<span class="av solid" title="${window.DH_ACESSO ? esc(window.DH_ACESSO.nome) : d.user}">${ini(window.DH_ACESSO ? window.DH_ACESSO.nome : d.user)}</span>'],
+   '<span class="av solid" title="${esc((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}">${ini((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}</span>'],
   // aviso interno do protótipo: não aparece para o cliente
   ['<div class="demo"><b>Protótipo</b>Histórico real importado do CRM (1.031 negócios). O que for alterado aqui não é salvo.</div>', ''],
   ['/* ---------- registros ---------- */',
@@ -24,8 +24,9 @@ function renderNav(){`],
   ["  $('#who').innerHTML = `<span class=\"av solid\">${ini(d.user)}</span><div><b>${d.user}</b><span>${d.papel}</span></div>`;",
    `  $('#who').innerHTML = \`<span class="av solid">\${ini(d.user)}</span><div><b>\${d.user}</b><span>\${d.papel}</span></div>\`;
   if (window.DH_ACESSO) { const A = window.DH_ACESSO;
-    $('#perfil').innerHTML = (A.configurar ? \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">Configurações</button>\` : '') + \`<form action="/sair" method="post" style="margin-top:8px"><button class="btn sm ghost" style="width:100%">Sair</button></form>\`;
-    $('#who').innerHTML = \`<span class="av solid">\${ini(A.nome)}</span><div><b>\${esc(A.nome)}</b><span>\${esc(A.cargo)}</span></div>\`; }`],
+    $('#perfil').innerHTML = (A.configurar ? \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">+ Adicionar colaborador</button>\` : '') + \`<form action="/sair" method="post" style="margin-top:8px"><button class="btn sm ghost" style="width:100%">Sair</button></form>\`;
+    $('#who').innerHTML = \`<span class="av solid">\${ini(A.nome)}</span><div><b>\${esc(A.nome)}</b><span>\${esc(A.cargo)}</span></div>\`; }
+  else if (window.DH_VITRINE) { const V = window.DH_VITRINE; $('#perfil').innerHTML = ''; $('#who').innerHTML = \`<span class="av solid">\${ini(V.nome)}</span><div><b>\${esc(V.nome)}</b><span>\${esc(V.cargo)}</span></div>\`; }`],
 ];
 function adaptar(html) {
   for (const [de, para] of TROCAS) {

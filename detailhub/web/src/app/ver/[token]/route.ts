@@ -11,5 +11,8 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ token:
   if (!html) return new NextResponse(
     '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Link indisponível · DetailHub</title><body style="font:16px system-ui;background:#0E1117;color:#E9ECF2;display:grid;place-items:center;min-height:100vh;margin:0;padding:16px;text-align:center"><div><h1 style="font-size:22px">Este link não está mais disponível</h1><p style="color:#A3ABBB">Ele venceu ou foi desativado. Peça um novo para quem te enviou.</p></div>',
     { status: 404, headers: { 'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex' } });
-  return new NextResponse(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex', 'referrer-policy': 'no-referrer' } });
+  const ADMIN_VITRINE: Record<string, { nome: string; cargo: string }> = { wingard: { nome: 'Weslen', cargo: 'Administrador' } };
+  const vitrine = ADMIN_VITRINE[slug as string];
+  const pagina = vitrine ? html.replace('<!--DH_ACESSO-->', `<script>window.DH_VITRINE=${JSON.stringify(vitrine)}</script>`) : html;
+  return new NextResponse(pagina, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'private, no-store', 'x-robots-tag': 'noindex', 'referrer-policy': 'no-referrer' } });
 }

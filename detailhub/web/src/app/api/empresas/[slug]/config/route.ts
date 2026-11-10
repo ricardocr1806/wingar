@@ -6,7 +6,7 @@ import { enviarEmailDeAcesso, linkDoConvite } from '@/lib/acessos';
 // Dados e ações da tela Configurações que fica dentro do sistema da empresa.
 // Tudo roda com a sessão de quem está logado: as regras do banco decidem o que pode.
 const DESCRICAO: Record<string, string> = {
-  Administrador: 'Vê tudo e gerencia as pessoas',
+  Administrador: 'Vê tudo e gerencia os colaboradores',
   Financeiro: 'Vê Comercial, Operacional e Financeiro',
   Comercial: 'Vê só o Comercial',
   Operacional: 'Vê só o Operacional',
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ slu
 
   if (b.acao === 'adicionar') {
     const nome = s('nome'), email = s('email').toLowerCase();
-    if (nome.length < 2) return erro('Informe o nome da pessoa.');
+    if (nome.length < 2) return erro('Informe o nome do colaborador.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return erro('Informe um e-mail válido.');
     const { data: token, error } = await sb.rpc('criar_convite', { p_empresa: emp.id, p_email: email, p_cargo: s('cargo_id'), p_escopo: 'todos', p_nome: nome });
     if (error || !token) return erro(/row-level/.test(error?.message ?? '') ? 'Você não pode dar essa área para alguém.' : mensagemErro(error));

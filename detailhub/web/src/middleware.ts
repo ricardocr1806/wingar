@@ -27,7 +27,8 @@ export async function middleware(req: NextRequest) {
       const url = req.nextUrl.clone(); url.pathname = '/entrar'; url.search = '?next=/';
       return NextResponse.redirect(url);
     }
-    const url = req.nextUrl.clone(); url.pathname = '/apresentacao'; url.search = `?empresa=${encodeURIComponent(sub)}`;
+    // o slug vai no caminho: a reescrita no Cloudflare perde a query string
+    const url = req.nextUrl.clone(); url.pathname = `/apresentacao/${encodeURIComponent(sub)}`; url.search = '';
     return NextResponse.rewrite(url, { headers: res.headers });
   }
   if (!data.user && PROTEGIDAS.some((x) => p === x || p.startsWith(x + '/'))) {

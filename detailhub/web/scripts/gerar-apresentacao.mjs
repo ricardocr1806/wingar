@@ -8,6 +8,8 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
+  // aviso interno do protótipo: não aparece para o cliente
+  ['<div class="demo"><b>Protótipo</b>Histórico real importado do CRM (1.031 negócios). O que for alterado aqui não é salvo.</div>', ''],
   ['/* ---------- registros ---------- */',
    `if (window.DH_ACESSO) { for (const k of Object.keys(DEPTS)) if (!window.DH_ACESSO.modulos.includes(k)) delete DEPTS[k]; }
 /* ---------- registros ---------- */`],

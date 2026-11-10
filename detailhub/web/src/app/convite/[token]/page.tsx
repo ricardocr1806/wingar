@@ -21,7 +21,12 @@ export default async function Convite({ params, searchParams }: {
 
   let corpo: React.ReactNode;
   if (!c) corpo = <div className="auth-card"><p>Este link de acesso não existe. Peça um novo para quem te adicionou.</p></div>;
-  else if (c.usado) corpo = <div className="auth-card"><p>Este acesso já foi usado.</p><Link className="btn pri" href="/entrar">Entrar no DetailHub</Link></div>;
+  else if (c.usado) corpo = (
+    <div className="auth-card">
+      <p><b>Este link já foi usado.</b> Cada link de acesso vale para uma pessoa só.</p>
+      <p className="muted" style={{ fontSize: 13.5 }}>Se você ainda não tem acesso à {c.empresa}, peça para o administrador te adicionar em <b>Adicionar colaborador</b>. Você recebe um link só seu por e-mail.</p>
+      {user ? <Link className="btn" href="/app">Ir para o meu acesso</Link> : <Link className="btn" href="/entrar">Já tenho acesso, entrar</Link>}
+    </div>);
   else if (c.expirado) corpo = <div className="auth-card"><p>Este link venceu. Peça para quem te adicionou te adicionar de novo.</p></div>;
   else if (user && auto && !erro && (!c.email || user.email?.toLowerCase() === c.email)) corpo = <EntrarAutomatico token={token} empresa={c.empresa} />;
   else if (user && (!c.email || user.email?.toLowerCase() === c.email)) corpo = (

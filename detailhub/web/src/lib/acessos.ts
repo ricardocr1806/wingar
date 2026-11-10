@@ -13,7 +13,7 @@ export async function enviarEmailDeAcesso(email: string, nome: string, token: st
   });
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true, emailRedirectTo: `${SITE_URL}/convite/${token}`, data: nome ? { full_name: nome } : undefined },
+    options: { shouldCreateUser: true, emailRedirectTo: `${SITE_URL}/convite/${token}?auto=1`, data: nome ? { full_name: nome } : undefined },
   });
   if (!error) return null;
   if (/rate|seconds|security purposes/i.test(error.message)) return 'O e-mail não foi enviado agora porque acabou de sair um para essa pessoa. Espere um minuto ou mande o link pelo WhatsApp.';

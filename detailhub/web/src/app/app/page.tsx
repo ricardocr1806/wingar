@@ -37,7 +37,7 @@ export default async function Empresas() {
           ))}
         </div>
       ) : !dono && (
-        <div className="vazio">Sua conta ainda não faz parte de nenhuma empresa. Peça o convite ao administrador da sua empresa e abra o link que ele mandar.</div>
+        <div className="vazio">Sua conta ({user.email}) ainda não foi adicionada a nenhuma empresa. Peça para o administrador da sua empresa te adicionar em <b>Adicionar colaborador</b>, com este mesmo e-mail. Você vai receber um link por e-mail para entrar.</div>
       )}
       <form action="/sair" method="post"><button className="link">Sair da conta</button></form>
     </main>

@@ -11,7 +11,7 @@ export function SessaoDoLink() {
     if (!access_token || !refresh_token) return;
     setEntrando(true);
     supabaseBrowser().auth.setSession({ access_token, refresh_token }).finally(() => {
-      window.location.replace(window.location.pathname);
+      window.location.replace(window.location.pathname + window.location.search);
     });
   }, []);
   return entrando ? <p className="msg ok" role="status">Entrando…</p> : null;

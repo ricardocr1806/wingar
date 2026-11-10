@@ -1,12 +1,30 @@
 // Tela "Configurações" dentro do sistema da empresa (só para o administrador).
 // É anexada à versão de apresentação por scripts/gerar-apresentacao.mjs e usa as funções dela (VIEWS, ACT, S, render…).
 (function () {
-  const A = window.DH_ACESSO;
-  if (!A || !A.admin) return;
-  const API = `/api/empresas/${A.slug}/config`;
+  const A = window.DH_ACESSO, V = window.DH_VITRINE;
+  if (!(A && A.admin) && !V) return;
+  // Link de visualização (sem login): a tela aparece com os dados de exemplo e pede login para salvar.
+  const VITRINE = !A && !!V;
+  const API = VITRINE ? '' : `/api/empresas/${A.slug}/config`;
   S.cfg = null; S.cfgNovo = null;
+  const DEMO = V && {
+    empresa: 'Wingard', dono: false, limite: 5, usados: 0, livres: 5,
+    areas: [
+      { id: 'adm', nome: 'Administrador', admin: true, descricao: 'Vê tudo e gerencia os colaboradores' },
+      { id: 'fin', nome: 'Financeiro', admin: false, descricao: 'Vê Comercial, Operacional e Financeiro' },
+      { id: 'com', nome: 'Comercial', admin: false, descricao: 'Vê só o Comercial' },
+      { id: 'ope', nome: 'Operacional', admin: false, descricao: 'Vê só o Operacional' },
+    ],
+    pessoas: [{ user_id: 'w', nome: V.nome, email: '', cargo_id: 'adm', cargo: V.cargo, admin: true, ativo: true, ultimo_acesso: new Date().toISOString(), eu: true }],
+    pendentes: [],
+  };
+  function pedirLogin() {
+    dialogo(`<div class="dlg-h"><div><h2>Entre como administrador</h2><p class="muted">Este é o link de apresentação. Para adicionar colaboradores de verdade, entre com a conta de administrador da Wingard.</p></div></div>
+      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Agora não</button><a class="btn pri" href="/entrar?next=/">Entrar</a></div>`);
+  }
 
   async function carregar() {
+    if (VITRINE) { S.cfg = DEMO; if (S.view === 'config') render(); return; }
     try {
       const r = await fetch(API, { credentials: 'same-origin', cache: 'no-store' });
       const j = await r.json();
@@ -15,6 +33,7 @@
     if (S.view === 'config') render();
   }
   async function enviar(corpo) {
+    if (VITRINE) { pedirLogin(); return null; }
     try {
       const r = await fetch(API, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) });
       const j = await r.json().catch(() => ({}));

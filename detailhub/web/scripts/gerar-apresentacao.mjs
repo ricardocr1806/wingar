@@ -26,7 +26,7 @@ function renderNav(){`],
   if (window.DH_ACESSO) { const A = window.DH_ACESSO;
     $('#perfil').innerHTML = (A.configurar ? \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">+ Adicionar colaborador</button>\` : '') + \`<form action="/sair" method="post" style="margin-top:8px"><button class="btn sm ghost" style="width:100%">Sair</button></form>\`;
     $('#who').innerHTML = \`<span class="av solid">\${ini(A.nome)}</span><div><b>\${esc(A.nome)}</b><span>\${esc(A.cargo)}</span></div>\`; }
-  else if (window.DH_VITRINE) { const V = window.DH_VITRINE; $('#perfil').innerHTML = ''; $('#who').innerHTML = \`<span class="av solid">\${ini(V.nome)}</span><div><b>\${esc(V.nome)}</b><span>\${esc(V.cargo)}</span></div>\`; }`],
+  else if (window.DH_VITRINE) { const V = window.DH_VITRINE; $('#perfil').innerHTML = \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">+ Adicionar colaborador</button>\`; $('#who').innerHTML = \`<span class="av solid">\${ini(V.nome)}</span><div><b>\${esc(V.nome)}</b><span>\${esc(V.cargo)}</span></div>\`; }`],
 ];
 function adaptar(html) {
   for (const [de, para] of TROCAS) {

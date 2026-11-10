@@ -36,7 +36,7 @@ export function LinksCliente({ empresaId, slug, nome, cargoAdmin }: { empresaId:
         <h3>2. Link para o administrador criar o acesso</h3>
         <p className="muted" style={{ fontSize: 13.5 }}>Quem abrir cria a própria conta e vira Administrador da {nome}. Depois ele mesmo adiciona a equipe. Vale 7 dias e só pode ser usado uma vez.</p>
         <form action={ac}>
-          <input type="hidden" name="empresa_id" value={empresaId} /><input type="hidden" name="cargo_id" value={cargoAdmin} />
+          <input type="hidden" name="empresa_id" value={empresaId} /><input type="hidden" name="cargo_id" value={cargoAdmin} /><input type="hidden" name="slug" value={slug} />
           <button className="btn pri" disabled={pc || !cargoAdmin}>{pc ? 'Gerando…' : 'Gerar link do administrador'}</button>
         </form>
         <Resultado e={ec} aviso="Link gerado. Mande para o responsável da empresa:" />

@@ -20,7 +20,7 @@ export async function gerarConviteAdmin(_: EstadoLink, f: FormData): Promise<Est
   const { data, error } = await sb.rpc('criar_convite', { p_empresa: txt(f, 'empresa_id'), p_email: null, p_cargo: txt(f, 'cargo_id') });
   if (error || !data) return { erro: mensagemErro(error) };
   revalidatePath(`/plataforma/empresas/${txt(f, 'empresa_id')}`);
-  return { link: `https://detailhub.com.br/convite/${data}` };
+  return { link: `https://${txt(f, 'slug') || 'detailhub'}.detailhub.com.br/convite/${data}`.replace('https://detailhub.detailhub.com.br', 'https://detailhub.com.br') };
 }
 
 export async function desativarLinkVer(f: FormData) {

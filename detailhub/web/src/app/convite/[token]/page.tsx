@@ -3,15 +3,17 @@ import { usuarioAtual } from '@/lib/supabase/server';
 import { Aviso, Marca } from '@/app/ui';
 import { aceitar, reenviarLink } from './actions';
 import { SessaoDoLink } from './SessaoDoLink';
+import { CriarAcesso } from './CriarAcesso';
+import { EntrarAutomatico } from './EntrarAutomatico';
 
 export const metadata = { title: 'Acesso · DetailHub' };
 type Info = { email: string | null; empresa: string; empresa_slug: string; cargo: string; expirado: boolean; usado: boolean; conta_ativa: boolean };
 
 export default async function Convite({ params, searchParams }: {
-  params: Promise<{ token: string }>; searchParams: Promise<{ erro?: string; enviado?: string }>;
+  params: Promise<{ token: string }>; searchParams: Promise<{ erro?: string; enviado?: string; auto?: string }>;
 }) {
   const { token } = await params;
-  const { erro, enviado } = await searchParams;
+  const { erro, enviado, auto } = await searchParams;
   const { sb, user } = await usuarioAtual();
   const { data } = await sb.rpc('ver_convite', { p_token: token });
   const c = (data as Info[] | null)?.[0];
@@ -21,6 +23,7 @@ export default async function Convite({ params, searchParams }: {
   if (!c) corpo = <div className="auth-card"><p>Este link de acesso não existe. Peça um novo para quem te adicionou.</p></div>;
   else if (c.usado) corpo = <div className="auth-card"><p>Este acesso já foi usado.</p><Link className="btn pri" href="/entrar">Entrar no DetailHub</Link></div>;
   else if (c.expirado) corpo = <div className="auth-card"><p>Este link venceu. Peça para quem te adicionou te adicionar de novo.</p></div>;
+  else if (user && auto && !erro && (!c.email || user.email?.toLowerCase() === c.email)) corpo = <EntrarAutomatico token={token} empresa={c.empresa} />;
   else if (user && (!c.email || user.email?.toLowerCase() === c.email)) corpo = (
     <div className="auth-card">
       <p>Você foi adicionado à <b>{c.empresa}</b> como <b>{c.cargo}</b>.</p>
@@ -31,13 +34,10 @@ export default async function Convite({ params, searchParams }: {
       <p>Este acesso é para <b>{c.email}</b>, mas você está logado como <b>{user.email}</b>.</p>
       <form action="/sair" method="post"><button className="btn">Sair e entrar com o e-mail certo</button></form>
     </div>);
-  else if (!c.email) corpo = (
-    <div className="auth-card">
-      <p>Você foi convidado para ser <b>{c.cargo}</b> da <b>{c.empresa}</b> no DetailHub.</p>
-      <p className="muted" style={{ fontSize: 13.5 }}>Crie sua conta com o seu e-mail e uma senha. Depois de confirmar o e-mail, volte para este link e clique em entrar.</p>
-      <Link className="btn pri" href={`/entrar?next=${volta}&modo=cadastrar`}>Criar minha conta</Link>
-      <Link className="btn" href={`/entrar?next=${volta}`}>Já tenho conta</Link>
-    </div>);
+  else if (!c.email) corpo = (<>
+    <CriarAcesso token={token} empresa={c.empresa} cargo={c.cargo} />
+    <p className="faint" style={{ fontSize: 13.5, textAlign: 'center' }}>Já tem conta no DetailHub? <Link href={`/entrar?next=${volta}`}>Entrar</Link></p>
+  </>);
   else corpo = (
     <div className="auth-card">
       <p>Você foi adicionado à <b>{c.empresa}</b> como <b>{c.cargo}</b>.</p>

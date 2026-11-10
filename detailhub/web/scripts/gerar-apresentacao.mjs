@@ -8,6 +8,34 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
+  // Centros de custo da Wingard (contas a pagar e DRE)
+  ["const CATS_PAGAR = ['Materiais','Pessoal','Ocupação','Marketing','Administrativo','Impostos','Financeiro','Outros'];",
+   "const CATS_PAGAR = ['Diretoria','Operacional','Marketing Comercial','CMV','Cartão de Crédito','Escritório Central'];"],
+  [`const REGRAS_CAT = [
+  ['Impostos',['das','simples','imposto','iss','icms','irpj','csll','pis','cofins','darf','inss','fgts','taxa municipal','iptu']],
+  ['Pessoal',['folha','salario','comissao','pro-labore','pro labore','ferias','13','vale transporte','vale refeicao','beneficio','rescisao']],
+  ['Ocupação',['aluguel','condominio','energia','luz','enel','agua','sabesp','internet','telefone','limpeza','seguranca','manutencao predial']],
+  ['Materiais',['ppf','pelicula','bobina','rolo','material','produto','vonixx','filme','vinil','ferramenta','insumo']],
+  ['Marketing',['anuncio','meta ads','facebook','instagram','google ads','marketing','publicidade','agencia','brinde','evento']],
+  ['Financeiro',['tarifa','juros','emprestimo','financiamento','iof','maquininha','taxa de cartao','banco']],
+  ['Administrativo',['contab','honorario','sistema','software','assinatura','escritorio','advogad','juridico','correios']],
+];`,
+   `const REGRAS_CAT = [
+  ['Cartão de Crédito',['cartao de credito','fatura do cartao','fatura cartao','nubank','itaucard','bradescard','cartao corporativo','anuidade']],
+  ['CMV',['ppf','pelicula','bobina','rolo','material','produto','vonixx','filme','vinil','insumo','mercadoria']],
+  ['Marketing Comercial',['anuncio','meta ads','facebook','instagram','google ads','marketing','publicidade','agencia','brinde','evento','comissao','vendedor']],
+  ['Diretoria',['pro-labore','pro labore','prolabore','retirada','socio','diretoria','distribuicao de lucro']],
+  ['Operacional',['folha','salario','ferias','13','vale transporte','vale refeicao','beneficio','rescisao','ferramenta','equipamento','manutencao','combustivel','frete','lavagem','aplicador']],
+  ['Escritório Central',['aluguel','condominio','energia','luz','enel','agua','sabesp','internet','telefone','limpeza','seguranca','contab','honorario','sistema','software','assinatura','escritorio','advogad','juridico','correios','das','simples','imposto','iss','icms','darf','inss','fgts','iptu','tarifa','juros','emprestimo','financiamento','iof','maquininha','taxa de cartao','banco']],
+];`],
+  ["  return 'Outros';\n}\nconst assinatura", "  return 'Escritório Central';\n}\nconst assinatura"],
+  ["  const mat = cat('Materiais'), lucroB = liq-mat;\n  const desp = CATS_PAGAR.filter(c=>c!=='Materiais').map(c=>[c, cat(c)]);",
+   "  const mat = cat('CMV'), lucroB = liq-mat;\n  const desp = CATS_PAGAR.filter(c=>c!=='CMV').map(c=>[c, cat(c)]);"],
+  ["line('Materiais aplicados (PPF, películas, produtos)', mat, 'ind', true)", "line('CMV · custo da mercadoria vendida (PPF, películas, produtos)', mat, 'ind', true)"],
+  ["validaLinha({desc:'', forn:'', cat:'Outros',", "validaLinha({desc:'', forn:'', cat:'Escritório Central',"],
+  ['<label for="np-c">Categoria</label>', '<label for="np-c">Centro de custo</label>'],
+  ['<h3>Gastos por categoria</h3>', '<h3>Gastos por centro de custo</h3>'],
+  ['<th>Categoria</th>', '<th>Centro de custo</th>', true],
   ['<span class="av solid" title="${d.user}">${ini(d.user)}</span>',
    '<span class="av solid" title="${esc((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}">${ini((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}</span>'],
   // aviso interno do protótipo: não aparece para o cliente
@@ -29,9 +57,9 @@ function renderNav(){`],
   else if (window.DH_VITRINE) { const V = window.DH_VITRINE; $('#perfil').innerHTML = \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">+ Adicionar colaborador</button>\`; $('#who').innerHTML = \`<span class="av solid">\${ini(V.nome)}</span><div><b>\${esc(V.nome)}</b><span>\${esc(V.cargo)}</span></div>\`; }`],
 ];
 function adaptar(html) {
-  for (const [de, para] of TROCAS) {
+  for (const [de, para, todos] of TROCAS) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
-    html = html.replace(de, para);
+    html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
   const extra = readFileSync(raiz + 'scripts/config-na-apresentacao.js', 'utf8');
   return html + `\n<script>\n${extra}\n</script>\n`;

@@ -213,8 +213,9 @@
   let aviso;
   function lembrarTela() { try { sessionStorage.setItem(VOLTA, JSON.stringify({ dept: S.dept, view: S.view, sel: S.sel, tab: S.tab, y: window.scrollY })); } catch { /* sem armazenamento */ } }
   function recarregar() { lembrarTela(); location.reload(); }
+  const hojeBR = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   function cuidarDaVersao() {
-    if (!versaoNova) return;
+    if (!versaoNova && hojeBR() === HOJE) return; // versão nova ou virou o dia: atualiza a aba
     const semPendencia = !enviando && [...fotografia()].every(([k, v]) => salvo.get(k) === canon(v) || proibido.has(k.split('|')[0]));
     if (!semPendencia) { salvar(); return; }
     const parado = Date.now() - ultimaAcao > 60000;

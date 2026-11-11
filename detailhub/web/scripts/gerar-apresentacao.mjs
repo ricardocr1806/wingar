@@ -8,6 +8,8 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
+  // Sistema real: data de hoje (horário de Brasília)
+  ["const HOJE = '2026-11-03';", "const HOJE = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date());"],
   ["let nextOS = 1, nextId = 1;", "const dhNovoId = p => p + (Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5)).toUpperCase(); let nextOS = 1, nextId = 1;"],
   ["'A'+String(nextId++).padStart(2,'0')", "dhNovoId('A')", true],
   ["const novoCli = () => ({id:'C'+String(nextCli++).padStart(4,'0'),", "const novoCli = () => ({id:dhNovoId('C'),"],

@@ -10,7 +10,7 @@ const paginas = {};
 const TROCAS = [
   // Centros de custo da Wingard (contas a pagar e DRE)
   ["const CATS_PAGAR = ['Materiais','Pessoal','Ocupação','Marketing','Administrativo','Impostos','Financeiro','Outros'];",
-   "const CATS_PAGAR = ['Diretoria','Operacional','Marketing Comercial','CMV','Cartão de Crédito','Escritório Central'];"],
+   "const CATS_PAGAR = ['Diretoria','Operacional','Marketing','Comercial','CMV','Cartão de Crédito','Escritório Central'];"],
   [`const REGRAS_CAT = [
   ['Impostos',['das','simples','imposto','iss','icms','irpj','csll','pis','cofins','darf','inss','fgts','taxa municipal','iptu']],
   ['Pessoal',['folha','salario','comissao','pro-labore','pro labore','ferias','13','vale transporte','vale refeicao','beneficio','rescisao']],
@@ -23,7 +23,8 @@ const TROCAS = [
    `const REGRAS_CAT = [
   ['Cartão de Crédito',['cartao de credito','fatura do cartao','fatura cartao','nubank','itaucard','bradescard','cartao corporativo','anuidade']],
   ['CMV',['ppf','pelicula','bobina','rolo','material','produto','vonixx','filme','vinil','insumo','mercadoria']],
-  ['Marketing Comercial',['anuncio','meta ads','facebook','instagram','google ads','marketing','publicidade','agencia','brinde','evento','comissao','vendedor']],
+  ['Marketing',['anuncio','meta ads','meta','facebook','instagram','google ads','google','marketing','publicidade','agencia','trafego','brinde','evento']],
+  ['Comercial',['comissao','vendedor','vendas','crm','prospeccao','representante']],
   ['Diretoria',['pro-labore','pro labore','prolabore','retirada','socio','diretoria','distribuicao de lucro']],
   ['Operacional',['folha','salario','ferias','13','vale transporte','vale refeicao','beneficio','rescisao','ferramenta','equipamento','manutencao','combustivel','frete','lavagem','aplicador']],
   ['Escritório Central',['aluguel','condominio','energia','luz','enel','agua','sabesp','internet','telefone','limpeza','seguranca','contab','honorario','sistema','software','assinatura','escritorio','advogad','juridico','correios','das','simples','imposto','iss','icms','darf','inss','fgts','iptu','tarifa','juros','emprestimo','financiamento','iof','maquininha','taxa de cartao','banco']],
@@ -36,6 +37,8 @@ const TROCAS = [
   ['<label for="np-c">Categoria</label>', '<label for="np-c">Centro de custo</label>'],
   ['<h3>Gastos por categoria</h3>', '<h3>Gastos por centro de custo</h3>'],
   ['<th>Categoria</th>', '<th>Centro de custo</th>', true],
+  ['<td>${p.pago?`<button class="btn sm ghost" data-a="pagar" data-i="${i}">Desfazer</button>`:`<button class="btn sm" data-a="pagar" data-i="${i}">Marcar como paga</button>`}</td></tr>`',
+   '<td style="white-space:nowrap">${p.pago?`<button class="btn sm ghost" data-a="pagar" data-i="${i}">Desfazer</button>`:`<button class="btn sm" data-a="pagar" data-i="${i}">Marcar como paga</button>`} <button class="btn sm ghost" data-a="pgEditar" data-i="${i}" aria-label="Editar conta">${ico(\'edit\')}Editar</button></td></tr>`'],
   ['<span class="av solid" title="${d.user}">${ini(d.user)}</span>',
    '<span class="av solid" title="${esc((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}">${ini((window.DH_ACESSO || window.DH_VITRINE || {}).nome || d.user)}</span>'],
   // aviso interno do protótipo: não aparece para o cliente
@@ -61,7 +64,7 @@ function adaptar(html) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
-  const extra = readFileSync(raiz + 'scripts/config-na-apresentacao.js', 'utf8');
+  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
   return html + `\n<script>\n${extra}\n</script>\n`;
 }
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {

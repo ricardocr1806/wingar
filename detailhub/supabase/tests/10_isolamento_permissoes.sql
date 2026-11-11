@@ -221,3 +221,22 @@ select teste.erro(format('select public.criar_convite(%L, %L, %L)', :'emp_q', 'c
 reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
 select teste.ok(public.criar_convite(:'emp_q', 'outro.adm@quantum.test', :'cargo_adm_q') is not null, 'administradores não contam no limite (o dono adiciona mesmo com as vagas cheias)');
 reset role;
+
+-- ============ contas a pagar
+reset role; select set_config('request.jwt.claim.sub', :'dono', false); set role authenticated;
+update public.empresas set ativa = true;
+insert into public.empresa_teto values (:'emp_a', 'financeiro', 'excluir') on conflict do nothing;
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+insert into public.contas_pagar (empresa_id, descricao, fornecedor, centro_custo, vencimento, valor) values (:'emp_a', 'Rolo PPF', 'Fornecedor X', 'CMV', current_date, 1500) returning id as conta_a \gset
+select teste.ok((select count(*) from public.contas_pagar) = 1, 'administrador lança conta a pagar');
+update public.contas_pagar set pago = true where id = :'conta_a';
+select teste.ok((select pago_em from public.contas_pagar where id = :'conta_a') = current_date, 'marcar como paga grava a data do pagamento');
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+select teste.ok((select count(*) from public.contas_pagar) = 0, 'vendedor não vê contas a pagar');
+select teste.erro(format('insert into public.contas_pagar (empresa_id, descricao, centro_custo, vencimento, valor) values (%L, %L, %L, current_date, 10)', :'emp_a', 'x', 'CMV'), 'vendedor não lança conta a pagar');
+reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
+select teste.ok((select count(*) from public.contas_pagar) = 0, 'outra empresa não vê as contas da Wingard');
+select teste.ok(teste.linhas(format('delete from public.contas_pagar where id = %L', :'conta_a')) = 0, 'outra empresa não apaga as contas da Wingard');
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.ok(teste.linhas(format('delete from public.contas_pagar where id = %L', :'conta_a')) = 1, 'administrador exclui conta a pagar');
+reset role;

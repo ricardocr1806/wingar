@@ -240,3 +240,21 @@ select teste.ok(teste.linhas(format('delete from public.contas_pagar where id = 
 reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
 select teste.ok(teste.linhas(format('delete from public.contas_pagar where id = %L', :'conta_a')) = 1, 'administrador exclui conta a pagar');
 reset role;
+
+-- ============ registros (atendimentos, clientes, catálogo, equipe)
+reset role; select set_config('request.jwt.claim.sub', :'vend_a', false); set role authenticated;
+insert into public.registros (empresa_id, colecao, id, dados) values (:'emp_a', 'atendimentos', 'A1', '{"cliente":"C1","status":"Aberto"}');
+select teste.ok((select atualizado_por from public.registros where id = 'A1') = :'vend_a', 'vendedor salva atendimento e fica registrado quem salvou');
+update public.registros set dados = '{"cliente":"C1","status":"Ganho"}' where empresa_id = :'emp_a' and id = 'A1';
+select teste.ok((select dados->>'status' from public.registros where id = 'A1') = 'Ganho', 'vendedor altera o atendimento');
+select teste.erro(format('insert into public.registros (empresa_id, colecao, id, dados) values (%L, %L, %L, %L)', :'emp_a', 'config', 'equipe', '[]'), 'vendedor não altera equipe do operacional');
+select teste.erro(format('insert into public.registros (empresa_id, colecao, id, dados) values (%L, %L, %L, %L)', :'emp_a', 'outra', 'x', '{}'), 'coleção desconhecida é recusada');
+select teste.erro('delete from public.registros', 'ninguém apaga registro de vez (só marca como excluído)');
+reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
+select teste.ok((select count(*) from public.registros) = 0, 'outra empresa não vê os atendimentos da Wingard');
+select teste.ok(teste.linhas(format('update public.registros set excluido = true, dados = null where id = %L', 'A1')) = 0, 'outra empresa não altera os atendimentos da Wingard');
+reset role; select set_config('request.jwt.claim.sub', :'curioso', false); set role authenticated;
+select teste.ok((select count(*) from public.registros) = 0, 'quem não é da empresa não vê nada');
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.ok((select count(*) from public.registros where id = 'A1') = 1, 'administrador vê o atendimento do vendedor');
+reset role;

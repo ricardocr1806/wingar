@@ -8,6 +8,9 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
+  ["let nextOS = 1, nextId = 1;", "const dhNovoId = p => p + (Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5)).toUpperCase(); let nextOS = 1, nextId = 1;"],
+  ["'A'+String(nextId++).padStart(2,'0')", "dhNovoId('A')", true],
+  ["const novoCli = () => ({id:'C'+String(nextCli++).padStart(4,'0'),", "const novoCli = () => ({id:dhNovoId('C'),"],
   // Centros de custo da Wingard (contas a pagar e DRE)
   ["const CATS_PAGAR = ['Materiais','Pessoal','Ocupação','Marketing','Administrativo','Impostos','Financeiro','Outros'];",
    "const CATS_PAGAR = ['Diretoria','Operacional','Marketing','Comercial','CMV','Cartão de Crédito','Escritório Central'];"],
@@ -64,7 +67,7 @@ function adaptar(html) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
-  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
+  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js', 'sincronizar-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
   return html + `\n<script>\n${extra}\n</script>\n`;
 }
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {
@@ -72,5 +75,8 @@ if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) 
   paginas[f.replace(/\.html$/, '')] = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><!--DH_ACESSO--></head><body>${corpo}</body></html>`;
 }
 mkdirSync(raiz + 'src/generated', { recursive: true });
-writeFileSync(raiz + 'src/generated/apresentacao.ts', `// Gerado por scripts/gerar-apresentacao.mjs. Não editar.\nexport const APRESENTACAO: Record<string, string> = ${JSON.stringify(paginas)};\n`);
+// Versão desta publicação: as abas abertas comparam com a do servidor e se atualizam sozinhas.
+const VERSAO = new Date().toISOString();
+for (const k of Object.keys(paginas)) paginas[k] = paginas[k].replace('<!--DH_ACESSO-->', `<script>window.DH_VERSAO=${JSON.stringify(VERSAO)}</script><!--DH_ACESSO-->`);
+writeFileSync(raiz + 'src/generated/apresentacao.ts', `// Gerado por scripts/gerar-apresentacao.mjs. Não editar.\nexport const VERSAO = ${JSON.stringify(VERSAO)};\nexport const APRESENTACAO: Record<string, string> = ${JSON.stringify(paginas)};\n`);
 console.log('Apresentações:', Object.keys(paginas).join(', ') || 'nenhuma');

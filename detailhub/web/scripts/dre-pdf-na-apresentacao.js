@@ -24,6 +24,36 @@
     .doc.dre-doc tr{break-inside:avoid}`;
   document.head.appendChild(estilo);
 
+  // Imprimir qualquer tela (Ctrl+P ou o menu do navegador): sai a tela que a pessoa está vendo, em folha branca,
+  // sem o menu lateral, a barra de busca e os botões. Quando um documento (OS, Prisma, DRE) está aberto, sai só ele.
+  const tela = 'body:not(:has(#modal:not([hidden])))';
+  const claro = (() => { // cores do tema claro, para não imprimir fundo escuro com letra clara
+    for (const f of document.styleSheets) {
+      let regras; try { regras = f.cssRules; } catch { continue; }
+      for (const r of regras) if (r.selectorText === ':root' && r.style) return [...r.style].filter((k) => k.startsWith('--')).map((k) => `${k}:${r.style.getPropertyValue(k)} !important`).join(';');
+    }
+    return '';
+  })();
+  const impressao = document.createElement('style');
+  impressao.textContent = `
+    @media print{
+      :root{color-scheme:light !important;${claro}}
+      html, ${tela}{background:#fff!important;color:#111!important}
+      ${tela} .app{display:block!important;min-height:0!important}
+      ${tela} .side, ${tela} .topbar, ${tela} .toast, ${tela} #dlg, ${tela} #cv, ${tela} #dh-sync, ${tela} .btn, ${tela} .strips{display:none!important}
+      ${tela} .main{padding:0!important;gap:14px!important}
+      ${tela} .view{animation:none!important;gap:14px!important}
+      ${tela} .card, ${tela} .kpi, ${tela} section{box-shadow:none!important;break-inside:avoid-page}
+      ${tela} .kpi.hl{background:#fff!important;color:#111!important;border:1px solid #ccc!important}
+      ${tela} .kpi.hl *{color:#111!important}
+      ${tela} .tbl-wrap{overflow:visible!important}
+      ${tela} table{min-width:0!important}
+      ${tela} tr{break-inside:avoid}
+      ${tela} input, ${tela} select{border:1px solid #ccc!important;background:#fff!important;color:#111!important}
+      @page{size:A4;margin:12mm}
+    }`;
+  document.head.appendChild(impressao);
+
   const original = VIEWS.dre;
   VIEWS.dre = () => {
     const html = original();

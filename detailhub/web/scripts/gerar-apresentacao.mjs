@@ -34,7 +34,7 @@ const TROCAS = [
 ];`],
   ["  return 'Outros';\n}\nconst assinatura", "  return 'Escritório Central';\n}\nconst assinatura"],
   ["  const mat = cat('Materiais'), lucroB = liq-mat;\n  const desp = CATS_PAGAR.filter(c=>c!=='Materiais').map(c=>[c, cat(c)]);",
-   "  const mat = cat('CMV'), lucroB = liq-mat;\n  const desp = CATS_PAGAR.filter(c=>c!=='CMV').map(c=>[c, cat(c)]);"],
+   "  const mat = cat('CMV'), lucroB = liq-mat;\n  const desp = [...CATS_PAGAR, ...new Set(PAGAR.filter(p=>!CATS_PAGAR.includes(p.cat) && noPeriodo(p.venc, per)).map(p=>p.cat))].filter(c=>c!=='CMV').map(c=>[c, cat(c)]);"],
   ["line('Materiais aplicados (PPF, películas, produtos)', mat, 'ind', true)", "line('CMV · custo da mercadoria vendida (PPF, películas, produtos)', mat, 'ind', true)"],
   ["validaLinha({desc:'', forn:'', cat:'Outros',", "validaLinha({desc:'', forn:'', cat:'Escritório Central',"],
   ['<label for="np-c">Categoria</label>', '<label for="np-c">Centro de custo</label>'],
@@ -67,7 +67,7 @@ function adaptar(html, extras = []) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
-  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js', 'sincronizar-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
+  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js', 'sincronizar-na-apresentacao.js', 'dre-pdf-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
   return html + `\n<script>\n${extra}\n</script>\n`;
 }
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {

@@ -249,6 +249,9 @@ update public.registros set dados = '{"cliente":"C1","status":"Ganho"}' where em
 select teste.ok((select dados->>'status' from public.registros where id = 'A1') = 'Ganho', 'vendedor altera o atendimento');
 select teste.erro(format('insert into public.registros (empresa_id, colecao, id, dados) values (%L, %L, %L, %L)', :'emp_a', 'config', 'equipe', '[]'), 'vendedor não altera equipe do operacional');
 select teste.erro(format('insert into public.registros (empresa_id, colecao, id, dados) values (%L, %L, %L, %L)', :'emp_a', 'outra', 'x', '{}'), 'coleção desconhecida é recusada');
+insert into public.registros (empresa_id, colecao, id, dados) values (:'emp_a', 'config', 'metas', '{"metas":{}}');
+select teste.ok((select count(*) from public.registros where id = 'metas') = 1, 'vendedor salva as metas do Comercial');
+select teste.erro(format('insert into public.registros (empresa_id, colecao, id, dados) values (%L, %L, %L, %L)', :'emp_a', 'config', 'modelos_pagar', '{}'), 'vendedor não altera padrões de planilha do Financeiro');
 select teste.erro('delete from public.registros', 'ninguém apaga registro de vez (só marca como excluído)');
 reset role; select set_config('request.jwt.claim.sub', :'adm_b', false); set role authenticated;
 select teste.ok((select count(*) from public.registros) = 0, 'outra empresa não vê os atendimentos da Wingard');

@@ -94,6 +94,21 @@ if (existsSync(dir + 'wingard.html')) {
     ["user:'Tatiane Moura', papel:'Financeiro'", "user:'Equipe Financeiro', papel:'Financeiro'"],
     ["const ORIGENS = [", "if (!CONSULTORES.length) CONSULTORES.push(((window.DH_ACESSO||window.DH_VITRINE||{}).nome) || 'Consultor');\nconst ORIGENS = ["],
     ["(r.linha==='bobina' ? x.linha==='bobina' : x.linha!=='bobina'));", "(r.linha==='bobina' ? x.linha==='bobina' : x.linha!=='bobina')); if (!c) return toast('Cadastre primeiro um serviço no menu Serviços.','warn');"],
+    // Bobinas são só da Wingard: as outras empresas não têm essa unidade
+    [",['bobina','Bobinas','Venda de bobinas','layers']", ""],
+    [",['bobina','Bobinas','layers','Empresa, nº de bobinas, metragem e entrega.']", ""],
+    ["['bobinas','Bobinas','layers'],", ""],
+    ["${bobSel ? '' : `<button class=\"bob-strip\" data-a=\"funilBob\">", "${true ? '' : `<button class=\"bob-strip\" data-a=\"funilBob\">"],
+    ["<option value=\"bobina\" ${r.linha==='bobina'?'selected':''}>Wingard Bobinas</option>", ""],
+    [",['bobina','Wingard Bobinas']", ""],
+    ["[['todas','Todos'],['servico','Carros'],['bobina','Bobinas']]", "[['todas','Todos'],['servico','Carros']]"],
+    ["${CATALOGO.length-1} itens vindos do histórico. O preço de referência é a mediana das vendas com um produto só.", "${CATALOGO.length-1} serviço${CATALOGO.length===2?'':'s'} cadastrado${CATALOGO.length===2?'':'s'}."],
+    [",['__bob','Bobinas']", ""],
+    [" Escolha “Bobinas” no filtro de funis para ver só as bobinas.", ""],
+    ["[['todas','Todas as vendas'],['servico','Carros'],['home','Home'],['bobina','Bobinas']]", "[['todas','Todas as vendas'],['servico','Carros'],['home','Home']]"],
+    ["[['todas','Todas as unidades'],['servico','Carros'],['home','Home'],['bobina','Bobinas']]", "[['todas','Todas as unidades'],['servico','Carros'],['home','Home']]"],
+    ["Carros ${fmt(x.sv)} · Bobinas ${fmt(x.bb)} · Home ${fmt(x.hm||0)}", "Carros ${fmt(x.sv)} · Home ${fmt(x.hm||0)}"],
+    ["'Receita bruta (carros + bobinas + home)'", "'Receita bruta (carros + home)'"],
   ];
   let h = adaptar(base, PADRAO);
   h = h.split('https://wingard.detailhub.com.br/').join('https://__DH_SLUG__.detailhub.com.br/')

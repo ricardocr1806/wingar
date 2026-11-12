@@ -33,6 +33,8 @@
     for (const c of CATALOGO) f.set('catalogo|' + c.cod, c);
     f.set('config|equipe', { lista: EQUIPE });
     f.set('config|tempo_ideal', TEMPO_IDEAL);
+    f.set('config|metas', { metas: S.metas || {}, padrao: S.metaPadrao || {} });
+    f.set('config|modelos_pagar', { modelos: modelosSalvos() || {} });
     return f;
   }
 
@@ -78,6 +80,8 @@
       if (g.excluido) continue;
       if (g.id === 'equipe' && Array.isArray(g.dados.lista) && g.dados.lista.length) { EQUIPE.splice(0, EQUIPE.length, ...g.dados.lista); if (typeof dhEquipe === 'function') dhEquipe(); }
       if (g.id === 'tempo_ideal') Object.assign(TEMPO_IDEAL, g.dados);
+      if (g.id === 'metas') { S.metas = g.dados.metas || {}; S.metaPadrao = g.dados.padrao || {}; }
+      if (g.id === 'modelos_pagar') salvaModelos(g.dados.modelos || {});
     }
     DB.sort((a, b) => String(b.data).localeCompare(String(a.data)) || String(b.id).localeCompare(String(a.id)));
     const maxNum = (arr, p) => Math.max(0, ...arr.map((x) => (new RegExp('^' + p + '(\\d+)$').exec(x) || [])[1]).filter(Boolean).map(Number));
@@ -90,7 +94,8 @@
   let salvo = new Map();      // chave -> forma salva no banco
   let pronto = false, enviando = false, falhas = 0, ultimo = null, versaoNova = null, ultimaAcao = Date.now();
   const pendentesRemotos = [];
-  const proibido = new Set(); // coleções que este cargo não pode alterar (não fica tentando de novo)
+  const proibido = new Set(); // o que este cargo não pode alterar (não fica tentando de novo)
+  const grupo = (k) => (k.startsWith('config|') ? k : k.split('|')[0]);
 
   const selo = document.createElement('div');
   selo.id = 'dh-sync';
@@ -126,20 +131,21 @@
     const mud = [];
     for (const [k, s] of atual) if (salvo.get(k) !== s) mud.push(k);
     for (const k of salvo.keys()) if (!atual.has(k) && !k.startsWith('config|')) mud.push(k);
-    const enviar = mud.filter((k) => !proibido.has(k.split('|')[0]));
+    const enviar = mud.filter((k) => !proibido.has(grupo(k)));
     if (!enviar.length) return;
     enviando = true; status('Salvando…');
     let erroMsg = '';
     try {
       const porCol = {};
-      for (const k of enviar) { const col = k.split('|')[0]; (porCol[col] = porCol[col] || []).push(k); }
-      for (const [col, ks] of Object.entries(porCol)) {
+      for (const k of enviar) { const gk = grupo(k); (porCol[gk] = porCol[gk] || []).push(k); }
+      for (const [gk, ks] of Object.entries(porCol)) {
+        const col = gk.split('|')[0];
         for (let i = 0; i < ks.length; i += 300) {
           const lote = ks.slice(i, i + 300);
           const mudancas = lote.map((k) => { const id = k.slice(col.length + 1); return atual.has(k) ? { colecao: col, id, dados: JSON.parse(atual.get(k)) } : { colecao: col, id, excluido: true }; });
           const r = await chamar(API, { mudancas });
           if (r.ok) { for (const k of lote) atual.has(k) ? salvo.set(k, atual.get(k)) : salvo.delete(k); }
-          else if (r.status === 403 || r.status === 400) { proibido.add(col); erroMsg = r.j.erro || 'Você não tem permissão para alterar isso.'; }
+          else if (r.status === 403 || r.status === 400) { proibido.add(gk); erroMsg = r.j.erro || 'Você não tem permissão para alterar isso.'; }
           else if (r.status === 401) { erroMsg = 'Sua sessão terminou. Entre de novo para salvar.'; throw new Error('401'); }
           else throw new Error('rede');
         }
@@ -216,7 +222,7 @@
   const hojeBR = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   function cuidarDaVersao() {
     if (!versaoNova && (!window.DH_DATA_REAL || hojeBR() === HOJE)) return; // versão nova ou virou o dia: atualiza a aba
-    const semPendencia = !enviando && [...fotografia()].every(([k, v]) => salvo.get(k) === canon(v) || proibido.has(k.split('|')[0]));
+    const semPendencia = !enviando && [...fotografia()].every(([k, v]) => salvo.get(k) === canon(v) || proibido.has(grupo(k)));
     if (!semPendencia) { salvar(); return; }
     const parado = Date.now() - ultimaAcao > 60000;
     if (document.hidden || (parado && !ocupado())) return recarregar();
@@ -231,7 +237,7 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) { salvar(); if (versaoNova) cuidarDaVersao(); } else verificar(); });
   window.addEventListener('beforeunload', (e) => {
     if (!pronto) return;
-    const pend = [...fotografia()].some(([k, v]) => salvo.get(k) !== canon(v) && !proibido.has(k.split('|')[0]));
+    const pend = [...fotografia()].some(([k, v]) => salvo.get(k) !== canon(v) && !proibido.has(grupo(k)));
     if (pend) { salvar(); e.preventDefault(); e.returnValue = ''; }
   });
 
@@ -242,6 +248,8 @@
       const regs = await buscar(true);
       aplicar(regs);
       for (const [k, v] of fotografia()) salvo.set(k, canon(v));
+      // padrões de planilha que já estavam guardados só neste computador sobem para o banco
+      if (!regs.some((g) => g.colecao === 'config' && g.id === 'modelos_pagar') && Object.keys(modelosSalvos() || {}).length) salvo.delete('config|modelos_pagar');
       marcarSalvo(regs);
       pronto = true;
       await atualizarPagar().catch(() => false);

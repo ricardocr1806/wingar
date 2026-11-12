@@ -5,6 +5,8 @@ import { COOKIE_DOMAIN, SUPABASE_KEY, SUPABASE_URL } from './lib/supabase/config
 const PROTEGIDAS = ['/app', '/plataforma'];
 
 export async function middleware(req: NextRequest) {
+  // As rotas /api conferem a sessão por conta própria: pular aqui deixa cada pedido mais leve.
+  if (req.nextUrl.pathname.startsWith('/api/')) return NextResponse.next();
   let res = NextResponse.next({ request: req });
   const sb = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
     cookieOptions: COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : undefined,

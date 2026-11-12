@@ -6,13 +6,26 @@
   const API = SALVA ? `/api/empresas/${A.slug}/pagar` : '';
   const num = (v) => parseFloat(String(v).replace(/\./g, '').replace(',', '.'));
 
+  // Se o servidor ou a internet falharem no meio, tenta de novo sozinho (as contas novas levam um id próprio,
+  // então uma nova tentativa nunca lança a mesma conta duas vezes).
+  const novoId = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16); }));
+  const espera = (ms) => new Promise((ok) => setTimeout(ok, ms));
   async function api(corpo) {
-    try {
-      const r = await fetch(API, corpo ? { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) } : { credentials: 'same-origin', cache: 'no-store' });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) { toast(j.erro || 'Não foi possível salvar.', 'bad'); return null; }
-      return j;
-    } catch { toast('Sem conexão. Nada foi salvo, tente de novo.', 'bad'); return null; }
+    if (corpo && corpo.acao === 'criar' && !corpo.id) corpo.id = novoId();
+    if (corpo && corpo.acao === 'importar') corpo.contas.forEach((c) => { if (!c.id) c.id = novoId(); });
+    let ultimo = '';
+    for (let tentativa = 0; tentativa < 5; tentativa++) {
+      if (tentativa) await espera([0, 700, 1500, 3000, 5000][tentativa]);
+      try {
+        const r = await fetch(API, corpo ? { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(corpo) } : { credentials: 'same-origin', cache: 'no-store' });
+        const j = await r.json().catch(() => null);
+        if (r.ok && j) return j;
+        if (j && j.erro) { toast(j.erro, 'bad'); return null; } // recusa de verdade (permissão, dado faltando)
+        ultimo = 'servidor';
+      } catch { ultimo = 'rede'; }
+    }
+    toast(ultimo === 'rede' ? 'Sem conexão com a internet. Nada foi salvo, tente de novo.' : 'O servidor não respondeu. Nada foi salvo, tente de novo em instantes.', 'bad');
+    return null;
   }
   async function carregar() {
     const j = await api();

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { usuarioAtual } from '@/lib/supabase/server';
 import { Marca } from '@/app/ui';
 import { inicioDaEmpresa } from '@/lib/nav';
-import { APRESENTACAO } from '@/generated/apresentacao';
+import { temSistema } from '@/lib/pagina-empresa';
 
 export const metadata = { title: 'Suas empresas · DetailHub' };
 
@@ -16,7 +16,7 @@ export default async function Empresas() {
   ]);
   if (dono) redirect('/plataforma');
   const lista = (empresas ?? []).filter((e) => dono || e.ativa);
-  if (!dono && lista.length === 1) redirect(inicioDaEmpresa(lista[0].slug, !!APRESENTACAO[lista[0].slug]));
+  if (!dono && lista.length === 1) redirect(inicioDaEmpresa(lista[0].slug, temSistema(lista[0].slug)));
 
   return (
     <main className="auth" style={{ maxWidth: 560 }}>

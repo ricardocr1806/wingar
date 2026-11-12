@@ -76,7 +76,7 @@
     }
     for (const g of porColecao.config) {
       if (g.excluido) continue;
-      if (g.id === 'equipe' && Array.isArray(g.dados.lista) && g.dados.lista.length) EQUIPE.splice(0, EQUIPE.length, ...g.dados.lista);
+      if (g.id === 'equipe' && Array.isArray(g.dados.lista) && g.dados.lista.length) { EQUIPE.splice(0, EQUIPE.length, ...g.dados.lista); if (typeof dhEquipe === 'function') dhEquipe(); }
       if (g.id === 'tempo_ideal') Object.assign(TEMPO_IDEAL, g.dados);
     }
     DB.sort((a, b) => String(b.data).localeCompare(String(a.data)) || String(b.id).localeCompare(String(a.id)));
@@ -215,7 +215,7 @@
   function recarregar() { lembrarTela(); location.reload(); }
   const hojeBR = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
   function cuidarDaVersao() {
-    if (!versaoNova && hojeBR() === HOJE) return; // versão nova ou virou o dia: atualiza a aba
+    if (!versaoNova && (!window.DH_DATA_REAL || hojeBR() === HOJE)) return; // versão nova ou virou o dia: atualiza a aba
     const semPendencia = !enviando && [...fotografia()].every(([k, v]) => salvo.get(k) === canon(v) || proibido.has(k.split('|')[0]));
     if (!semPendencia) { salvar(); return; }
     const parado = Date.now() - ultimaAcao > 60000;

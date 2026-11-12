@@ -8,8 +8,6 @@ const paginas = {};
 // Liga a versão de apresentação ao acesso real: quando a página recebe window.DH_ACESSO (pessoa logada),
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
-  // Sistema real: data de hoje (horário de Brasília)
-  ["const HOJE = '2026-11-03';", "const HOJE = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date());"],
   ["let nextOS = 1, nextId = 1;", "const dhNovoId = p => p + (Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5)).toUpperCase(); let nextOS = 1, nextId = 1;"],
   ["'A'+String(nextId++).padStart(2,'0')", "dhNovoId('A')", true],
   ["const novoCli = () => ({id:'C'+String(nextCli++).padStart(4,'0'),", "const novoCli = () => ({id:dhNovoId('C'),"],
@@ -64,8 +62,8 @@ function renderNav(){`],
     $('#who').innerHTML = \`<span class="av solid">\${ini(A.nome)}</span><div><b>\${esc(A.nome)}</b><span>\${esc(A.cargo)}</span></div>\`; }
   else if (window.DH_VITRINE) { const V = window.DH_VITRINE; $('#perfil').innerHTML = \`<button class="btn sm" data-a="cfgAbrir" style="width:100%;justify-content:center">+ Adicionar colaborador</button>\`; $('#who').innerHTML = \`<span class="av solid">\${ini(V.nome)}</span><div><b>\${esc(V.nome)}</b><span>\${esc(V.cargo)}</span></div>\`; }`],
 ];
-function adaptar(html) {
-  for (const [de, para, todos] of TROCAS) {
+function adaptar(html, extras = []) {
+  for (const [de, para, todos] of [...TROCAS, ...extras]) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
@@ -75,6 +73,34 @@ function adaptar(html) {
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {
   const corpo = adaptar(readFileSync(dir + f, 'utf8'));
   paginas[f.replace(/\.html$/, '')] = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><!--DH_ACESSO--></head><body>${corpo}</body></html>`;
+}
+// Versão padrão para toda empresa nova criada no painel: o mesmo sistema, com o nome da empresa
+// (trocado na hora de abrir) e sem nenhum dado da Wingard (histórico, clientes, catálogo, equipe).
+if (existsSync(dir + 'wingard.html')) {
+  const base = readFileSync(dir + 'wingard.html', 'utf8');
+  const hist = /HISTDATA = \{.*\};/.exec(base)[0];
+  const equipe = /const EQUIPE = \[.*?\];/.exec(base)[0];
+  const PADRAO = [
+    ["const HOJE = '2026-11-03';", "const HOJE = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date()); window.DH_DATA_REAL = true;"],
+    [hist, 'HISTDATA = {"cat":[["000","Produto não informado",0,"s"]],"cli":[],"neg":[],"osmax":0};'],
+    ["const APLICADORES = ['Diego Martins','Felipe Souza','Lucas Pereira','Rogério Lima'];\nconst TECNICOS = ['William Santos','Diego Martins'];", "const APLICADORES = []; const TECNICOS = [];"],
+    [equipe, "const EQUIPE = []; function dhEquipe(){ const n = EQUIPE.map(p=>p.nome), t = EQUIPE.filter(p=>/t[ée]cnic|respons/i.test(p.funcao)).map(p=>p.nome); APLICADORES.splice(0, APLICADORES.length, ...n); TECNICOS.splice(0, TECNICOS.length, ...(t.length ? t : n)); }"],
+    ["[...TECNICOS,...APLICADORES.slice(1)]", "EQUIPE.map(p=>p.nome)", true],
+    ["EQUIPE.splice(0, EQUIPE.length, ...L); fecharDlg();", "EQUIPE.splice(0, EQUIPE.length, ...L); dhEquipe(); fecharDlg();"],
+    ["relIniciar: a => { const r = DB.find", "relIniciar: a => { if (!EQUIPE.length){ toast('Cadastre primeiro a equipe da operação.','warn'); return ACT.equipeEditar(); } const r = DB.find"],
+    ["${S.prodDemo ? '' : `<button class=\"btn pri\" data-a=\"prodDemo\">", "${S.prodDemo || window.DH_ACESSO ? '' : `<button class=\"btn pri\" data-a=\"prodDemo\">"],
+    ["user:'Letícia Siciliano', papel:'Consultora'", "user:'Equipe Comercial', papel:'Comercial'"],
+    ["user:'William Santos', papel:'Responsável técnico'", "user:'Equipe Operacional', papel:'Operacional'"],
+    ["user:'Tatiane Moura', papel:'Financeiro'", "user:'Equipe Financeiro', papel:'Financeiro'"],
+    ["const ORIGENS = [", "if (!CONSULTORES.length) CONSULTORES.push(((window.DH_ACESSO||window.DH_VITRINE||{}).nome) || 'Consultor');\nconst ORIGENS = ["],
+    ["(r.linha==='bobina' ? x.linha==='bobina' : x.linha!=='bobina'));", "(r.linha==='bobina' ? x.linha==='bobina' : x.linha!=='bobina')); if (!c) return toast('Cadastre primeiro um serviço no menu Serviços.','warn');"],
+  ];
+  let h = adaptar(base, PADRAO);
+  h = h.split('https://wingard.detailhub.com.br/').join('https://__DH_SLUG__.detailhub.com.br/')
+       .split('wingard_modelos_pagar').join('dh_modelos_pagar')
+       .split('Wingard').join('__DH_EMPRESA__').split('WINGARD').join('__DH_EMPRESA_M__');
+  if (/wingard/i.test(h.replace(/__DH_[A-Z_]+__/g, ''))) console.warn('Aviso: a versão padrão ainda cita a Wingard');
+  paginas._padrao = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex, nofollow"><!--DH_ACESSO--></head><body>${h}</body></html>`;
 }
 mkdirSync(raiz + 'src/generated', { recursive: true });
 // Versão desta publicação: as abas abertas comparam com a do servidor e se atualizam sozinhas.

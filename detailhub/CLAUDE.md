@@ -1,5 +1,11 @@
 # DetailHub — regras de trabalho
 
+## Custos (pedido do Ricardo)
+Antes de qualquer decisão que gere custo (planos, serviços, ferramentas), apresentar a opção mais econômica
+que mantenha a mesma performance e segurança, comparando pelo menos 3 alternativas com preço mensal em reais.
+Nunca recomendar um plano pago sem antes avaliar o que já está contratado (Cloudflare Workers Paid) ou é gratuito.
+Contratado hoje: Cloudflare Workers Paid (US$ 5/mês). Supabase no plano gratuito; backup diário próprio no Cloudflare R2.
+
 O sistema está em produção: a Wingard (wingard.detailhub.com.br) opera com dados reais.
 Toda mudança pedida é publicada mantendo intacto tudo o que os clientes já lançaram.
 

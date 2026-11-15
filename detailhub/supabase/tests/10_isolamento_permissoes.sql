@@ -261,3 +261,13 @@ select teste.ok((select count(*) from public.registros) = 0, 'quem não é da em
 reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
 select teste.ok((select count(*) from public.registros where id = 'A1') = 1, 'administrador vê o atendimento do vendedor');
 reset role;
+
+-- ============ backup
+reset role; select set_config('request.jwt.claim.sub', :'adm_a', false); set role authenticated;
+select teste.erro('select public.backup_completo()', 'usuário do sistema não consegue baixar a cópia do banco');
+reset role; set role anon;
+select teste.erro('select public.backup_completo()', 'visitante sem login não consegue baixar a cópia do banco');
+reset role; set role service_role;
+select ((b->'tabelas'->'contas_pagar') is not null and jsonb_array_length(b->'usuarios') >= 7 and (b->'tabelas') ? 'registros' and (b->'tabelas') ? 'empresas') as backup_ok from (select public.backup_completo() b) x \gset
+reset role;
+select teste.ok(:'backup_ok'::boolean, 'chave de serviço baixa a cópia com todas as tabelas e as contas de acesso');

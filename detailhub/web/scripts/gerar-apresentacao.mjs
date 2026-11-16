@@ -9,7 +9,7 @@ const paginas = {};
 // mostra só as áreas liberadas para o cargo dela, troca o "Acessando como" pelo nome real e põe o atalho de Configurações.
 const TROCAS = [
   // Período personalizado (de uma data a outra)
-  ["['tudo','Todo o período'], ...ms.map(m=>[m, mesNome(m)])];", "['tudo','Todo o período'], ...ms.map(m=>[m, mesNome(m)]), ...(/^r:\\d{4}-\\d{2}-\\d{2}:\\d{4}-\\d{2}-\\d{2}$/.test(S.f.periodo||'') ? [[S.f.periodo, dhNomeRange(S.f.periodo)]] : []), ['escolher','Escolher datas…']];"],
+  ["['tudo','Todo o período'], ...ms.map(m=>[m, mesNome(m)])];", "['tudo','Todo o período'], ...ms.map(m=>[m, mesNome(m)]), ...(/^r:\\d{4}-\\d{2}-\\d{2}:\\d{4}-\\d{2}-\\d{2}$/.test(S.f.periodo||'') ? [[S.f.periodo, dhNomeRange(S.f.periodo)]] : [])];"],
   // Data real de hoje (horário de Brasília) em todas as empresas
   ["const HOJE = '2026-11-03';", "const HOJE = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date()); window.DH_DATA_REAL = true;"],
   // Filtro de período: Hoje e Ontem (data real, horário de Brasília)
@@ -23,7 +23,7 @@ const TROCAS = [
   ["c[f] = el.dataset.t==='n' ? (parseFloat(String(el.value).replace(',','.'))||0) : el.value; return; }", "c[f] = el.dataset.t==='n' ? dhNum(el.value) : el.value; return; }"],
   ["${x.cod===s.cod?'selected':''}>${x.cod} · ${esc(x.desc)}</option>", "${x.cod===s.cod?'selected':''}>${x.cod==='000' && x.cod===s.cod && s.dhTotal ? esc(s.desc) : x.cod+' · '+esc(x.desc)}</option>"],
   ["<input id=\"i-desc\" class=\"num\" data-b=\"desconto\" data-t=\"n\" value=\"${r.desconto}\" ${dis}>", "<input id=\"i-desc\" class=\"num\" data-b=\"desconto\" data-t=\"n\" value=\"${r.desconto}\" inputmode=\"decimal\" ${dis}>\n          <label class=\"muted\" for=\"dh-total\" style=\"align-self:center\">Valor total (R$)</label><input id=\"dh-total\" class=\"num\" inputmode=\"decimal\" placeholder=\"Digite o total\" aria-label=\"Definir o valor total da proposta\" ${dis}>"],
-  ["let nextOS = 1, nextId = 1;", "const dhSomaDia = (d, n) => new Date(Date.parse(d+'T12:00:00Z') + n*864e5).toISOString().slice(0,10); const dhNomeRange = p => { const [,a,b] = p.split(':'), f = d => d.split('-').reverse().join('/'); return 'De '+f(a)+' a '+f(dhSomaDia(b,-1)); }; const dhDia = n => new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date(Date.now() + n*864e5)); const dhNum = v => { let t = String(v ?? '').trim().replace(/[R$\\s]/g, ''); if (!t) return 0; if (t.includes(',')) t = t.replace(/\\./g, '').replace(',', '.'); else if (/^-?\\d{1,3}(\\.\\d{3})+$/.test(t)) t = t.replace(/\\./g, ''); return parseFloat(t) || 0; }; const dhNovoId = p => p + (Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5)).toUpperCase(); let nextOS = 1, nextId = 1;"],
+  ["let nextOS = 1, nextId = 1;", "const dhSomaDia = (d, n) => new Date(Date.parse(d+'T12:00:00Z') + n*864e5).toISOString().slice(0,10); const dhNomeRange = p => { const [,a,b] = p.split(':'), f = d => d.split('-').reverse().join('/'); return f(a)+' a '+f(dhSomaDia(b,-1)); }; const dhDia = n => new Intl.DateTimeFormat('en-CA', {timeZone:'America/Sao_Paulo'}).format(new Date(Date.now() + n*864e5)); const dhNum = v => { let t = String(v ?? '').trim().replace(/[R$\\s]/g, ''); if (!t) return 0; if (t.includes(',')) t = t.replace(/\\./g, '').replace(',', '.'); else if (/^-?\\d{1,3}(\\.\\d{3})+$/.test(t)) t = t.replace(/\\./g, ''); return parseFloat(t) || 0; }; const dhNovoId = p => p + (Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 5)).toUpperCase(); let nextOS = 1, nextId = 1;"],
   ["'A'+String(nextId++).padStart(2,'0')", "dhNovoId('A')", true],
   ["const novoCli = () => ({id:'C'+String(nextCli++).padStart(4,'0'),", "const novoCli = () => ({id:dhNovoId('C'),"],
   // Centros de custo da Wingard (contas a pagar e DRE)
@@ -82,7 +82,7 @@ function adaptar(html, extras = []) {
     if (!html.includes(de)) { console.warn('Aviso: trecho não encontrado na apresentação:', de.slice(0, 60)); continue; }
     html = todos ? html.split(de).join(para) : html.replace(de, para);
   }
-  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js', 'sincronizar-na-apresentacao.js', 'dre-pdf-na-apresentacao.js', 'valores-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
+  const extra = ['config-na-apresentacao.js', 'pagar-na-apresentacao.js', 'sincronizar-na-apresentacao.js', 'dre-pdf-na-apresentacao.js', 'valores-na-apresentacao.js', 'custos-na-apresentacao.js'].map((f) => readFileSync(raiz + 'scripts/' + f, 'utf8')).join('\n');
   return html + `\n<script>\n${extra}\n</script>\n`;
 }
 if (existsSync(dir)) for (const f of readdirSync(dir)) if (f.endsWith('.html')) {

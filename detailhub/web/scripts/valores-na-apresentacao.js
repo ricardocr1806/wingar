@@ -48,26 +48,44 @@
   });
 })();
 
-// Filtro de período: "Escolher datas…" abre um quadro com De / Até e aplica o período personalizado.
+// Filtro de período: ao lado da lista de períodos, os campos "De" e "Até" (dia, mês e ano) para puxar
+// qualquer intervalo. Escolher um período na lista preenche as datas; digitar as datas aplica o intervalo.
 (function () {
+  const RANGE = /^r:(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/;
+  function intervalo(p) {
+    p = String(p || '');
+    if (p === 'hoje' || p === 'ontem') { const d = dhDia(p === 'hoje' ? 0 : -1); return [d, d]; }
+    if (/^\d{4}-\d{2}$/.test(p)) return [p + '-01', dhSomaDia(addMes(p + '-01', 1).slice(0, 10), -1)];
+    if (/^\d{4}$/.test(p)) return [p + '-01-01', p + '-12-31'];
+    if (p === '12m') return [ini12(), dhDia(0)];
+    const r = RANGE.exec(p); if (r) return [r[1], dhSomaDia(r[2], -1)];
+    return ['', ''];
+  }
+  const estilo = document.createElement('style');
+  estilo.textContent = `.dh-datas{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+    .dh-datas input{height:40px;border:1px solid var(--line);border-radius:12px;padding:0 10px;background:var(--surface);color:var(--fg);font:inherit;font-size:14px}`;
+  document.head.appendChild(estilo);
+  function colocar() {
+    document.querySelectorAll('select[data-f="periodo"]').forEach((sel) => {
+      let g = sel.nextElementSibling;
+      if (!g || !g.classList.contains('dh-datas')) {
+        sel.insertAdjacentHTML('afterend', '<span class="dh-datas"><label for="dh-de">De</label><input id="dh-de" type="date" data-dhper="de" aria-label="Data inicial"><label for="dh-ate">até</label><input id="dh-ate" type="date" data-dhper="ate" aria-label="Data final"></span>');
+        g = sel.nextElementSibling;
+      }
+      const [de, ate] = intervalo(S.f.periodo);
+      const [a, b] = g.querySelectorAll('input');
+      if (a !== document.activeElement) a.value = de;
+      if (b !== document.activeElement) b.value = ate;
+    });
+  }
+  new MutationObserver(() => colocar()).observe(document.getElementById('main') || document.body, { childList: true, subtree: true });
+  colocar();
   document.addEventListener('change', (e) => {
-    const el = e.target;
-    if (!(el.tagName === 'SELECT' && el.dataset.f === 'periodo' && el.value === 'escolher')) return;
-    e.stopImmediatePropagation(); e.stopPropagation();
-    const atual = String(S.f.periodo || ''), r = /^r:(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/.exec(atual);
-    el.value = atual;
-    const hoje = dhDia(0), de = r ? r[1] : hoje.slice(0, 8) + '01', ate = r ? dhSomaDia(r[2], -1) : hoje;
-    dialogo(`<div class="dlg-h"><span class="dlg-ic">${ico('calendar')}</span><div><h2>Escolher período</h2><p class="muted">Os números da tela passam a considerar só esse intervalo de datas.</p></div></div>
-      <div class="fields"><div class="field"><label for="per-de">De</label><input id="per-de" type="date" value="${de}"></div>
-        <div class="field"><label for="per-ate">Até</label><input id="per-ate" type="date" value="${ate}"></div></div>
-      <div id="per-err" class="cv-err" hidden></div>
-      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Cancelar</button><button class="btn pri" data-a="perAplicar">Aplicar</button></div>`);
-  }, true);
-  ACT.perAplicar = () => {
-    const de = $('#per-de').value, ate = $('#per-ate').value, err = $('#per-err');
-    if (!de || !ate) { err.textContent = 'Escolha as duas datas.'; err.hidden = false; return; }
-    if (ate < de) { err.textContent = 'A data final precisa ser depois da inicial.'; err.hidden = false; return; }
+    const el = e.target; if (!el.dataset || !el.dataset.dhper) return;
+    const g = el.closest('.dh-datas'), [a, b] = g.querySelectorAll('input');
+    if (!a.value || !b.value) return;
+    let de = a.value, ate = b.value; if (ate < de) [de, ate] = [ate, de];
     S.f.periodo = 'r:' + de + ':' + dhSomaDia(ate, 1);
-    fecharDlg(); render();
-  };
+    render();
+  });
 })();

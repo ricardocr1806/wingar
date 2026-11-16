@@ -47,3 +47,27 @@
     toast(`Total da proposta: ${fmt(total(r))}.`);
   });
 })();
+
+// Filtro de período: "Escolher datas…" abre um quadro com De / Até e aplica o período personalizado.
+(function () {
+  document.addEventListener('change', (e) => {
+    const el = e.target;
+    if (!(el.tagName === 'SELECT' && el.dataset.f === 'periodo' && el.value === 'escolher')) return;
+    e.stopImmediatePropagation(); e.stopPropagation();
+    const atual = String(S.f.periodo || ''), r = /^r:(\d{4}-\d{2}-\d{2}):(\d{4}-\d{2}-\d{2})$/.exec(atual);
+    el.value = atual;
+    const hoje = dhDia(0), de = r ? r[1] : hoje.slice(0, 8) + '01', ate = r ? dhSomaDia(r[2], -1) : hoje;
+    dialogo(`<div class="dlg-h"><span class="dlg-ic">${ico('calendar')}</span><div><h2>Escolher período</h2><p class="muted">Os números da tela passam a considerar só esse intervalo de datas.</p></div></div>
+      <div class="fields"><div class="field"><label for="per-de">De</label><input id="per-de" type="date" value="${de}"></div>
+        <div class="field"><label for="per-ate">Até</label><input id="per-ate" type="date" value="${ate}"></div></div>
+      <div id="per-err" class="cv-err" hidden></div>
+      <div class="dlg-acts"><button class="btn" data-a="dlgFechar">Cancelar</button><button class="btn pri" data-a="perAplicar">Aplicar</button></div>`);
+  }, true);
+  ACT.perAplicar = () => {
+    const de = $('#per-de').value, ate = $('#per-ate').value, err = $('#per-err');
+    if (!de || !ate) { err.textContent = 'Escolha as duas datas.'; err.hidden = false; return; }
+    if (ate < de) { err.textContent = 'A data final precisa ser depois da inicial.'; err.hidden = false; return; }
+    S.f.periodo = 'r:' + de + ':' + dhSomaDia(ate, 1);
+    fecharDlg(); render();
+  };
+})();
